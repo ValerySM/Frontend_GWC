@@ -35,10 +35,10 @@ function EatsApp({ setIsTabOpen }) {
   const [damageIndicators, setDamageIndicators] = useState([]);
 
   const [energy, setEnergy] = useState(() => {
-    const savedEnergy = UniverseData.getUniverseData(currentUniverse, 'energy', 1000);
-    const lastUpdate = UniverseData.getUniverseData(currentUniverse, 'lastUpdate', Date.now());
-    const energyMax = UniverseData.getUniverseData(currentUniverse, 'energyMax', 1000);
-    const regenRate = UniverseData.getUniverseData(currentUniverse, 'regenRate', 1);
+    const savedEnergy = UniverseData.getUpgradeLevel('energy') || 1000;
+    const lastUpdate = Date.now();
+    const energyMax = UniverseData.getUpgradeLevel('energyMax') || 1000;
+    const regenRate = UniverseData.getUpgradeLevel('regenRate') || 1;
 
     const now = Date.now();
     const elapsedSeconds = Math.floor((now - lastUpdate) / 1000);
@@ -48,20 +48,20 @@ function EatsApp({ setIsTabOpen }) {
   });
 
   const [energyMax, setEnergyMax] = useState(() => 
-    UniverseData.getUniverseData(currentUniverse, 'energyMax', 1000)
+    UniverseData.getUpgradeLevel('energyMax') || 1000
   );
   const [regenRate, setRegenRate] = useState(() => 
-    UniverseData.getUniverseData(currentUniverse, 'regenRate', 1)
+    UniverseData.getUpgradeLevel('regenRate') || 1
   );
 
   const [damageLevel, setDamageLevel] = useState(() => 
-    UniverseData.getUniverseData(currentUniverse, 'damageLevel', 1)
+    UniverseData.getUpgradeLevel('damageLevel')
   );
   const [energyLevel, setEnergyLevel] = useState(() => 
-    UniverseData.getUniverseData(currentUniverse, 'energyLevel', 1)
+    UniverseData.getUpgradeLevel('energyLevel')
   );
   const [regenLevel, setRegenLevel] = useState(() => 
-    UniverseData.getUniverseData(currentUniverse, 'regenLevel', 1)
+    UniverseData.getUpgradeLevel('regenLevel')
   );
 
   const damageUpgradeCost = 1000 * Math.pow(2, damageLevel - 1);
@@ -84,33 +84,31 @@ function EatsApp({ setIsTabOpen }) {
   }, []);
 
   useEffect(() => {
-
-    UniverseData.setUniverseData(currentUniverse, 'energyMax', energyMax);
-  }, [energyMax, currentUniverse]);
-
-  useEffect(() => {
-    UniverseData.setUniverseData(currentUniverse, 'regenRate', regenRate);
-  }, [regenRate, currentUniverse]);
+    UniverseData.setUpgradeLevel('energyMax', energyMax);
+  }, [energyMax]);
 
   useEffect(() => {
-    UniverseData.setUniverseData(currentUniverse, 'damageLevel', damageLevel);
-  }, [damageLevel, currentUniverse]);
+    UniverseData.setUpgradeLevel('regenRate', regenRate);
+  }, [regenRate]);
 
   useEffect(() => {
-    UniverseData.setUniverseData(currentUniverse, 'energyLevel', energyLevel);
-  }, [energyLevel, currentUniverse]);
+    UniverseData.setUpgradeLevel('damageLevel', damageLevel);
+  }, [damageLevel]);
 
   useEffect(() => {
-    UniverseData.setUniverseData(currentUniverse, 'regenLevel', regenLevel);
-  }, [regenLevel, currentUniverse]);
+    UniverseData.setUpgradeLevel('energyLevel', energyLevel);
+  }, [energyLevel]);
+
+  useEffect(() => {
+    UniverseData.setUpgradeLevel('regenLevel', regenLevel);
+  }, [regenLevel]);
 
   useEffect(() => {
     const interval = setInterval(() => {
       setEnergy(prevEnergy => {
         if (prevEnergy < energyMax) {
           const newEnergy = Math.min(prevEnergy + regenRate, energyMax);
-          UniverseData.setUniverseData(currentUniverse, 'energy', newEnergy);
-          UniverseData.setUniverseData(currentUniverse, 'lastUpdate', Date.now());
+          UniverseData.setUpgradeLevel('energy', newEnergy);
           return newEnergy;
         }
         return prevEnergy;
@@ -119,10 +117,27 @@ function EatsApp({ setIsTabOpen }) {
 
     return () => {
       clearInterval(interval);
-      UniverseData.setUniverseData(currentUniverse, 'energy', energy);
-      UniverseData.setUniverseData(currentUniverse, 'lastUpdate', Date.now());
+      UniverseData.setUpgradeLevel('energy', energy);
     };
-  }, [currentUniverse, energy, energyMax, regenRate]);
+  }, [energy, energyMax, regenRate]);
+
+  // Обновленный эффект для автосохранения
+  useEffect(() => {
+    const saveInterval = setInterval(() => {
+      UniverseData.saveToServer();
+    }, 10000); // Сохранение каждые 10 секунд
+
+    const handleBeforeUnload = () => {
+      UniverseData.saveToServer();
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      clearInterval(saveInterval);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, []);
 
   const handleTabOpen = (tab) => {
     setActiveTab(tab);
