@@ -1,13 +1,21 @@
 const UniverseData = {
   sessionToken: null,
   totalClicks: 0,
-  upgrades: {
-    damageLevel: 1,
-    energyLevel: 1,
-    regenLevel: 1
+  gameScores: {
+    appleCatcher: 0,
+    purblePairs: 0
   },
+  universes: {},
   currentUniverse: 'default',
   
+  eweData: {
+    tokens: 0,
+    farmedTokens: 0,
+    isFarming: false,
+    startTime: null,
+    elapsedFarmingTime: 0
+  },
+
   setSessionToken(token) {
     this.sessionToken = token;
     localStorage.setItem('sessionToken', token);
@@ -29,18 +37,52 @@ const UniverseData = {
     return this.totalClicks;
   },
 
+  listeners: [],
+
+  addListener(callback) {
+    this.listeners.push(callback);
+  },
+
+  removeListener(callback) {
+    this.listeners = this.listeners.filter(listener => listener !== callback);
+  },
+
+  notifyListeners() {
+    this.listeners.forEach(listener => listener(this.totalClicks));
+  },
+
   setTotalClicks(newTotal) {
     this.totalClicks = newTotal;
     this.saveToServer();
+    this.notifyListeners();
   },
 
-  setUpgradeLevel(upgradeType, level) {
-    this.upgrades[upgradeType] = level;
+  addGameScore(gameType, score) {
+    if (gameType in this.gameScores) {
+      this.gameScores[gameType] = score;
+      this.totalClicks += score;
+      this.saveToServer();
+      this.notifyListeners();
+      console.log(`Updated ${gameType} score:`, this.gameScores[gameType]);
+      console.log('New total clicks:', this.totalClicks);
+    } else {
+      console.error('Неизвестный тип игры:', gameType);
+    }
+  },
+
+  setUniverseData(universeName, key, value) {
+    if (!this.universes[universeName]) {
+      this.universes[universeName] = {};
+    }
+    this.universes[universeName][key] = value;
     this.saveToServer();
   },
 
-  getUpgradeLevel(upgradeType) {
-    return this.upgrades[upgradeType] || 1;
+  getUniverseData(universeName, key, defaultValue) {
+    if (this.universes[universeName] && this.universes[universeName][key] !== undefined) {
+      return this.universes[universeName][key];
+    }
+    return defaultValue;
   },
 
   setCurrentUniverse(universeName) {
@@ -50,6 +92,15 @@ const UniverseData = {
 
   getCurrentUniverse() {
     return this.currentUniverse;
+  },
+
+  setEWEData(key, value) {
+    this.eweData[key] = value;
+    this.saveToServer();
+  },
+
+  getEWEData(key) {
+    return this.eweData[key];
   },
 
   saveToServer() {
@@ -67,7 +118,11 @@ const UniverseData = {
       },
       body: JSON.stringify({
         totalClicks: this.totalClicks,
-        upgrades: this.upgrades,
+        upgrades: {
+          damageLevel: this.getUniverseData(this.currentUniverse, 'damageLevel', 1),
+          energyLevel: this.getUniverseData(this.currentUniverse, 'energyLevel', 1),
+          regenLevel: this.getUniverseData(this.currentUniverse, 'regenLevel', 1),
+        },
         currentUniverse: this.currentUniverse,
       }),
     })
@@ -90,12 +145,12 @@ const UniverseData = {
 
   loadFromServer(data) {
     this.totalClicks = data.totalClicks || 0;
-    this.upgrades = data.upgrades || {
-      damageLevel: 1,
-      energyLevel: 1,
-      regenLevel: 1
-    };
     this.currentUniverse = data.currentUniverse || 'default';
+    this.universes[this.currentUniverse] = {
+      damageLevel: data.upgrades.damageLevel || 1,
+      energyLevel: data.upgrades.energyLevel || 1,
+      regenLevel: data.upgrades.regenLevel || 1,
+    };
   },
 
   init() {
