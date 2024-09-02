@@ -16,8 +16,6 @@ const UniverseData = {
     elapsedFarmingTime: 0
   },
 
-  isDirty: false,
-
   setSessionToken(token) {
     this.sessionToken = token;
     localStorage.setItem('sessionToken', token);
@@ -55,7 +53,7 @@ const UniverseData = {
 
   setTotalClicks(newTotal) {
     this.totalClicks = newTotal;
-    this.setDirty();
+    this.saveToServer();
     this.notifyListeners();
   },
 
@@ -63,7 +61,7 @@ const UniverseData = {
     if (gameType in this.gameScores) {
       this.gameScores[gameType] = score;
       this.totalClicks += score;
-      this.setDirty();
+      this.saveToServer();
       this.notifyListeners();
       console.log(`Updated ${gameType} score:`, this.gameScores[gameType]);
       console.log('New total clicks:', this.totalClicks);
@@ -77,7 +75,7 @@ const UniverseData = {
       this.universes[universeName] = {};
     }
     this.universes[universeName][key] = value;
-    this.setDirty();
+    this.saveToServer();
   },
 
   getUniverseData(universeName, key, defaultValue) {
@@ -89,7 +87,7 @@ const UniverseData = {
 
   setCurrentUniverse(universeName) {
     this.currentUniverse = universeName;
-    this.setDirty();
+    this.saveToServer();
   },
 
   getCurrentUniverse() {
@@ -98,20 +96,14 @@ const UniverseData = {
 
   setEWEData(key, value) {
     this.eweData[key] = value;
-    this.setDirty();
+    this.saveToServer();
   },
 
   getEWEData(key) {
     return this.eweData[key];
   },
 
-  setDirty() {
-    this.isDirty = true;
-  },
-
   saveToServer() {
-    if (!this.isDirty) return;
-
     const token = this.getSessionToken();
     if (!token) {
       console.error('No session token available');
@@ -142,10 +134,7 @@ const UniverseData = {
         return response.json();
       })
       .then(data => {
-        if (data.success) {
-          this.isDirty = false;
-          console.log('Data saved successfully');
-        } else {
+        if (!data.success) {
           console.error('Failed to save data to server');
         }
       })
@@ -162,7 +151,6 @@ const UniverseData = {
       energyLevel: data.upgrades.energyLevel || 1,
       regenLevel: data.upgrades.regenLevel || 1,
     };
-    this.isDirty = false;
   },
 
   init() {
@@ -170,15 +158,6 @@ const UniverseData = {
     if (token) {
       // Здесь можно добавить логику для проверки валидности токена на сервере
     }
-  },
-
-  // Добавляем методы для совместимости с EatsApp.js
-  getUpgradeLevel(upgradeType) {
-    return this.getUniverseData(this.currentUniverse, upgradeType, 1);
-  },
-
-  setUpgradeLevel(upgradeType, level) {
-    this.setUniverseData(this.currentUniverse, upgradeType, level);
   }
 };
 
