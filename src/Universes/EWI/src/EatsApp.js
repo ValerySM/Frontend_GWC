@@ -121,12 +121,13 @@ function EatsApp({ setIsTabOpen }) {
     };
   }, [energy, energyMax, regenRate]);
 
-  // Обновленный эффект для автосохранения
+  // Добавляем эффект для автосохранения
   useEffect(() => {
     const saveInterval = setInterval(() => {
       UniverseData.saveToServer();
-    }, 10000); // Сохранение каждые 10 секунд
+    }, 30000); // Сохранение каждые 30 секунд
 
+    // Добавляем обработчик для сохранения при закрытии или обновлении страницы
     const handleBeforeUnload = () => {
       UniverseData.saveToServer();
     };
