@@ -10,6 +10,13 @@ import clickerImage from '../public/clicker-image.png'
 import SoonTab from './components/SoonTab'
 import UniverseData from './UniverseData';
 
+import {
+  handleClick,
+  handleDamageUpgrade,
+  handleEnergyUpgrade,
+  handleRegenUpgrade
+} from './scripts/functions';
+
 const DamageIndicator = ({ x, y, damage }) => (
   <div className="damage-indicator" style={{ left: x, top: y }}>
     {damage}
@@ -114,20 +121,20 @@ function EatsApp({ setIsTabOpen }) {
     };
   }, [energy, energyMax, regenRate]);
 
-  // Новый useEffect для регулярного обновления данных
+  // Обновленный эффект для автосохранения
   useEffect(() => {
-    const updateInterval = setInterval(() => {
+    const saveInterval = setInterval(() => {
       UniverseData.saveToServer();
-    }, 10000); // Обновление каждые 10 секунд
+    }, 10000); // Сохранение каждые 10 секунд
 
-    // Обработка прерывания сессии
     const handleBeforeUnload = () => {
       UniverseData.saveToServer();
     };
+
     window.addEventListener('beforeunload', handleBeforeUnload);
 
     return () => {
-      clearInterval(updateInterval);
+      clearInterval(saveInterval);
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
   }, []);
