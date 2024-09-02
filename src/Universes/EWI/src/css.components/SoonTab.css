@@ -1,0 +1,53 @@
+.soon-tab {
+    font-size: 36px;
+    font-weight: 700;
+    color: rgba(255, 217, 0, 1);
+    display: flex;
+    gap: 2%;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.soon-tab::after {
+    content: '';
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+}
+
+.soon-tab .dots {
+    display: flex;
+    gap: 0.2em;
+}
+
+.soon-tab .dots div {
+    width: 0.2em;
+    height: 0.7em;
+    background-color: rgba(242, 255, 0, 0.8);
+    border-radius: 5px;
+    animation: blink 1.8s infinite step-start;
+}
+
+.soon-tab .dots div:nth-child(2) {
+    animation-delay: 0.3s;
+}
+
+.soon-tab .dots div:nth-child(3) {
+    animation-delay: 0.6s;
+}
+
+@keyframes blink {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.6;
+    }
+}

@@ -1,0 +1,150 @@
+.container{z-index: 2;
+    width: 100%;
+    height: 100vh;
+    position: relative;
+}
+.btn-container{z-index: 2;
+    height: 6%;
+    bottom: 10%;
+    position: absolute;
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+}
+.npBtn{
+    /* height: 0%; */
+    border: none;
+    width: 20%;
+    background-color: rgba(239, 228, 228, 0.3);
+}
+.loading-screen {
+    display: flex;
+    justify-content: center;
+    align-items: end;
+    position: relative;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    background-color: #501e1e;
+    z-index: 1000;
+  }
+  
+  .loading-screen img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  }
+  
+  .loading-screen p {
+    position: absolute;
+    color: white;
+    font-size: 24px;
+    margin-top: 20px;
+  }
+  .loading-screen p {
+    position: absolute;
+    color: white;
+    font-size: 24px;
+    margin-top: 20px;
+    white-space: nowrap;
+}
+
+.loading-screen p::after {
+    content: '';
+    display: inline-block;
+    animation: ellipsis 3s infinite;
+}
+
+@keyframes ellipsis {
+    0% {
+        content: '';
+    }
+    33% {
+        content: '.';
+    }
+    66% {
+        content: '..';
+    }
+    100% {
+        content: '...';
+    }
+}
+.npBtn {
+    border-radius: 5px;
+    border: none;
+    width: 20%;
+    background-color: rgba(239, 228, 228, 0.4);
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.5s ease;
+}
+.npBtn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    transition: background-color 0.5s ease;
+}
+.npBtn.left-move {
+    animation: moveLeft 1.6s forwards ease;
+}
+
+.npBtn.right-move {
+    animation: moveRight 1.6s forwards ease;
+}
+
+.npBtn.left-move::before {
+    background: linear-gradient(to right, rgba(51, 255, 0, 0.7), rgba(0, 208, 255, 0.3));
+}
+
+.npBtn.right-move::before {
+    background: linear-gradient(to right, rgba(0, 238, 255, 0.7), rgba(0, 255, 98, 0.3));
+}
+
+.npBtn.left-move {
+    animation: moveLeft 1s forwards ease;
+}
+
+.npBtn.right-move {
+    animation: moveRight 1s forwards ease;
+}
+
+@keyframes moveLeft {
+    0% {
+        border-radius: 10px;
+        transform: translateX(0);
+    }
+    50% {
+        border-radius: 20px;
+        transform: translateX(20px);
+    }
+    100% {
+        border-radius: 50%;
+        transform: translateX(-100px);
+    }
+}
+
+@keyframes moveRight {
+    0% {
+        border-radius: 10px;
+        transform: translateX(0);
+    }
+    50% {
+        border-radius: 20px;
+        transform: translateX(-20px);
+    }
+    100% {
+        border-radius: 50%;
+        transform: translateX(100px);
+    }
+}
+.npBtn:disabled {
+    background-color: rgba(239, 228, 228, 0.1);
+    cursor: not-allowed;
+}

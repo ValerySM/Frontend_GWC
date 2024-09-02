@@ -1,0 +1,261 @@
+* {
+  margin: 0;
+  padding: 0;
+  user-select: none;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+}
+.App {
+  position: relative;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.bg {
+  width: 100vw;
+  height: 100vh;
+  position: absolute;
+  z-index: -1;
+}
+.App-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1; 
+  position: relative;
+  z-index: 1;
+}
+
+.balance-container {
+  font-size: large;
+  font-weight: 700;
+  color: rgba(188, 1, 1, 0.6);
+  display: flex;
+  align-items: center;
+}
+
+.balance-icon {
+  width: 32px;
+  height: 32px;
+  margin-right: 1%;
+  border-radius: 50%;
+}
+
+.clicker-container {
+  outline: none;
+  margin: 5%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  height: max-content;
+  cursor: pointer;
+}
+
+.progress-circle {
+  opacity: 0.6;
+  position: absolute;
+  z-index: -1;
+  width: 92%;
+  border-radius: 50%;
+}
+
+.clicker-image {
+  transition: transform 0.2s;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.clicker-image.distorted {
+  transform: scale(1.05);
+}
+
+.tabs {
+  gap: 2%;
+  display: flex;
+  justify-content: center;
+  position: absolute;
+  bottom: 0; 
+  left: 0;
+  right: 0;
+  padding: 20px;
+}
+
+.upgrades button {
+  text-align: start;
+  margin-top: 1%;
+  width: 70%;
+  background-color: rgba(188, 1, 1, 0.6);
+  color: rgb(0, 0, 0);
+  padding: 1%;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.energy-container {
+  font-weight: 800;
+  height: 10%;
+  font-size: 150%;
+  margin-top: 10px;
+  color: rgba(188, 1, 1, 0.6);
+}
+
+.tab-content {
+  height: 100vh;
+  margin: 0;    
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(188, 1, 1, 0.6); 
+  z-index: 10; 
+  transform: translateY(100%);
+  transition: transform 0.5s ease-out, opacity 0.5s ease-out;
+  opacity: 0;
+}
+
+.tab-content.open {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.tabs button {
+  border-radius: 5px;
+  background-color: rgba(214, 24, 24, 0.6);
+  color: rgb(196, 255, 2);
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+}
+
+.back-button {
+  background-color: rgba(253, 1, 1, 0.6);
+  color: rgb(195, 255, 0);
+  border: none;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 10px 0;
+  cursor: pointer;
+  border-radius: 5px;
+  box-shadow: 0 2px 10px rgba(1, 1, 1, 0.5);
+}
+
+.settings-tab {
+  padding: 20px;
+}
+
+.settings-tab .toggle {
+  margin: 10px 0;
+}
+
+.settings-tab .toggle label {
+  display: flex;
+  align-items: center;
+}
+
+.settings-tab .toggle input {
+  margin-right: 10px;
+}
+
+.abg-wr-4 {
+  position: relative;
+  height: 100vh;
+  overflow: hidden;
+  background-color: #fff;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: cover;    
+}
+
+.abg-4 {
+  background: linear-gradient(315deg, #65005e 3%, #3c84ce 38%, #30eee2 68%, #ff1919 98%);
+  animation: animationbg-4a 15s ease infinite;
+  background-size: 400% 400%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  opacity: 0.3;    
+}
+
+.abg-4 li {
+  position: absolute;
+  display: block;
+  list-style: none;
+  width: 200%;
+  height: 120px;    
+  left: 0;
+  transform: translate3d(0, 0, 0);    
+  background: #000;
+  border-radius: 100% 100% 0 0;    
+}
+
+.abg-4 li:nth-child(1) {
+  animation: animationbg-4b 10s -3s linear infinite;
+  opacity: 0.4;
+  bottom: 0;
+}
+
+.abg-4 li:nth-child(2) {
+  bottom: -12px;
+  animation: animationbg-4b 18s linear reverse infinite;
+  opacity: 0.5;
+}
+
+.abg-4 li:nth-child(3) {
+  bottom: -25px;
+  animation: animationbg-4b 20s -1s reverse infinite;
+  opacity: 0.6;
+}
+
+@keyframes animationbg-4a {
+  0% {
+    background-position: 0% 0%;
+  }
+  50% {
+    background-position: 100% 100%;
+  }
+  100% {
+    background-position: 0% 0%;
+  }
+}
+
+@keyframes animationbg-4b {
+  2% {
+    transform: translateX(1);
+  }
+  25% {
+    transform: translateX(-25%);
+  }
+  50% {
+    transform: translateX(-50%);
+  }
+  75% {
+    transform: translateX(-25%);
+  }
+  100% {
+    transform: translateX(1);
+  }
+}
+
+.damage-indicator {
+  position: absolute;
+  font-size: 20px;
+  font-weight: bold;
+  color: #ff0000;
+  text-shadow: 1px 1px 2px #000000;
+  pointer-events: none;
+  animation: fadeOut 1s forwards;
+}
+
+@keyframes fadeOut {
+  0% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-20px); }
+}
