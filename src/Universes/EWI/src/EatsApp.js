@@ -35,10 +35,10 @@ function EatsApp({ setIsTabOpen }) {
   const [damageIndicators, setDamageIndicators] = useState([]);
 
   const [energy, setEnergy] = useState(() => {
-    const savedEnergy = UniverseData.getUpgradeLevel('energy') || 1000;
-    const lastUpdate = Date.now();
-    const energyMax = UniverseData.getUpgradeLevel('energyMax') || 1000;
-    const regenRate = UniverseData.getUpgradeLevel('regenRate') || 1;
+    const savedEnergy = UniverseData.getUniverseData(currentUniverse, 'energy', 1000);
+    const lastUpdate = UniverseData.getUniverseData(currentUniverse, 'lastUpdate', Date.now());
+    const energyMax = UniverseData.getUniverseData(currentUniverse, 'energyMax', 1000);
+    const regenRate = UniverseData.getUniverseData(currentUniverse, 'regenRate', 1);
 
     const now = Date.now();
     const elapsedSeconds = Math.floor((now - lastUpdate) / 1000);
@@ -48,20 +48,20 @@ function EatsApp({ setIsTabOpen }) {
   });
 
   const [energyMax, setEnergyMax] = useState(() => 
-    UniverseData.getUpgradeLevel('energyMax') || 1000
+    UniverseData.getUniverseData(currentUniverse, 'energyMax', 1000)
   );
   const [regenRate, setRegenRate] = useState(() => 
-    UniverseData.getUpgradeLevel('regenRate') || 1
+    UniverseData.getUniverseData(currentUniverse, 'regenRate', 1)
   );
 
   const [damageLevel, setDamageLevel] = useState(() => 
-    UniverseData.getUpgradeLevel('damageLevel')
+    UniverseData.getUniverseData(currentUniverse, 'damageLevel', 1)
   );
   const [energyLevel, setEnergyLevel] = useState(() => 
-    UniverseData.getUpgradeLevel('energyLevel')
+    UniverseData.getUniverseData(currentUniverse, 'energyLevel', 1)
   );
   const [regenLevel, setRegenLevel] = useState(() => 
-    UniverseData.getUpgradeLevel('regenLevel')
+    UniverseData.getUniverseData(currentUniverse, 'regenLevel', 1)
   );
 
   const damageUpgradeCost = 1000 * Math.pow(2, damageLevel - 1);
@@ -84,31 +84,33 @@ function EatsApp({ setIsTabOpen }) {
   }, []);
 
   useEffect(() => {
-    UniverseData.setUpgradeLevel('energyMax', energyMax);
-  }, [energyMax]);
+
+    UniverseData.setUniverseData(currentUniverse, 'energyMax', energyMax);
+  }, [energyMax, currentUniverse]);
 
   useEffect(() => {
-    UniverseData.setUpgradeLevel('regenRate', regenRate);
-  }, [regenRate]);
+    UniverseData.setUniverseData(currentUniverse, 'regenRate', regenRate);
+  }, [regenRate, currentUniverse]);
 
   useEffect(() => {
-    UniverseData.setUpgradeLevel('damageLevel', damageLevel);
-  }, [damageLevel]);
+    UniverseData.setUniverseData(currentUniverse, 'damageLevel', damageLevel);
+  }, [damageLevel, currentUniverse]);
 
   useEffect(() => {
-    UniverseData.setUpgradeLevel('energyLevel', energyLevel);
-  }, [energyLevel]);
+    UniverseData.setUniverseData(currentUniverse, 'energyLevel', energyLevel);
+  }, [energyLevel, currentUniverse]);
 
   useEffect(() => {
-    UniverseData.setUpgradeLevel('regenLevel', regenLevel);
-  }, [regenLevel]);
+    UniverseData.setUniverseData(currentUniverse, 'regenLevel', regenLevel);
+  }, [regenLevel, currentUniverse]);
 
   useEffect(() => {
     const interval = setInterval(() => {
       setEnergy(prevEnergy => {
         if (prevEnergy < energyMax) {
           const newEnergy = Math.min(prevEnergy + regenRate, energyMax);
-          UniverseData.setUpgradeLevel('energy', newEnergy);
+          UniverseData.setUniverseData(currentUniverse, 'energy', newEnergy);
+          UniverseData.setUniverseData(currentUniverse, 'lastUpdate', Date.now());
           return newEnergy;
         }
         return prevEnergy;
@@ -117,27 +119,10 @@ function EatsApp({ setIsTabOpen }) {
 
     return () => {
       clearInterval(interval);
-      UniverseData.setUpgradeLevel('energy', energy);
+      UniverseData.setUniverseData(currentUniverse, 'energy', energy);
+      UniverseData.setUniverseData(currentUniverse, 'lastUpdate', Date.now());
     };
-  }, [energy, energyMax, regenRate]);
-
-  // Обновленный эффект для автосохранения
-  useEffect(() => {
-    const saveInterval = setInterval(() => {
-      UniverseData.saveToServer();
-    }, 10000); // Сохранение каждые 10 секунд
-
-    const handleBeforeUnload = () => {
-      UniverseData.saveToServer();
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-
-    return () => {
-      clearInterval(saveInterval);
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
-  }, []);
+  }, [currentUniverse, energy, energyMax, regenRate]);
 
   const handleTabOpen = (tab) => {
     setActiveTab(tab);
