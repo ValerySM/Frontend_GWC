@@ -84,31 +84,7 @@ function EatsApp({ setIsTabOpen }) {
   }, []);
 
   useEffect(() => {
-<<<<<<< HEAD
-    UniverseData.setUniverseData(currentUniverse, 'energy', energy);
-  }, [energy, currentUniverse]);
 
-  useEffect(() => {
-=======
-    const savedData = localStorage.getItem('universeData');
-    if (!savedData) {
-      UniverseData.resetToDefaults();
-      setTotalClicks(100000);
-      setEnergy(1000);
-      setEnergyMax(1000);
-      setRegenRate(1);
-      setDamageLevel(1);
-      setEnergyLevel(1);
-      setRegenLevel(1);
-    }
-  }, []);
-
-  useEffect(() => {
-    UniverseData.setUniverseData(currentUniverse, 'energy', energy);
-  }, [energy, currentUniverse]);
-
-  useEffect(() => {
->>>>>>> 292d65f42af9a23ed8a446ba1509a3ca26a165a5
     UniverseData.setUniverseData(currentUniverse, 'energyMax', energyMax);
   }, [energyMax, currentUniverse]);
 
