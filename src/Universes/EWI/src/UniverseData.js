@@ -106,11 +106,11 @@ const UniverseData = {
   saveToServer() {
     const token = this.getSessionToken();
     if (!token) {
-      console.error('No session token available');
-      return;
+      console.error('Нет доступного токена сессии');
+      return Promise.reject('Нет доступного токена сессии');
     }
 
-    fetch(`https://gwc-backend.onrender.com/api/users`, {
+    return fetch(`https://gwc-backend.onrender.com/api/users`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -129,17 +129,15 @@ const UniverseData = {
       .then(response => {
         if (response.status === 401) {
           this.clearSessionToken();
-          // Здесь можно добавить логику для перенаправления пользователя на повторную аутентификацию
+          return Promise.reject('Сессия истекла');
         }
         return response.json();
       })
       .then(data => {
         if (!data.success) {
-          console.error('Failed to save data to server');
+          return Promise.reject('Не удалось сохранить данные на сервере');
         }
-      })
-      .catch(error => {
-        console.error('Error saving data to server:', error);
+        return data;
       });
   },
 
