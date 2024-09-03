@@ -18,20 +18,20 @@ const UniverseData = {
   },
 
   setUserData(id, name) {
-    this.telegramId = id;
-    this.username = name;
-    localStorage.setItem('telegramId', id);
-    localStorage.setItem('username', name);
-    this.logToServer(`User data set: ${id}, ${name}`);
-  },
+  this.telegramId = id;
+  this.username = name;
+  localStorage.setItem('telegramId', id);
+  localStorage.setItem('username', name);
+  this.logToServer(`User data set: ${id}, ${name}`);
+},
 
-  getUserData() {
-    if (!this.telegramId) {
-      this.telegramId = localStorage.getItem('telegramId');
-      this.username = localStorage.getItem('username');
-    }
-    return { telegramId: this.telegramId, username: this.username };
-  },
+getUserData() {
+  if (!this.telegramId || !this.username) {
+    this.telegramId = localStorage.getItem('telegramId');
+    this.username = localStorage.getItem('username');
+  }
+  return { telegramId: this.telegramId, username: this.username };
+},
 
   clearUserData() {
     this.telegramId = null;
