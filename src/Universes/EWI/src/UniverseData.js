@@ -112,35 +112,43 @@ const UniverseData = {
 
     const currentUniverseData = this.universes[this.currentUniverse] || {};
 
+    const dataToSend = {
+      totalClicks: this.totalClicks,
+      upgrades: {
+        damageLevel: currentUniverseData.damageLevel || 1,
+        energyLevel: currentUniverseData.energyLevel || 1,
+        regenLevel: currentUniverseData.regenLevel || 1,
+        energy: currentUniverseData.energy || 1000,
+        energyMax: currentUniverseData.energyMax || 1000,
+        regenRate: currentUniverseData.regenRate || 1,
+      },
+      currentUniverse: this.currentUniverse,
+    };
+
+    console.log('Sending data to server:', dataToSend);
+    console.log('Session token:', token);
+
     fetch(`https://backend-gwc-1.onrender.com/api/users`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
-      body: JSON.stringify({
-        totalClicks: this.totalClicks,
-        upgrades: {
-          damageLevel: currentUniverseData.damageLevel || 1,
-          energyLevel: currentUniverseData.energyLevel || 1,
-          regenLevel: currentUniverseData.regenLevel || 1,
-          energy: currentUniverseData.energy || 1000,
-          energyMax: currentUniverseData.energyMax || 1000,
-          regenRate: currentUniverseData.regenRate || 1,
-        },
-        currentUniverse: this.currentUniverse,
-      }),
+      body: JSON.stringify(dataToSend),
     })
       .then(response => {
         if (response.status === 401) {
+          console.error('Unauthorized: Clearing session token');
           this.clearSessionToken();
           // Здесь можно добавить логику для перенаправления пользователя на повторную аутентификацию
         }
         return response.json();
       })
       .then(data => {
-        if (!data.success) {
-          console.error('Failed to save data to server');
+        if (data.success) {
+          console.log('Data successfully saved to server');
+        } else {
+          console.error('Failed to save data to server:', data.error);
         }
       })
       .catch(error => {

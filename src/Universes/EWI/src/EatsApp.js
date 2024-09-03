@@ -8,7 +8,7 @@ import TasksTab from './components/TasksTab';
 import SettingsButton from './components/SettingsButton';
 import clickerImage from '../public/clicker-image.png';
 import SoonTab from './components/SoonTab';
-import UniverseData from './UniverseData';
+import UniverseData from '../../UniverseData';
 
 import {
   handleClick as handleClickFunction,
@@ -152,7 +152,10 @@ function EatsApp({ setIsTabOpen }) {
       setDamageIndicators(prev => prev.filter(indicator => indicator.id !== newIndicator.id));
     }, 1000);
 
-    handleClickFunction(energy, damageLevel, count, totalClicks, setCount, updateTotalClicks, (newEnergy) => {
+    handleClickFunction(energy, damageLevel, count, totalClicks, setCount, (newTotalClicks) => {
+      updateTotalClicks(newTotalClicks);
+      UniverseData.saveToServer();
+    }, (newEnergy) => {
       setEnergy(newEnergy);
       UniverseData.setUniverseData(currentUniverse, 'energy', newEnergy);
       UniverseData.saveToServer();
