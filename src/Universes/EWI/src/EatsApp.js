@@ -6,15 +6,15 @@ import UpgradeTab from './components/UpgradeTab';
 import BoostTab from './components/BoostTab';
 import TasksTab from './components/TasksTab';
 import SettingsButton from './components/SettingsButton';
-import clickerImage from '../public/clicker-image.png'
-import SoonTab from './components/SoonTab'
+import clickerImage from './public/clicker-image.png';
+import SoonTab from './components/SoonTab';
 import UniverseData from '../../UniverseData';
 
 import {
-  handleClick,
-  handleDamageUpgrade,
-  handleEnergyUpgrade,
-  handleRegenUpgrade
+  handleClick as handleClickFunction,
+  handleDamageUpgrade as handleDamageUpgradeFunction,
+  handleEnergyUpgrade as handleEnergyUpgradeFunction,
+  handleRegenUpgrade as handleRegenUpgradeFunction
 } from './scripts/functions';
 
 const DamageIndicator = ({ x, y, damage }) => (
@@ -92,18 +92,6 @@ function EatsApp({ setIsTabOpen }) {
   }, [regenRate, currentUniverse]);
 
   useEffect(() => {
-    UniverseData.setUniverseData(currentUniverse, 'damageLevel', damageLevel);
-  }, [damageLevel, currentUniverse]);
-
-  useEffect(() => {
-    UniverseData.setUniverseData(currentUniverse, 'energyLevel', energyLevel);
-  }, [energyLevel, currentUniverse]);
-
-  useEffect(() => {
-    UniverseData.setUniverseData(currentUniverse, 'regenLevel', regenLevel);
-  }, [regenLevel, currentUniverse]);
-
-  useEffect(() => {
     const interval = setInterval(() => {
       setEnergy(prevEnergy => {
         if (prevEnergy < energyMax) {
@@ -120,23 +108,6 @@ function EatsApp({ setIsTabOpen }) {
       UniverseData.setUniverseData(currentUniverse, 'energy', energy);
     };
   }, [energy, energyMax, regenRate, currentUniverse]);
-
-  useEffect(() => {
-    const saveInterval = setInterval(() => {
-      UniverseData.saveToServer();
-    }, 30000);
-
-    const handleBeforeUnload = () => {
-      UniverseData.saveToServer();
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-
-    return () => {
-      clearInterval(saveInterval);
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
-  }, []);
 
   const handleTabOpen = (tab) => {
     setActiveTab(tab);
@@ -160,7 +131,7 @@ function EatsApp({ setIsTabOpen }) {
     });
   }, []);
 
-  const handleInteraction = useCallback((e) => {
+  const handleClick = useCallback((e) => {
     e.preventDefault();
     setIsImageDistorted(true);
 
@@ -181,7 +152,11 @@ function EatsApp({ setIsTabOpen }) {
       setDamageIndicators(prev => prev.filter(indicator => indicator.id !== newIndicator.id));
     }, 1000);
 
-    handleClick(energy, damageLevel, count, totalClicks, setCount, updateTotalClicks, setEnergy, setIsImageDistorted, activityTimeoutRef);
+    handleClickFunction(energy, damageLevel, count, totalClicks, setCount, updateTotalClicks, (newEnergy) => {
+      setEnergy(newEnergy);
+      UniverseData.setUniverseData(currentUniverse, 'energy', newEnergy);
+      UniverseData.saveToServer();
+    }, setIsImageDistorted, activityTimeoutRef);
 
     if (activityTimeoutRef.current) {
       clearTimeout(activityTimeoutRef.current);
@@ -190,20 +165,48 @@ function EatsApp({ setIsTabOpen }) {
     activityTimeoutRef.current = setTimeout(() => {
       setIsImageDistorted(false);
     }, 200);
-  }, [damageLevel, energy, count, totalClicks, updateTotalClicks]);
+  }, [damageLevel, energy, count, totalClicks, updateTotalClicks, currentUniverse]);
 
   useEffect(() => {
     const clicker = clickerRef.current;
     if (clicker) {
-      clicker.addEventListener('click', handleInteraction);
-      clicker.addEventListener('touchstart', handleInteraction, { passive: false });
+      clicker.addEventListener('click', handleClick);
+      clicker.addEventListener('touchstart', handleClick, { passive: false });
       
       return () => {
-        clicker.removeEventListener('click', handleInteraction);
-        clicker.removeEventListener('touchstart', handleInteraction);
+        clicker.removeEventListener('click', handleClick);
+        clicker.removeEventListener('touchstart', handleClick);
       };
     }
-  }, [handleInteraction]);
+  }, [handleClick]);
+
+  const handleDamageUpgrade = () => {
+    handleDamageUpgradeFunction(totalClicks, damageUpgradeCost, updateTotalClicks, (newLevel) => {
+      setDamageLevel(newLevel);
+      UniverseData.setUniverseData(currentUniverse, 'damageLevel', newLevel);
+      UniverseData.saveToServer();
+    });
+  };
+
+  const handleEnergyUpgrade = () => {
+    handleEnergyUpgradeFunction(totalClicks, energyUpgradeCost, updateTotalClicks, (newLevel, newEnergyMax) => {
+      setEnergyLevel(newLevel);
+      setEnergyMax(newEnergyMax);
+      UniverseData.setUniverseData(currentUniverse, 'energyLevel', newLevel);
+      UniverseData.setUniverseData(currentUniverse, 'energyMax', newEnergyMax);
+      UniverseData.saveToServer();
+    });
+  };
+
+  const handleRegenUpgrade = () => {
+    handleRegenUpgradeFunction(totalClicks, regenUpgradeCost, updateTotalClicks, (newLevel, newRegenRate) => {
+      setRegenLevel(newLevel);
+      setRegenRate(newRegenRate);
+      UniverseData.setUniverseData(currentUniverse, 'regenLevel', newLevel);
+      UniverseData.setUniverseData(currentUniverse, 'regenRate', newRegenRate);
+      UniverseData.saveToServer();
+    });
+  };
 
   const tabContent = (() => {
     switch (activeTab) {
@@ -217,9 +220,9 @@ function EatsApp({ setIsTabOpen }) {
             damageLevel={damageLevel}
             energyLevel={energyLevel}
             regenLevel={regenLevel}
-            handleDamageUpgrade={() => handleDamageUpgrade(totalClicks, damageUpgradeCost, updateTotalClicks, setDamageLevel)}
-            handleEnergyUpgrade={() => handleEnergyUpgrade(totalClicks, energyUpgradeCost, updateTotalClicks, setEnergyMax, setEnergyLevel)}
-            handleRegenUpgrade={() => handleRegenUpgrade(totalClicks, regenUpgradeCost, updateTotalClicks, setRegenRate, setRegenLevel)}
+            handleDamageUpgrade={handleDamageUpgrade}
+            handleEnergyUpgrade={handleEnergyUpgrade}
+            handleRegenUpgrade={handleRegenUpgrade}
           />
         );
       case 'BOOST':

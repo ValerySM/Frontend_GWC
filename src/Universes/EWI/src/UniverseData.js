@@ -110,6 +110,8 @@ const UniverseData = {
       return;
     }
 
+    const currentUniverseData = this.universes[this.currentUniverse] || {};
+
     fetch(`https://backend-gwc-1.onrender.com/api/users`, {
       method: 'PUT',
       headers: {
@@ -119,9 +121,12 @@ const UniverseData = {
       body: JSON.stringify({
         totalClicks: this.totalClicks,
         upgrades: {
-          damageLevel: this.getUniverseData(this.currentUniverse, 'damageLevel', 1),
-          energyLevel: this.getUniverseData(this.currentUniverse, 'energyLevel', 1),
-          regenLevel: this.getUniverseData(this.currentUniverse, 'regenLevel', 1),
+          damageLevel: currentUniverseData.damageLevel || 1,
+          energyLevel: currentUniverseData.energyLevel || 1,
+          regenLevel: currentUniverseData.regenLevel || 1,
+          energy: currentUniverseData.energy || 1000,
+          energyMax: currentUniverseData.energyMax || 1000,
+          regenRate: currentUniverseData.regenRate || 1,
         },
         currentUniverse: this.currentUniverse,
       }),
@@ -146,11 +151,17 @@ const UniverseData = {
   loadFromServer(data) {
     this.totalClicks = data.totalClicks || 0;
     this.currentUniverse = data.currentUniverse || 'default';
-    this.universes[this.currentUniverse] = {
-      damageLevel: data.upgrades.damageLevel || 1,
-      energyLevel: data.upgrades.energyLevel || 1,
-      regenLevel: data.upgrades.regenLevel || 1,
-    };
+    this.universes = data.universes || {};
+    if (!this.universes[this.currentUniverse]) {
+      this.universes[this.currentUniverse] = {
+        damageLevel: 1,
+        energyLevel: 1,
+        regenLevel: 1,
+        energy: 1000,
+        energyMax: 1000,
+        regenRate: 1,
+      };
+    }
   },
 
   init() {
