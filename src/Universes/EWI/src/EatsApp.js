@@ -6,7 +6,7 @@ import UpgradeTab from './components/UpgradeTab';
 import BoostTab from './components/BoostTab';
 import TasksTab from './components/TasksTab';
 import SettingsButton from './components/SettingsButton';
-import clickerImage from './public/clicker-image.png';
+import clickerImage from '../public/clicker-image.png';
 import SoonTab from './components/SoonTab';
 import UniverseData from './UniverseData';
 
