@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Route, Switch, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Switch, Redirect } from 'react-router-dom';
 import UniverseSwitcher from './components/UniverseSwitcher';
 import EatsApp from './Universes/EWI/EatsApp';
 import EWE from './Universes/EWE/EWE';
@@ -7,17 +7,18 @@ import EcoGame from './Universes/ECI/EcoGame';
 import UniverseData from './UniverseData';
 
 function App() {
-  const [currentUniverse, setCurrentUniverse] = useState(null);
+  const [currentUniverse, setCurrentUniverse] = useState('EatsApp');
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
     const authenticateUser = async () => {
       const urlParams = new URLSearchParams(window.location.search);
-      const token = urlParams.get('token');
+      const telegramId = urlParams.get('telegram_id');
+      const username = urlParams.get('username');
 
-      if (!token) {
-        console.error('No authentication token provided');
+      if (!telegramId || !username) {
+        console.error('No Telegram ID or username provided');
         setIsLoading(false);
         return;
       }
@@ -28,15 +29,15 @@ function App() {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ token }),
+          body: JSON.stringify({ telegram_id: telegramId, username: username }),
         });
 
         const data = await response.json();
 
         if (data.success) {
+          UniverseData.setUserData(telegramId, username);
           UniverseData.loadFromServer(data.universe_data);
-          UniverseData.setSessionToken(data.session_token);
-          setCurrentUniverse(data.universe_data.currentUniverse || 'EatsApp');
+          setCurrentUniverse(data.universe_data.currentUniverse);
           setIsAuthenticated(true);
         } else {
           console.error('Authentication failed');
@@ -60,7 +61,7 @@ function App() {
   }
 
   return (
-    <Router>
+    <Router basename="/Frontend_GWC">
       <div className="App">
         <UniverseSwitcher currentUniverse={currentUniverse} setCurrentUniverse={setCurrentUniverse} />
         <Switch>
@@ -73,7 +74,7 @@ function App() {
               case 'EcoGame':
                 return <EcoGame />;
               default:
-                return <Navigate to="/" />;
+                return <EatsApp />;
             }
           }} />
         </Switch>

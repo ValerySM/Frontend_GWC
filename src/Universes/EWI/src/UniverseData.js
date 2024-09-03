@@ -1,5 +1,6 @@
 const UniverseData = {
-  sessionToken: null,
+  telegramId: null,
+  username: null,
   totalClicks: 0,
   gameScores: {
     appleCatcher: 0,
@@ -16,22 +17,26 @@ const UniverseData = {
     elapsedFarmingTime: 0
   },
 
-  setSessionToken(token) {
-    console.log('Setting session token:', token);
-    this.sessionToken = token;
-    localStorage.setItem('sessionToken', token);
+  setUserData(id, name) {
+    this.telegramId = id;
+    this.username = name;
+    localStorage.setItem('telegramId', id);
+    localStorage.setItem('username', name);
   },
 
-  getSessionToken() {
-    if (!this.sessionToken) {
-      this.sessionToken = localStorage.getItem('sessionToken');
+  getUserData() {
+    if (!this.telegramId) {
+      this.telegramId = localStorage.getItem('telegramId');
+      this.username = localStorage.getItem('username');
     }
-    return this.sessionToken;
+    return { telegramId: this.telegramId, username: this.username };
   },
 
-  clearSessionToken() {
-    this.sessionToken = null;
-    localStorage.removeItem('sessionToken');
+  clearUserData() {
+    this.telegramId = null;
+    this.username = null;
+    localStorage.removeItem('telegramId');
+    localStorage.removeItem('username');
   },
 
   getTotalClicks() {
@@ -105,15 +110,17 @@ const UniverseData = {
   },
 
   saveToServer() {
-    const token = this.getSessionToken();
-    if (!token) {
-      console.error('No session token available');
+    const { telegramId, username } = this.getUserData();
+    if (!telegramId) {
+      console.error('No Telegram ID available');
       return;
     }
 
     const currentUniverseData = this.universes[this.currentUniverse] || {};
 
     const dataToSend = {
+      telegram_id: telegramId,
+      username: username,
       totalClicks: this.totalClicks,
       upgrades: {
         damageLevel: currentUniverseData.damageLevel || 1,
@@ -127,13 +134,11 @@ const UniverseData = {
     };
 
     console.log('Sending data to server:', dataToSend);
-    console.log('Session token:', token);
 
     fetch(`https://backend-gwc-1.onrender.com/api/users`, {
       method: 'PUT',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify(dataToSend),
     })
@@ -169,13 +174,14 @@ const UniverseData = {
         regenRate: 1,
       };
     }
+    this.notifyListeners();
   },
 
   init() {
-    const token = this.getSessionToken();
-    if (token) {
-      console.log('Initializing with session token:', token);
-      // Здесь можно добавить логику для проверки валидности токена на сервере
+    const { telegramId, username } = this.getUserData();
+    if (telegramId && username) {
+      console.log('Initializing with Telegram ID:', telegramId, 'and username:', username);
+      // Здесь можно добавить логику для загрузки данных с сервера
     }
   }
 };
