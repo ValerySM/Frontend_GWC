@@ -8,7 +8,7 @@ import TasksTab from './components/TasksTab';
 import SettingsButton from './components/SettingsButton';
 import clickerImage from './public/clicker-image.png';
 import SoonTab from './components/SoonTab';
-import UniverseData from '../../UniverseData';
+import UniverseData from './UniverseData';
 
 import {
   handleClick as handleClickFunction,
