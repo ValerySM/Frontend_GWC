@@ -105,7 +105,6 @@ const UniverseData = {
   },
 
   saveToServer() {
-	  console.log('Attempting to save data:', this.totalClicks, this.universes);
     const token = this.getSessionToken();
     if (!token) {
       console.error('No session token available');
@@ -138,24 +137,22 @@ const UniverseData = {
       },
       body: JSON.stringify(dataToSend),
     })
-      .then(response => {
-        if (response.status === 401) {
-          console.error('Unauthorized: Clearing session token');
-          this.clearSessionToken();
-          // Здесь можно добавить логику для перенаправления пользователя на повторную аутентификацию
-        }
-        return response.json();
-      })
-      .then(data => {
-        if (data.success) {
-          console.log('Data successfully saved to server');
-        } else {
-          console.error('Failed to save data to server:', data.error);
-        }
-      })
-      .catch(error => {
-        console.error('Error saving data to server:', error);
-      });
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(data => {
+      if (data.success) {
+        console.log('Data successfully saved to server');
+      } else {
+        console.error('Failed to save data to server:', data.error);
+      }
+    })
+    .catch(error => {
+      console.error('Error saving data to server:', error);
+    });
   },
 
   loadFromServer(data) {
@@ -177,6 +174,7 @@ const UniverseData = {
   init() {
     const token = this.getSessionToken();
     if (token) {
+      console.log('Initializing with session token:', token);
       // Здесь можно добавить логику для проверки валидности токена на сервере
     }
   }
