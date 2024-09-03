@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Route, Switch, Redirect } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Switch, Navigate } from 'react-router-dom';
 import UniverseSwitcher from './components/UniverseSwitcher';
 import EatsApp from './Universes/EWI/EatsApp';
 import EWE from './Universes/EWE/EWE';
@@ -7,7 +7,7 @@ import EcoGame from './Universes/ECI/EcoGame';
 import UniverseData from './UniverseData';
 
 function App() {
-  const [currentUniverse, setCurrentUniverse] = useState('EatsApp');
+  const [currentUniverse, setCurrentUniverse] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
@@ -36,7 +36,7 @@ function App() {
         if (data.success) {
           UniverseData.loadFromServer(data.universe_data);
           UniverseData.setSessionToken(data.session_token);
-          setCurrentUniverse(data.universe_data.currentUniverse);
+          setCurrentUniverse(data.universe_data.currentUniverse || 'EatsApp');
           setIsAuthenticated(true);
         } else {
           console.error('Authentication failed');
@@ -60,7 +60,7 @@ function App() {
   }
 
   return (
-    <Router basename="/Frontend_GWC">
+    <Router>
       <div className="App">
         <UniverseSwitcher currentUniverse={currentUniverse} setCurrentUniverse={setCurrentUniverse} />
         <Switch>
@@ -73,7 +73,7 @@ function App() {
               case 'EcoGame':
                 return <EcoGame />;
               default:
-                return <EatsApp />;
+                return <Navigate to="/" />;
             }
           }} />
         </Switch>
