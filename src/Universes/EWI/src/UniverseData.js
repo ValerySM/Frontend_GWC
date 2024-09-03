@@ -110,7 +110,7 @@ const UniverseData = {
       return;
     }
 
-    fetch(`https://gwc-backend.onrender.com/api/users`, {
+    fetch(`https://backend-gwc-1.onrender.com/api/users`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',

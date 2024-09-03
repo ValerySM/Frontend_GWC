@@ -23,7 +23,7 @@ function App() {
       }
 
       try {
-        const response = await fetch('https://your-backend-url.onrender.com/api/auth', {
+        const response = await fetch('https://backend-gwc-1.onrender.com/api/auth', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
