@@ -17,6 +17,7 @@ const UniverseData = {
   },
 
   setSessionToken(token) {
+    console.log('Setting session token:', token);
     this.sessionToken = token;
     localStorage.setItem('sessionToken', token);
   },
@@ -104,6 +105,7 @@ const UniverseData = {
   },
 
   saveToServer() {
+	  console.log('Attempting to save data:', this.totalClicks, this.universes);
     const token = this.getSessionToken();
     if (!token) {
       console.error('No session token available');
