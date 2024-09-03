@@ -17,7 +17,10 @@ function App() {
       const telegramId = urlParams.get('telegram_id');
       const username = urlParams.get('username');
 
+      UniverseData.logToServer(`Initializing with: ${telegramId}, ${username}`);
+
       if (!telegramId || !username) {
+        UniverseData.logToServer('Missing telegram_id or username');
         console.error('No Telegram ID or username provided');
         setIsLoading(false);
         return;
@@ -39,11 +42,14 @@ function App() {
           UniverseData.loadFromServer(data.universe_data);
           setCurrentUniverse(data.universe_data.currentUniverse);
           setIsAuthenticated(true);
+          UniverseData.logToServer('Authentication successful');
         } else {
           console.error('Authentication failed');
+          UniverseData.logToServer('Authentication failed');
         }
       } catch (error) {
         console.error('Error during authentication:', error);
+        UniverseData.logToServer(`Authentication error: ${error.message}`);
       }
 
       setIsLoading(false);

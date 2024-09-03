@@ -22,6 +22,7 @@ const UniverseData = {
     this.username = name;
     localStorage.setItem('telegramId', id);
     localStorage.setItem('username', name);
+    this.logToServer(`User data set: ${id}, ${name}`);
   },
 
   getUserData() {
@@ -37,6 +38,7 @@ const UniverseData = {
     this.username = null;
     localStorage.removeItem('telegramId');
     localStorage.removeItem('username');
+    this.logToServer('User data cleared');
   },
 
   getTotalClicks() {
@@ -69,10 +71,9 @@ const UniverseData = {
       this.totalClicks += score;
       this.saveToServer();
       this.notifyListeners();
-      console.log(`Updated ${gameType} score:`, this.gameScores[gameType]);
-      console.log('New total clicks:', this.totalClicks);
+      this.logToServer(`Updated ${gameType} score: ${this.gameScores[gameType]}, New total clicks: ${this.totalClicks}`);
     } else {
-      console.error('Неизвестный тип игры:', gameType);
+      this.logToServer(`Unknown game type: ${gameType}`);
     }
   },
 
@@ -80,20 +81,27 @@ const UniverseData = {
     if (!this.universes[universeName]) {
       this.universes[universeName] = {};
     }
-    this.universes[universeName][key] = value;
-    this.saveToServer();
+    if (this.universes[universeName][key] !== value) {
+      this.universes[universeName][key] = value;
+      this.saveToServer();
+      this.logToServer(`Set universe data: ${universeName}.${key} = ${value}`);
+    }
   },
 
   getUniverseData(universeName, key, defaultValue) {
-    if (this.universes[universeName] && this.universes[universeName][key] !== undefined) {
-      return this.universes[universeName][key];
+    if (!this.universes[universeName]) {
+      this.universes[universeName] = {};
     }
-    return defaultValue;
+    if (this.universes[universeName][key] === undefined) {
+      return defaultValue;
+    }
+    return this.universes[universeName][key];
   },
 
   setCurrentUniverse(universeName) {
     this.currentUniverse = universeName;
     this.saveToServer();
+    this.logToServer(`Current universe set to: ${universeName}`);
   },
 
   getCurrentUniverse() {
@@ -103,16 +111,33 @@ const UniverseData = {
   setEWEData(key, value) {
     this.eweData[key] = value;
     this.saveToServer();
+    this.logToServer(`Set EWE data: ${key} = ${value}`);
   },
 
   getEWEData(key) {
     return this.eweData[key];
   },
 
+  logToServer(message) {
+    const { telegramId, username } = this.getUserData();
+    fetch(`https://backend-gwc-1.onrender.com/api/log`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        telegram_id: telegramId,
+        username: username,
+        message: message
+      }),
+    }).catch(error => console.error('Error logging to server:', error));
+  },
+
   saveToServer() {
     const { telegramId, username } = this.getUserData();
+    this.logToServer('Attempting to save data');
     if (!telegramId) {
-      console.error('No Telegram ID available');
+      this.logToServer('No Telegram ID available');
       return;
     }
 
@@ -122,18 +147,13 @@ const UniverseData = {
       telegram_id: telegramId,
       username: username,
       totalClicks: this.totalClicks,
-      upgrades: {
-        damageLevel: currentUniverseData.damageLevel || 1,
-        energyLevel: currentUniverseData.energyLevel || 1,
-        regenLevel: currentUniverseData.regenLevel || 1,
-        energy: currentUniverseData.energy || 1000,
-        energyMax: currentUniverseData.energyMax || 1000,
-        regenRate: currentUniverseData.regenRate || 1,
-      },
+      upgrades: Object.fromEntries(
+        Object.entries(currentUniverseData).filter(([key, value]) => value !== undefined)
+      ),
       currentUniverse: this.currentUniverse,
     };
 
-    console.log('Sending data to server:', dataToSend);
+    this.logToServer(`Sending data to server: ${JSON.stringify(dataToSend)}`);
 
     fetch(`https://backend-gwc-1.onrender.com/api/users`, {
       method: 'PUT',
@@ -150,13 +170,13 @@ const UniverseData = {
     })
     .then(data => {
       if (data.success) {
-        console.log('Data successfully saved to server');
+        this.logToServer('Data successfully saved to server');
       } else {
-        console.error('Failed to save data to server:', data.error);
+        this.logToServer(`Failed to save data to server: ${data.error}`);
       }
     })
     .catch(error => {
-      console.error('Error saving data to server:', error);
+      this.logToServer(`Error saving data to server: ${error}`);
     });
   },
 
@@ -164,24 +184,17 @@ const UniverseData = {
     this.totalClicks = data.totalClicks || 0;
     this.currentUniverse = data.currentUniverse || 'default';
     this.universes = data.universes || {};
-    if (!this.universes[this.currentUniverse]) {
-      this.universes[this.currentUniverse] = {
-        damageLevel: 1,
-        energyLevel: 1,
-        regenLevel: 1,
-        energy: 1000,
-        energyMax: 1000,
-        regenRate: 1,
-      };
-    }
     this.notifyListeners();
+    this.logToServer('Data loaded from server');
   },
 
   init() {
     const { telegramId, username } = this.getUserData();
     if (telegramId && username) {
-      console.log('Initializing with Telegram ID:', telegramId, 'and username:', username);
+      this.logToServer(`Initializing with Telegram ID: ${telegramId} and username: ${username}`);
       // Здесь можно добавить логику для загрузки данных с сервера
+    } else {
+      this.logToServer('Initialization failed: missing Telegram ID or username');
     }
   }
 };
