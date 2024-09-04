@@ -18,26 +18,18 @@ const UniverseData = {
   },
 
   setUserData(id, name) {
-  this.telegramId = id;
-  this.username = name;
-  localStorage.setItem('telegramId', id);
-  localStorage.setItem('username', name);
-  this.logToServer(`User data set: ${id}, ${name}`);
-},
+    this.telegramId = id;
+    this.username = name;
+    this.logToServer(`User data set: ${id}, ${name}`);
+  },
 
-getUserData() {
-  if (!this.telegramId || !this.username) {
-    this.telegramId = localStorage.getItem('telegramId');
-    this.username = localStorage.getItem('username');
-  }
-  return { telegramId: this.telegramId, username: this.username };
-},
+  getUserData() {
+    return { telegramId: this.telegramId, username: this.username };
+  },
 
   clearUserData() {
     this.telegramId = null;
     this.username = null;
-    localStorage.removeItem('telegramId');
-    localStorage.removeItem('username');
     this.logToServer('User data cleared');
   },
 
@@ -81,11 +73,9 @@ getUserData() {
     if (!this.universes[universeName]) {
       this.universes[universeName] = {};
     }
-    if (this.universes[universeName][key] !== value) {
-      this.universes[universeName][key] = value;
-      this.saveToServer();
-      this.logToServer(`Set universe data: ${universeName}.${key} = ${value}`);
-    }
+    this.universes[universeName][key] = value;
+    this.saveToServer();
+    this.logToServer(`Set universe data: ${universeName}.${key} = ${value}`);
   },
 
   getUniverseData(universeName, key, defaultValue) {
@@ -135,7 +125,7 @@ getUserData() {
 
   saveToServer() {
     const { telegramId, username } = this.getUserData();
-    this.logToServer('Attempting to save data');
+    this.logToServer(`Attempting to save data for user: ${telegramId}, ${username}`);
     if (!telegramId) {
       this.logToServer('No Telegram ID available');
       return;
@@ -147,9 +137,7 @@ getUserData() {
       telegram_id: telegramId,
       username: username,
       totalClicks: this.totalClicks,
-      upgrades: Object.fromEntries(
-        Object.entries(currentUniverseData).filter(([key, value]) => value !== undefined)
-      ),
+      upgrades: currentUniverseData,
       currentUniverse: this.currentUniverse,
     };
 
@@ -192,7 +180,6 @@ getUserData() {
     const { telegramId, username } = this.getUserData();
     if (telegramId && username) {
       this.logToServer(`Initializing with Telegram ID: ${telegramId} and username: ${username}`);
-      // Здесь можно добавить логику для загрузки данных с сервера
     } else {
       this.logToServer('Initialization failed: missing Telegram ID or username');
     }

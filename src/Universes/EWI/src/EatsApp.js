@@ -143,12 +143,10 @@ function EatsApp({ setIsTabOpen }) {
 
     handleClickFunction(energy, damageLevel, count, totalClicks, setCount, (newTotalClicks) => {
       updateTotalClicks(newTotalClicks);
-      UniverseData.logToServer(`Updated clicks: ${newTotalClicks}`);
       UniverseData.saveToServer();
     }, (newEnergy) => {
       setEnergy(newEnergy);
       UniverseData.setUniverseData(currentUniverse, 'energy', newEnergy);
-      UniverseData.logToServer(`Updated energy: ${newEnergy}`);
       UniverseData.saveToServer();
     }, setIsImageDistorted, activityTimeoutRef);
 
@@ -178,7 +176,6 @@ function EatsApp({ setIsTabOpen }) {
     handleDamageUpgradeFunction(totalClicks, damageUpgradeCost, updateTotalClicks, (newLevel) => {
       setDamageLevel(newLevel);
       UniverseData.setUniverseData(currentUniverse, 'damageLevel', newLevel);
-      UniverseData.logToServer(`Upgraded damage to level ${newLevel}`);
       UniverseData.saveToServer();
     });
   };
@@ -189,7 +186,6 @@ function EatsApp({ setIsTabOpen }) {
       setEnergyMax(newEnergyMax);
       UniverseData.setUniverseData(currentUniverse, 'energyLevel', newLevel);
       UniverseData.setUniverseData(currentUniverse, 'energyMax', newEnergyMax);
-      UniverseData.logToServer(`Upgraded energy to level ${newLevel}, new max: ${newEnergyMax}`);
       UniverseData.saveToServer();
     });
   };
@@ -200,7 +196,6 @@ function EatsApp({ setIsTabOpen }) {
       setRegenRate(newRegenRate);
       UniverseData.setUniverseData(currentUniverse, 'regenLevel', newLevel);
       UniverseData.setUniverseData(currentUniverse, 'regenRate', newRegenRate);
-      UniverseData.logToServer(`Upgraded regen to level ${newLevel}, new rate: ${newRegenRate}`);
       UniverseData.saveToServer();
     });
   };
