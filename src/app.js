@@ -47,15 +47,32 @@ function App() {
 
         const data = await response.json();
 
-        if (data.success) {
-          UniverseData.setUserData(telegramId.toString(), displayName);
-          UniverseData.loadFromServer(data.universe_data);
-          setCurrentUniverse(data.universe_data.currentUniverse);
-          setIsAuthenticated(true);
-          UniverseData.logToServer('Аутентификация успешна');
+        console.log('Полученные данные от сервера:', data); // Лог для отладки
 
-          // Сообщаем Telegram, что приложение готово
-          tg.ready();
+        if (data.success) {
+          // Проверяем наличие всех необходимых полей
+          if (data.telegram_id && data.username && 'totalClicks' in data && data.currentUniverse) {
+            UniverseData.setUserData(data.telegram_id.toString(), data.username);
+            UniverseData.setTotalClicks(data.totalClicks);
+            UniverseData.setCurrentUniverse(data.currentUniverse);
+            
+            // Если universes существует, загружаем их
+            if (data.universes) {
+              Object.keys(data.universes).forEach(universeName => {
+                UniverseData.setUniverseData(universeName, data.universes[universeName]);
+              });
+            }
+
+            setCurrentUniverse(data.currentUniverse);
+            setIsAuthenticated(true);
+            UniverseData.logToServer('Аутентификация успешна');
+
+            // Сообщаем Telegram, что приложение готово
+            tg.ready();
+          } else {
+            console.error('Неполные данные получены от сервера');
+            UniverseData.logToServer('Неполные данные получены от сервера');
+          }
         } else {
           console.error('Аутентификация не удалась');
           UniverseData.logToServer('Аутентификация не удалась');

@@ -47,6 +47,12 @@ const UniverseData = {
     return this.totalClicks;
   },
 
+  setTotalClicks(clicks) {
+    this.totalClicks = clicks;
+    this.notifyListeners();
+    this.logToServer(`Установлено общее количество кликов: ${clicks}`);
+  },
+
   listeners: [],
 
   addListener(callback) {
@@ -61,12 +67,6 @@ const UniverseData = {
     this.listeners.forEach(listener => listener(this.totalClicks));
   },
 
-  setTotalClicks(newTotal) {
-    this.totalClicks = newTotal;
-    this.saveToServer();
-    this.notifyListeners();
-  },
-
   addGameScore(gameType, score) {
     if (gameType in this.gameScores) {
       this.gameScores[gameType] = score;
@@ -79,13 +79,13 @@ const UniverseData = {
     }
   },
 
-  setUniverseData(universeName, key, value) {
+  setUniverseData(universeName, data) {
     if (!this.universes[universeName]) {
       this.universes[universeName] = {};
     }
-    this.universes[universeName][key] = value;
+    Object.assign(this.universes[universeName], data);
     this.saveToServer();
-    this.logToServer(`Установлены данные вселенной: ${universeName}.${key} = ${value}`);
+    this.logToServer(`Установлены данные вселенной: ${universeName}`);
   },
 
   getUniverseData(universeName, key, defaultValue) {
@@ -183,6 +183,7 @@ const UniverseData = {
   },
 
   loadFromServer(data) {
+    console.log('Загрузка данных с сервера:', data); // Добавлен лог для отладки
     this.totalClicks = data.totalClicks || 0;
     this.currentUniverse = data.currentUniverse || 'default';
     this.universes = data.universes || {};
