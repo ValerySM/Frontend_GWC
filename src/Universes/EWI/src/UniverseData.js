@@ -21,10 +21,16 @@ const UniverseData = {
     console.log('Установка данных пользователя:', id, name);
     this.telegramId = id;
     this.username = name;
+    sessionStorage.setItem('telegramId', id);
+    sessionStorage.setItem('username', name);
     this.logToServer(`Данные пользователя установлены: ${id}, ${name}`);
   },
 
   getUserData() {
+    if (!this.telegramId || !this.username) {
+      this.telegramId = sessionStorage.getItem('telegramId');
+      this.username = sessionStorage.getItem('username');
+    }
     console.log('Получение данных пользователя:', this.telegramId, this.username);
     return { telegramId: this.telegramId, username: this.username };
   },
@@ -32,6 +38,8 @@ const UniverseData = {
   clearUserData() {
     this.telegramId = null;
     this.username = null;
+    sessionStorage.removeItem('telegramId');
+    sessionStorage.removeItem('username');
     this.logToServer('Данные пользователя очищены');
   },
 
@@ -161,6 +169,10 @@ const UniverseData = {
     .then(data => {
       if (data.success) {
         this.logToServer('Данные успешно сохранены на сервере');
+        // Отправляем уведомление в Telegram бот о успешном сохранении
+        if (window.Telegram && window.Telegram.WebApp) {
+          window.Telegram.WebApp.sendData(JSON.stringify({action: 'save_success'}));
+        }
       } else {
         this.logToServer(`Не удалось сохранить данные на сервере: ${data.error}`);
       }

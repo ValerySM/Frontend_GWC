@@ -12,20 +12,29 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    const authenticateUser = async () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const telegramId = urlParams.get('telegram_id');
-      const username = urlParams.get('username');
-
-      console.log('Telegram ID:', telegramId);
-      console.log('Username:', username);
-
-      if (!telegramId || !username) {
-        console.error('No Telegram ID or username provided');
-        UniverseData.logToServer('Missing telegram_id or username');
+    const initTelegramApp = async () => {
+      if (!window.Telegram || !window.Telegram.WebApp) {
+        console.error('Telegram WebApp API не доступен');
         setIsLoading(false);
         return;
       }
+
+      const tg = window.Telegram.WebApp;
+
+      // Инициализация и настройка Telegram Mini App
+      tg.expand(); // Расширяем приложение на весь экран
+      tg.enableClosingConfirmation(); // Включаем подтверждение закрытия
+
+      // Получаем данные пользователя
+      const initData = tg.initDataUnsafe;
+      if (!initData || !initData.user) {
+        console.error('Данные пользователя недоступны');
+        setIsLoading(false);
+        return;
+      }
+
+      const { id: telegramId, username, first_name } = initData.user;
+      const displayName = username || first_name;
 
       try {
         const response = await fetch('https://backend-gwc-1.onrender.com/api/auth', {
@@ -33,38 +42,58 @@ function App() {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ telegram_id: telegramId, username: username }),
+          body: JSON.stringify({ telegram_id: telegramId.toString(), username: displayName }),
         });
 
         const data = await response.json();
 
         if (data.success) {
-          UniverseData.setUserData(telegramId, username);
+          UniverseData.setUserData(telegramId.toString(), displayName);
           UniverseData.loadFromServer(data.universe_data);
           setCurrentUniverse(data.universe_data.currentUniverse);
           setIsAuthenticated(true);
-          UniverseData.logToServer('Authentication successful');
+          UniverseData.logToServer('Аутентификация успешна');
+
+          // Сообщаем Telegram, что приложение готово
+          tg.ready();
         } else {
-          console.error('Authentication failed');
-          UniverseData.logToServer('Authentication failed');
+          console.error('Аутентификация не удалась');
+          UniverseData.logToServer('Аутентификация не удалась');
         }
       } catch (error) {
-        console.error('Error during authentication:', error);
-        UniverseData.logToServer(`Authentication error: ${error.message}`);
+        console.error('Ошибка во время аутентификации:', error);
+        UniverseData.logToServer(`Ошибка аутентификации: ${error.message}`);
       }
 
       setIsLoading(false);
     };
 
-    authenticateUser();
+    initTelegramApp();
+  }, []);
+
+  useEffect(() => {
+    const handleBackButton = () => {
+      // Здесь можно добавить логику для обработки нажатия кнопки "Назад"
+      console.log('Нажата кнопка "Назад"');
+    };
+
+    if (window.Telegram && window.Telegram.WebApp) {
+      window.Telegram.WebApp.onEvent('backButtonClicked', handleBackButton);
+    }
+
+    return () => {
+      if (window.Telegram && window.Telegram.WebApp) {
+        window.Telegram.WebApp.offEvent('backButtonClicked', handleBackButton);
+      }
+    };
   }, []);
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <div>Загрузка...</div>;
   }
 
   if (!isAuthenticated) {
-    return <div>Authentication failed. Please try again via Telegram bot.</div>;
+    return <div>Ошибка аутентификации. Пожалуйста, попробуйте снова через Telegram бот.</div>;
   }
 
   return (
