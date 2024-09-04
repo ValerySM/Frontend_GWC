@@ -13,17 +13,17 @@ function App() {
 
   useEffect(() => {
     const authenticateUser = async () => {
-      // Проверяем, доступен ли объект Telegram
       if (window.Telegram && window.Telegram.WebApp) {
-        const webAppData = window.Telegram.WebApp.initDataUnsafe;
-        const telegramId = webAppData.user?.id;
-        const username = webAppData.user?.username;
+        const webAppUser = window.Telegram.WebApp.initDataUnsafe.user;
+        const telegramId = webAppUser.id.toString();
+        const username = webAppUser.username || webAppUser.first_name;
 
-        UniverseData.logToServer(`Initializing with: ${telegramId}, ${username}`);
+        console.log('Telegram ID:', telegramId);
+        console.log('Username:', username);
 
         if (!telegramId || !username) {
-          UniverseData.logToServer('Missing telegram_id or username');
           console.error('No Telegram ID or username provided');
+          UniverseData.logToServer('Missing telegram_id or username');
           setIsLoading(false);
           return;
         }
@@ -40,7 +40,7 @@ function App() {
           const data = await response.json();
 
           if (data.success) {
-            UniverseData.setUserData(data.telegram_id, data.username);
+            UniverseData.setUserData(telegramId, username);
             UniverseData.loadFromServer(data.universe_data);
             setCurrentUniverse(data.universe_data.currentUniverse);
             setIsAuthenticated(true);
@@ -54,8 +54,8 @@ function App() {
           UniverseData.logToServer(`Authentication error: ${error.message}`);
         }
       } else {
-        console.error('Telegram WebApp is not available');
-        UniverseData.logToServer('Telegram WebApp is not available');
+        console.error('Telegram Web App is not available');
+        UniverseData.logToServer('Telegram Web App is not available');
       }
 
       setIsLoading(false);

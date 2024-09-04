@@ -18,12 +18,14 @@ const UniverseData = {
   },
 
   setUserData(id, name) {
+    console.log('Setting user data:', id, name);
     this.telegramId = id;
     this.username = name;
     this.logToServer(`User data set: ${id}, ${name}`);
   },
 
   getUserData() {
+    console.log('Getting user data:', this.telegramId, this.username);
     return { telegramId: this.telegramId, username: this.username };
   },
 
