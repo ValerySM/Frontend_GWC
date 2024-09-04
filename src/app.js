@@ -20,9 +20,12 @@ function App() {
       }
 
       const tg = window.Telegram.WebApp;
-      tg.expand();
-      tg.enableClosingConfirmation();
 
+      // Инициализация и настройка Telegram Mini App
+      tg.expand(); // Расширяем приложение на весь экран
+      tg.enableClosingConfirmation(); // Включаем подтверждение закрытия
+
+      // Получаем данные пользователя
       const initData = tg.initDataUnsafe;
       if (!initData || !initData.user) {
         console.error('Данные пользователя недоступны');
@@ -43,24 +46,63 @@ function App() {
         });
 
         const data = await response.json();
-        console.log('Полученные данные от сервера:', data);
+
+        console.log('Полученные данные от сервера:', data); // Лог для отладки
 
         if (data.success) {
-          UniverseData.setUserData(data.telegram_id.toString(), data.username);
-          UniverseData.loadFromServer(data.universe_data);
-          setIsAuthenticated(true);
-          tg.ready();
+          // Проверяем наличие всех необходимых полей
+          if (data.telegram_id && data.username && 'totalClicks' in data && data.currentUniverse) {
+            UniverseData.setUserData(data.telegram_id.toString(), data.username);
+            UniverseData.setTotalClicks(data.totalClicks);
+            UniverseData.setCurrentUniverse(data.currentUniverse);
+            
+            // Если universes существует, загружаем их
+            if (data.universes) {
+              Object.keys(data.universes).forEach(universeName => {
+                UniverseData.setUniverseData(universeName, data.universes[universeName]);
+              });
+            }
+
+            setCurrentUniverse(data.currentUniverse);
+            setIsAuthenticated(true);
+            UniverseData.logToServer('Аутентификация успешна');
+
+            // Сообщаем Telegram, что приложение готово
+            tg.ready();
+          } else {
+            console.error('Неполные данные получены от сервера');
+            UniverseData.logToServer('Неполные данные получены от сервера');
+          }
         } else {
           console.error('Аутентификация не удалась');
+          UniverseData.logToServer('Аутентификация не удалась');
         }
       } catch (error) {
         console.error('Ошибка во время аутентификации:', error);
+        UniverseData.logToServer(`Ошибка аутентификации: ${error.message}`);
       }
 
       setIsLoading(false);
     };
 
     initTelegramApp();
+  }, []);
+
+  useEffect(() => {
+    const handleBackButton = () => {
+      // Здесь можно добавить логику для обработки нажатия кнопки "Назад"
+      console.log('Нажата кнопка "Назад"');
+    };
+
+    if (window.Telegram && window.Telegram.WebApp) {
+      window.Telegram.WebApp.onEvent('backButtonClicked', handleBackButton);
+    }
+
+    return () => {
+      if (window.Telegram && window.Telegram.WebApp) {
+        window.Telegram.WebApp.offEvent('backButtonClicked', handleBackButton);
+      }
+    };
   }, []);
 
   if (isLoading) {
