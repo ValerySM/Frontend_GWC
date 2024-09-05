@@ -18,6 +18,7 @@ const UniverseData = {
   },
 
   async initFromServer(telegramId, username) {
+    console.log('initFromServer вызван с параметрами:', telegramId, username);
     try {
       const response = await fetch('https://backend-gwc-1.onrender.com/api/auth', {
         method: 'POST',
@@ -32,6 +33,7 @@ const UniverseData = {
       }
 
       const data = await response.json();
+      console.log('Ответ сервера:', data);
 
       if (data.success) {
         this.setUserData(data.telegram_id, data.username);
@@ -41,17 +43,19 @@ const UniverseData = {
 
         console.log('Данные успешно загружены с сервера:', this);
         this.logToServer('Данные успешно загружены с сервера');
+        return true;
       } else {
         throw new Error(data.error || 'Неизвестная ошибка при загрузке данных');
       }
     } catch (error) {
       console.error('Ошибка при инициализации данных с сервера:', error);
       this.logToServer(`Ошибка при инициализации данных с сервера: ${error.message}`);
+      return false;
     }
   },
 
   setUserData(id, name) {
-    console.log('Установка данных пользователя:', id, name);
+    console.log('setUserData вызван с:', id, name);
     this.telegramId = id;
     this.username = name;
     this.logToServer(`Данные пользователя установлены: ${id}, ${name}`);
@@ -76,6 +80,7 @@ const UniverseData = {
   },
 
   setTotalClicks(clicks) {
+    console.log('setTotalClicks вызван с:', clicks);
     this.totalClicks = clicks;
     this.notifyListeners();
     this.logToServer(`Установлено общее количество кликов: ${clicks}`);
@@ -127,6 +132,7 @@ const UniverseData = {
   },
 
   setCurrentUniverse(universeName) {
+    console.log('setCurrentUniverse вызван с:', universeName);
     this.currentUniverse = universeName;
     this.saveToServer();
     this.logToServer(`Текущая вселенная установлена на: ${universeName}`);
@@ -206,24 +212,6 @@ const UniverseData = {
       this.logToServer(`Ошибка сохранения данных на сервере: ${error}`);
     });
   },
-
-  loadFromServer(data) {
-    console.log('Загрузка данных с сервера:', data);
-    this.totalClicks = data.totalClicks || 0;
-    this.currentUniverse = data.currentUniverse || 'default';
-    this.universes = data.universes || {};
-    this.notifyListeners();
-    this.logToServer('Данные загружены с сервера');
-  },
-
-  init() {
-    const { telegramId, username } = this.getUserData();
-    if (telegramId && username) {
-      this.logToServer(`Инициализация с Telegram ID: ${telegramId} и именем пользователя: ${username}`);
-    } else {
-      this.logToServer('Инициализация не удалась: отсутствует Telegram ID или имя пользователя');
-    }
-  }
 };
 
 export default UniverseData;

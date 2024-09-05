@@ -35,23 +35,31 @@ function App() {
       const displayName = username || first_name;
 
       try {
-        await UniverseData.initFromServer(telegramId.toString(), displayName);
+        const success = await UniverseData.initFromServer(telegramId.toString(), displayName);
         
-        console.log('Установленные данные:', {
-          telegramId: UniverseData.getUserData().telegramId,
-          username: UniverseData.getUserData().username,
-          totalClicks: UniverseData.getTotalClicks(),
-          currentUniverse: UniverseData.getCurrentUniverse()
-        });
+        console.log('Данные после initFromServer:', UniverseData);
 
-        setCurrentUniverse(UniverseData.getCurrentUniverse());
-        setIsAuthenticated(true);
-        UniverseData.logToServer('Аутентификация успешна');
+        if (success) {
+          console.log('Установленные данные:', {
+            telegramId: UniverseData.getUserData().telegramId,
+            username: UniverseData.getUserData().username,
+            totalClicks: UniverseData.getTotalClicks(),
+            currentUniverse: UniverseData.getCurrentUniverse()
+          });
 
-        tg.ready();
+          setCurrentUniverse(UniverseData.getCurrentUniverse());
+          setIsAuthenticated(true);
+          UniverseData.logToServer('Аутентификация успешна');
+
+          tg.ready();
+        } else {
+          setIsAuthenticated(false);
+          UniverseData.logToServer('Не удалось загрузить данные пользователя');
+        }
       } catch (error) {
         console.error('Ошибка во время аутентификации:', error);
         UniverseData.logToServer(`Ошибка аутентификации: ${error.message}`);
+        setIsAuthenticated(false);
       }
 
       setIsLoading(false);
