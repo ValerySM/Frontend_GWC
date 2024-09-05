@@ -30,6 +30,8 @@ function EatsApp({ setIsTabOpen }) {
   if (!telegramId || !username) {
     console.error('Данные пользователя недоступны в EatsApp');
     return <div>Ошибка: данные пользователя недоступны</div>;
+  }
+
   const currentUniverse = UniverseData.getCurrentUniverse();
 
   const [totalClicks, setTotalClicks] = useState(UniverseData.getTotalClicks());
