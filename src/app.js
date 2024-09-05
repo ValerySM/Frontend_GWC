@@ -21,11 +21,9 @@ function App() {
 
       const tg = window.Telegram.WebApp;
 
-      // Инициализация и настройка Telegram Mini App
-      tg.expand(); // Расширяем приложение на весь экран
-      tg.enableClosingConfirmation(); // Включаем подтверждение закрытия
+      tg.expand();
+      tg.enableClosingConfirmation();
 
-      // Получаем данные пользователя
       const initData = tg.initDataUnsafe;
       if (!initData || !initData.user) {
         console.error('Данные пользователя недоступны');
@@ -47,32 +45,26 @@ function App() {
 
         const data = await response.json();
 
-        console.log('Полученные данные от сервера:', data); // Лог для отладки
+        console.log('Полученные данные от сервера:', data);
 
         if (data.success) {
-          // Проверяем наличие всех необходимых полей
-          if (data.telegram_id && data.username && 'totalClicks' in data && data.currentUniverse) {
-            UniverseData.setUserData(data.telegram_id.toString(), data.username);
-            UniverseData.setTotalClicks(data.totalClicks);
-            UniverseData.setCurrentUniverse(data.currentUniverse);
-            
-            // Если universes существует, загружаем их
-            if (data.universes) {
-              Object.keys(data.universes).forEach(universeName => {
-                UniverseData.setUniverseData(universeName, data.universes[universeName]);
-              });
-            }
+          console.log('Данные, полученные от сервера:', data);
+          UniverseData.setUserData(data.telegram_id.toString(), data.username);
+          UniverseData.setTotalClicks(data.universe_data.totalClicks);
+          UniverseData.setCurrentUniverse(data.universe_data.currentUniverse);
+          
+          console.log('Установленные данные:', {
+            telegramId: UniverseData.getUserData().telegramId,
+            username: UniverseData.getUserData().username,
+            totalClicks: UniverseData.getTotalClicks(),
+            currentUniverse: UniverseData.getCurrentUniverse()
+          });
 
-            setCurrentUniverse(data.currentUniverse);
-            setIsAuthenticated(true);
-            UniverseData.logToServer('Аутентификация успешна');
+          setCurrentUniverse(data.universe_data.currentUniverse);
+          setIsAuthenticated(true);
+          UniverseData.logToServer('Аутентификация успешна');
 
-            // Сообщаем Telegram, что приложение готово
-            tg.ready();
-          } else {
-            console.error('Неполные данные получены от сервера');
-            UniverseData.logToServer('Неполные данные получены от сервера');
-          }
+          tg.ready();
         } else {
           console.error('Аутентификация не удалась');
           UniverseData.logToServer('Аутентификация не удалась');
@@ -90,7 +82,6 @@ function App() {
 
   useEffect(() => {
     const handleBackButton = () => {
-      // Здесь можно добавить логику для обработки нажатия кнопки "Назад"
       console.log('Нажата кнопка "Назад"');
     };
 
