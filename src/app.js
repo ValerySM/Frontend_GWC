@@ -34,6 +34,8 @@ function App() {
       const { id: telegramId, username, first_name } = initData.user;
       const displayName = username || first_name;
 
+      console.log('Данные пользователя из Telegram:', { telegramId, displayName });
+
       if (!telegramId) {
         console.error('telegramId отсутствует в данных пользователя Telegram');
         setIsLoading(false);
