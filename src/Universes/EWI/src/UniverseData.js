@@ -41,7 +41,7 @@ const UniverseData = {
         this.setCurrentUniverse(data.universe_data.currentUniverse);
         this.universes = data.universe_data.universes || {};
 
-        console.log('Данные успешно загружены с сервера:', this);
+        console.log('Данные установлены в UniverseData:', JSON.stringify(this));
         this.logToServer('Данные успешно загружены с сервера');
         return true;
       } else {
@@ -62,7 +62,7 @@ const UniverseData = {
   },
 
   getUserData() {
-    console.log('Получение данных пользователя:', this.telegramId, this.username);
+    console.log('getUserData вызван. telegramId:', this.telegramId, 'username:', this.username);
     return { telegramId: this.telegramId, username: this.username };
   },
 

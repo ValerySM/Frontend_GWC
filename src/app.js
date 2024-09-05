@@ -34,10 +34,17 @@ function App() {
       const { id: telegramId, username, first_name } = initData.user;
       const displayName = username || first_name;
 
+      if (!telegramId) {
+        console.error('telegramId отсутствует в данных пользователя Telegram');
+        setIsLoading(false);
+        return;
+      }
+
       try {
         const success = await UniverseData.initFromServer(telegramId.toString(), displayName);
         
-        console.log('Данные после initFromServer:', UniverseData);
+        console.log('Результат initFromServer:', success);
+        console.log('UniverseData после initFromServer:', JSON.stringify(UniverseData));
 
         if (success) {
           console.log('Установленные данные:', {
