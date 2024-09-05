@@ -48,11 +48,15 @@ function App() {
         console.log('Полученные данные от сервера:', data);
 
         if (data.success) {
-          console.log('Данные, полученные от сервера:', data);
-          UniverseData.setUserData(telegramId.toString(), displayName);
-          UniverseData.setTotalClicks(data.universe_data.totalClicks);
-          UniverseData.setCurrentUniverse(data.universe_data.currentUniverse);
+          UniverseData.setUserData(data.telegram_id, data.username);
+          UniverseData.setTotalClicks(data.totalClicks);
+          UniverseData.setCurrentUniverse(data.currentUniverse);
           
+          // Устанавливаем данные вселенных
+          Object.keys(data.universes).forEach(universeName => {
+            UniverseData.setUniverseData(universeName, data.universes[universeName]);
+          });
+
           console.log('Установленные данные:', {
             telegramId: UniverseData.getUserData().telegramId,
             username: UniverseData.getUserData().username,
@@ -60,7 +64,7 @@ function App() {
             currentUniverse: UniverseData.getCurrentUniverse()
           });
 
-          setCurrentUniverse(data.universe_data.currentUniverse);
+          setCurrentUniverse(data.currentUniverse);
           setIsAuthenticated(true);
           UniverseData.logToServer('Аутентификация успешна');
 

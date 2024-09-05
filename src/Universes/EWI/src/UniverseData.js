@@ -32,6 +32,9 @@ const UniverseData = {
   clearUserData() {
     this.telegramId = null;
     this.username = null;
+    this.totalClicks = 0;
+    this.universes = {};
+    this.currentUniverse = 'default';
     this.logToServer('Данные пользователя очищены');
   },
 
@@ -133,14 +136,12 @@ const UniverseData = {
       return;
     }
 
-    const currentUniverseData = this.universes[this.currentUniverse] || {};
-
     const dataToSend = {
       telegram_id: telegramId,
       username: username,
       totalClicks: this.totalClicks,
-      upgrades: currentUniverseData,
       currentUniverse: this.currentUniverse,
+      universes: this.universes
     };
 
     this.logToServer(`Отправка данных на сервер: ${JSON.stringify(dataToSend)}`);
