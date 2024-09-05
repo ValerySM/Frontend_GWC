@@ -53,7 +53,6 @@ function EatsApp({ setIsTabOpen }) {
   const [regenLevel, setRegenLevel] = useState(() => 
     UniverseData.getUniverseData(currentUniverse, 'regenLevel', 1)
   );
-
   const damageUpgradeCost = 1000 * Math.pow(2, damageLevel - 1);
   const energyUpgradeCost = 1000 * Math.pow(2, energyLevel - 1);
   const regenUpgradeCost = 50000 * Math.pow(2, regenLevel - 1);
@@ -144,37 +143,6 @@ function EatsApp({ setIsTabOpen }) {
 
     handleClickFunction(energy, damageLevel, count, totalClicks, setCount, (newTotalClicks) => {
       updateTotalClicks(newTotalClicks);
-      
-      const { telegramId, username } = UniverseData.getUserData();
-      if (telegramId) {
-        fetch('https://backend-gwc-1.onrender.com/api/users', {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            telegram_id: telegramId,
-            username: username,
-            totalClicks: newTotalClicks,
-            currentUniverse: UniverseData.getCurrentUniverse(),
-          }),
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            console.log('Данные успешно обновлены на сервере');
-          } else {
-            console.error('Ошибка при обновлении данных на сервере:', data.error);
-          }
-        })
-        .catch(error => {
-          console.error('Ошибка при отправке данных на сервер:', error);
-        });
-      } else {
-        console.error('Telegram ID недоступен');
-        UniverseData.logToServer('Попытка обновления данных без Telegram ID');
-      }
-
       UniverseData.saveToServer();
     }, (newEnergy) => {
       setEnergy(newEnergy);
