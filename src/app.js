@@ -35,44 +35,20 @@ function App() {
       const displayName = username || first_name;
 
       try {
-        const response = await fetch('https://backend-gwc-1.onrender.com/api/auth', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ telegram_id: telegramId.toString(), username: displayName }),
+        await UniverseData.initFromServer(telegramId.toString(), displayName);
+        
+        console.log('Установленные данные:', {
+          telegramId: UniverseData.getUserData().telegramId,
+          username: UniverseData.getUserData().username,
+          totalClicks: UniverseData.getTotalClicks(),
+          currentUniverse: UniverseData.getCurrentUniverse()
         });
 
-        const data = await response.json();
+        setCurrentUniverse(UniverseData.getCurrentUniverse());
+        setIsAuthenticated(true);
+        UniverseData.logToServer('Аутентификация успешна');
 
-        console.log('Полученные данные от сервера:', data);
-
-        if (data.success) {
-          UniverseData.setUserData(data.telegram_id, data.username);
-          UniverseData.setTotalClicks(data.totalClicks);
-          UniverseData.setCurrentUniverse(data.currentUniverse);
-          
-          // Устанавливаем данные вселенных
-          Object.keys(data.universes).forEach(universeName => {
-            UniverseData.setUniverseData(universeName, data.universes[universeName]);
-          });
-
-          console.log('Установленные данные:', {
-            telegramId: UniverseData.getUserData().telegramId,
-            username: UniverseData.getUserData().username,
-            totalClicks: UniverseData.getTotalClicks(),
-            currentUniverse: UniverseData.getCurrentUniverse()
-          });
-
-          setCurrentUniverse(data.currentUniverse);
-          setIsAuthenticated(true);
-          UniverseData.logToServer('Аутентификация успешна');
-
-          tg.ready();
-        } else {
-          console.error('Аутентификация не удалась');
-          UniverseData.logToServer('Аутентификация не удалась');
-        }
+        tg.ready();
       } catch (error) {
         console.error('Ошибка во время аутентификации:', error);
         UniverseData.logToServer(`Ошибка аутентификации: ${error.message}`);
