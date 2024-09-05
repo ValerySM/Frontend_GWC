@@ -24,14 +24,7 @@ const DamageIndicator = ({ x, y, damage }) => (
 );
 
 function EatsApp({ setIsTabOpen }) {
-  const { telegramId, username } = UniverseData.getUserData();
-  console.log('EatsApp рендерится. UniverseData:', JSON.stringify(UniverseData));
-  
-  if (!telegramId || !username) {
-    console.error('Данные пользователя недоступны в EatsApp');
-    return <div>Ошибка: данные пользователя недоступны</div>;
-  }
-
+  console.log('EatsApp рендерится с данными:', UniverseData.getUserData(), UniverseData.getTotalClicks());
   const currentUniverse = UniverseData.getCurrentUniverse();
 
   const [totalClicks, setTotalClicks] = useState(UniverseData.getTotalClicks());
