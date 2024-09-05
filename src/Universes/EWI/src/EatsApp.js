@@ -144,29 +144,35 @@ function EatsApp({ setIsTabOpen }) {
     handleClickFunction(energy, damageLevel, count, totalClicks, setCount, (newTotalClicks) => {
       updateTotalClicks(newTotalClicks);
       
-      // Отправляем обновленные данные на сервер после каждого клика
-      fetch('https://backend-gwc-1.onrender.com/api/users', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          telegram_id: UniverseData.getUserData().telegramId,
-          totalClicks: newTotalClicks,
-          currentUniverse: UniverseData.getCurrentUniverse(),
-        }),
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          console.log('Данные успешно обновлены на сервере');
-        } else {
-          console.error('Ошибка при обновлении данных на сервере:', data.error);
-        }
-      })
-      .catch(error => {
-        console.error('Ошибка при отправке данных на сервер:', error);
-      });
+      const { telegramId, username } = UniverseData.getUserData();
+      if (telegramId) {
+        fetch('https://backend-gwc-1.onrender.com/api/users', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            telegram_id: telegramId,
+            username: username,
+            totalClicks: newTotalClicks,
+            currentUniverse: UniverseData.getCurrentUniverse(),
+          }),
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            console.log('Данные успешно обновлены на сервере');
+          } else {
+            console.error('Ошибка при обновлении данных на сервере:', data.error);
+          }
+        })
+        .catch(error => {
+          console.error('Ошибка при отправке данных на сервер:', error);
+        });
+      } else {
+        console.error('Telegram ID недоступен');
+        UniverseData.logToServer('Попытка обновления данных без Telegram ID');
+      }
 
       UniverseData.saveToServer();
     }, (newEnergy) => {
@@ -239,7 +245,7 @@ function EatsApp({ setIsTabOpen }) {
             regenLevel={regenLevel}
             handleDamageUpgrade={handleDamageUpgrade}
             handleEnergyUpgrade={handleEnergyUpgrade}
-			handleRegenUpgrade={handleRegenUpgrade}
+            handleRegenUpgrade={handleRegenUpgrade}
           />
         );
       case 'BOOST':

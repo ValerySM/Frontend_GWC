@@ -49,7 +49,7 @@ function App() {
 
         if (data.success) {
           console.log('Данные, полученные от сервера:', data);
-          UniverseData.setUserData(data.telegram_id.toString(), data.username);
+          UniverseData.setUserData(telegramId.toString(), displayName);
           UniverseData.setTotalClicks(data.universe_data.totalClicks);
           UniverseData.setCurrentUniverse(data.universe_data.currentUniverse);
           
