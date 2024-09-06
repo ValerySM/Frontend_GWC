@@ -1,6 +1,6 @@
 const UniverseData = {
-  telegramId: null,
-  username: null,
+  telegramId: "5859381541",
+  username: "ValerySM ⚜️",
   totalClicks: 0,
   gameScores: {
     appleCatcher: 0,
