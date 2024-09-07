@@ -6,7 +6,9 @@ export const authenticateUser = async (telegramId, username) => {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ telegram_id: telegramId, username })
   });
-  if (!response.ok) throw new Error('Authentication failed');
+  if (!response.ok) {
+    throw new Error('Authentication failed');
+  }
   return response.json();
 };
 
@@ -16,15 +18,19 @@ export const updateUserData = async (data) => {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data)
   });
-  if (!response.ok) throw new Error('Failed to update user data');
+  if (!response.ok) {
+    throw new Error('Failed to update user data');
+  }
   return response.json();
 };
 
-export const logToServer = async (message) => {
+export const logToServer = async (message, telegramId, username) => {
   const response = await fetch(`${API_URL}/api/log`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message })
+    body: JSON.stringify({ message, telegram_id: telegramId, username })
   });
-  if (!response.ok) throw new Error('Failed to log message');
+  if (!response.ok) {
+    throw new Error('Failed to log message');
+  }
 };

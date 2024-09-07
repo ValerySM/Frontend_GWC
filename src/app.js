@@ -5,12 +5,10 @@ import EatsApp from './Universes/EWI/EatsApp';
 import EWE from './Universes/EWE/EWE';
 import EcoGame from './Universes/ECI/EcoGame';
 import UniverseData from './UniverseData';
-import { logToServer } from './services/apiService';
 
 function App() {
   const [currentUniverse, setCurrentUniverse] = useState('EatsApp');
   const [isLoading, setIsLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -36,7 +34,7 @@ function App() {
         console.log('Попытка инициализации с сервера', { telegramId, displayName });
         const success = await UniverseData.initFromServer(telegramId.toString(), displayName);
         
-        if (success) {
+        if (success && UniverseData.isDataLoaded()) {
           console.log('Установленные данные:', {
             telegramId: UniverseData.getUserData().telegramId,
             username: UniverseData.getUserData().username,
@@ -45,8 +43,7 @@ function App() {
           });
 
           setCurrentUniverse(UniverseData.getCurrentUniverse());
-          setIsAuthenticated(true);
-          await logToServer('Аутентификация успешна');
+          await UniverseData.logToServer('Аутентификация успешна');
 
           tg.ready();
         } else {
@@ -54,9 +51,8 @@ function App() {
         }
       } catch (error) {
         console.error('Ошибка во время инициализации:', error);
-        await logToServer(`Ошибка инициализации: ${error.message}`);
+        await UniverseData.logToServer(`Ошибка инициализации: ${error.message}`);
         setError(error.message);
-        setIsAuthenticated(false);
       } finally {
         setIsLoading(false);
       }
@@ -81,16 +77,12 @@ function App() {
     };
   }, []);
 
-  if (isLoading) {
+  if (isLoading || !UniverseData.isDataLoaded()) {
     return <div>Загрузка...</div>;
   }
 
   if (error) {
     return <div>Произошла ошибка: {error}</div>;
-  }
-
-  if (!isAuthenticated) {
-    return <div>Ошибка аутентификации. Пожалуйста, попробуйте снова через Telegram бот.</div>;
   }
 
   return (
