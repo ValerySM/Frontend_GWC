@@ -1,4 +1,4 @@
-import { authenticateUser, updateUserData, logToServer } from './services/apiService';
+import { authenticateUser, updateUserData } from './services/apiService';
 
 class UniverseData {
   constructor() {
