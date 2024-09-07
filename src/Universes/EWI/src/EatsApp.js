@@ -146,6 +146,7 @@ function EatsApp({ setIsTabOpen }) {
       updateTotalClicks(newTotalClicks);
       
       const { telegramId, username } = UniverseData.getUserData();
+      console.log('Обновление данных пользователя:', { telegramId, username, newTotalClicks });
       if (telegramId) {
         fetch('https://backend-gwc-1.onrender.com/api/users', {
           method: 'PUT',
