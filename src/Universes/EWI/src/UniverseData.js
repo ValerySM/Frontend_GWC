@@ -53,24 +53,21 @@ const UniverseData = {
   },
 
   setUserData(id, name) {
-    console.log('setUserData вызван с:', id, name);
-    this.telegramId = id;
-    this.username = name;
-    // Сохраняем данные в localStorage для персистентности
-    localStorage.setItem('telegramId', id);
-    localStorage.setItem('username', name);
-    this.logToServer('Данные пользователя установлены');
-  },
+  console.log('setUserData вызван с:', id, name);
+  this.telegramId = id;
+  this.username = name;
+  localStorage.setItem('telegramId', id);
+  localStorage.setItem('username', name);
+},
 
-  getUserData() {
-    // Если данные отсутствуют в памяти, пытаемся восстановить из localStorage
-    if (!this.telegramId || !this.username) {
-      this.telegramId = localStorage.getItem('telegramId');
-      this.username = localStorage.getItem('username');
-    }
-    console.log('getUserData вызван. telegramId:', this.telegramId, 'username:', this.username);
-    return { telegramId: this.telegramId, username: this.username };
-  },
+getUserData() {
+  if (!this.telegramId || !this.username) {
+    this.telegramId = localStorage.getItem('telegramId');
+    this.username = localStorage.getItem('username');
+  }
+  console.log('getUserData вызван. telegramId:', this.telegramId, 'username:', this.username);
+  return { telegramId: this.telegramId, username: this.username };
+},
 
   clearUserData() {
     this.telegramId = null;

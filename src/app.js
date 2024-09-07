@@ -12,58 +12,47 @@ function App() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const initTelegramApp = async () => {
-      console.log('Начало инициализации Telegram App');
-      try {
-        if (!window.Telegram || !window.Telegram.WebApp) {
-          throw new Error('Telegram WebApp API не доступен');
-        }
-
-        const tg = window.Telegram.WebApp;
-        
-        // Ожидаем готовности WebApp
-        await new Promise(resolve => {
-          tg.onEvent('viewportChanged', resolve);
-          tg.expand();
-        });
-
-        console.log('WebApp готов');
-
-        // Получаем данные пользователя
-        const initDataUnsafe = tg.initDataUnsafe || {};
-        const initData = tg.initData ? JSON.parse(atob(tg.initData)) : {};
-        const user = initDataUnsafe.user || initData.user;
-
-        if (!user) {
-          throw new Error('Данные пользователя недоступны');
-        }
-
-        const { id: telegramId, username, first_name } = user;
-        const displayName = username || first_name;
-
-        console.log('Получены данные пользователя:', { telegramId, displayName });
-
-        const success = await UniverseData.initFromServer(telegramId.toString(), displayName);
-        
-        if (success && UniverseData.isDataLoaded()) {
-          console.log('Установленные данные:', UniverseData.getUserData());
-          setCurrentUniverse(UniverseData.getCurrentUniverse());
-          await UniverseData.logToServer('Аутентификация успешна');
-          tg.ready();
-        } else {
-          throw new Error('Не удалось загрузить данные пользователя');
-        }
-      } catch (error) {
-        console.error('Ошибка во время инициализации:', error);
-        await UniverseData.logToServer(`Ошибка инициализации: ${error.message}`);
-        setError(error.message);
-      } finally {
-        setIsLoading(false);
+  const initTelegramApp = async () => {
+    console.log('Начало инициализации Telegram App');
+    try {
+      if (!window.Telegram || !window.Telegram.WebApp) {
+        throw new Error('Telegram WebApp API не доступен');
       }
-    };
 
-    initTelegramApp();
-  }, []);
+      const tg = window.Telegram.WebApp;
+      tg.expand();
+
+      // Получаем данные пользователя
+      const user = tg.initDataUnsafe.user;
+      if (!user) {
+        throw new Error('Данные пользователя недоступны');
+      }
+
+      const { id: telegramId, username, first_name } = user;
+      const displayName = username || first_name;
+
+      console.log('Получены данные пользователя:', { telegramId, displayName });
+
+      const success = await UniverseData.initFromServer(telegramId.toString(), displayName);
+      
+      if (success && UniverseData.isDataLoaded()) {
+        console.log('Установленные данные:', UniverseData.getUserData());
+        setCurrentUniverse(UniverseData.getCurrentUniverse());
+        await UniverseData.logToServer('Аутентификация успешна');
+        tg.ready();
+      } else {
+        throw new Error('Не удалось загрузить данные пользователя');
+      }
+    } catch (error) {
+      console.error('Ошибка во время инициализации:', error);
+      setError(error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  initTelegramApp();
+}, []);
 
   useEffect(() => {
     const handleBackButton = () => {
