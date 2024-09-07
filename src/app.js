@@ -5,54 +5,37 @@ import EatsApp from './Universes/EWI/EatsApp';
 import EWE from './Universes/EWE/EWE';
 import EcoGame from './Universes/ECI/EcoGame';
 import UniverseData from './UniverseData';
+import { logToServer } from './services/apiService';
 
-
-logToServer(message) {
-    
-    fetch(`https://backend-gwc-1.onrender.com/api/log`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        
-        message: message
-      }),
-    }).catch(error => console.error('Ошибка логирования на сервер:', error));
-  };
 function App() {
   const [currentUniverse, setCurrentUniverse] = useState('EatsApp');
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-logToServer("Лог перед юзефект");
+  const [error, setError] = useState(null);
+
   useEffect(() => {
     const initTelegramApp = async () => {
-      if (!window.Telegram || !window.Telegram.WebApp) {
-        console.error('Telegram WebApp API не доступен');
-        setIsLoading(false);
-        return;
-      }
-
-      const tg = window.Telegram.WebApp;
-
-      tg.expand();
-      tg.enableClosingConfirmation();
-
-      const initData = tg.initDataUnsafe;
-      if (!initData || !initData.user) {
-        console.error('Данные пользователя недоступны');
-        setIsLoading(false);
-        return;
-      }
-
-      const { id: telegramId, username, first_name } = initData.user;
-      const displayName = username || first_name;
-
+      console.log('Начало инициализации Telegram App');
       try {
+        if (!window.Telegram || !window.Telegram.WebApp) {
+          throw new Error('Telegram WebApp API не доступен');
+        }
+
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.enableClosingConfirmation();
+
+        const initData = tg.initDataUnsafe;
+        if (!initData || !initData.user) {
+          throw new Error('Данные пользователя недоступны');
+        }
+
+        const { id: telegramId, username, first_name } = initData.user;
+        const displayName = username || first_name;
+
+        console.log('Попытка инициализации с сервера', { telegramId, displayName });
         const success = await UniverseData.initFromServer(telegramId.toString(), displayName);
         
-        console.log('Данные после initFromServer:', UniverseData);
-
         if (success) {
           console.log('Установленные данные:', {
             telegramId: UniverseData.getUserData().telegramId,
@@ -63,20 +46,20 @@ logToServer("Лог перед юзефект");
 
           setCurrentUniverse(UniverseData.getCurrentUniverse());
           setIsAuthenticated(true);
-          UniverseData.logToServer('Аутентификация успешна');
+          await logToServer('Аутентификация успешна');
 
           tg.ready();
         } else {
-          setIsAuthenticated(false);
-          UniverseData.logToServer('Не удалось загрузить данные пользователя');
+          throw new Error('Не удалось загрузить данные пользователя');
         }
       } catch (error) {
-        console.error('Ошибка во время аутентификации:', error);
-        UniverseData.logToServer(`Ошибка аутентификации: ${error.message}`);
+        console.error('Ошибка во время инициализации:', error);
+        await logToServer(`Ошибка инициализации: ${error.message}`);
+        setError(error.message);
         setIsAuthenticated(false);
+      } finally {
+        setIsLoading(false);
       }
-
-      setIsLoading(false);
     };
 
     initTelegramApp();
@@ -102,6 +85,10 @@ logToServer("Лог перед юзефект");
     return <div>Загрузка...</div>;
   }
 
+  if (error) {
+    return <div>Произошла ошибка: {error}</div>;
+  }
+
   if (!isAuthenticated) {
     return <div>Ошибка аутентификации. Пожалуйста, попробуйте снова через Telegram бот.</div>;
   }
@@ -112,6 +99,7 @@ logToServer("Лог перед юзефект");
         <UniverseSwitcher currentUniverse={currentUniverse} setCurrentUniverse={setCurrentUniverse} />
         <Switch>
           <Route exact path="/" render={() => {
+            console.log('Рендеринг вселенной:', currentUniverse);
             switch(currentUniverse) {
               case 'EatsApp':
                 return <EatsApp />;
@@ -120,7 +108,8 @@ logToServer("Лог перед юзефект");
               case 'EcoGame':
                 return <EcoGame />;
               default:
-                return <EatsApp />;
+                console.log('Неизвестная вселенная:', currentUniverse);
+                return <div>Неизвестная вселенная</div>;
             }
           }} />
         </Switch>
