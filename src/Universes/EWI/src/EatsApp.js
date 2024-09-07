@@ -145,8 +145,7 @@ console.log('EatsApp рендерится с данными:', UniverseData.getU
     handleClickFunction(energy, damageLevel, count, totalClicks, setCount, (newTotalClicks) => {
       updateTotalClicks(newTotalClicks);
       
-      const { telegramId, username } 
-	  = UniverseData.getUserData();
+      const { telegramId, username } = UniverseData.getUserData();
       if (telegramId) {
         fetch('https://backend-gwc-1.onrender.com/api/users', {
           method: 'PUT',
