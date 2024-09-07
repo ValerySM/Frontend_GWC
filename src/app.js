@@ -6,25 +6,11 @@ import EWE from './Universes/EWE/EWE';
 import EcoGame from './Universes/ECI/EcoGame';
 import UniverseData from './UniverseData';
 
-
-logToServer(message) {
-    
-    fetch(`https://backend-gwc-1.onrender.com/api/log`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        
-        message: message
-      }),
-    }).catch(error => console.error('Ошибка логирования на сервер:', error));
-  };
 function App() {
   const [currentUniverse, setCurrentUniverse] = useState('EatsApp');
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-logToServer("Лог перед юзефект");
+
   useEffect(() => {
     const initTelegramApp = async () => {
       if (!window.Telegram || !window.Telegram.WebApp) {
