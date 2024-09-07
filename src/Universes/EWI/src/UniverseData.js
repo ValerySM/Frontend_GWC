@@ -18,41 +18,49 @@ const UniverseData = {
   },
 
   async initFromServer(telegramId, username) {
-    console.log('initFromServer вызван с параметрами:', telegramId, username);
-    try {
-      const response = await fetch('https://backend-gwc-1.onrender.com/api/auth', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ telegram_id: telegramId, username: username }),
-      });
+  console.log('initFromServer вызван с параметрами:', telegramId, username);
+  try {
+    const response = await fetch('https://backend-gwc-1.onrender.com/api/auth', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ telegram_id: telegramId, username: username }),
+    });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log('Ответ сервера:', data);
-
-      if (data.success) {
-        this.setUserData(data.telegram_id, data.username);
-        this.setTotalClicks(data.universe_data.totalClicks);
-        this.setCurrentUniverse(data.universe_data.currentUniverse);
-        this.universes = data.universe_data.universes || {};
-
-        console.log('Данные установлены в UniverseData:', JSON.stringify(this));
-        this.logToServer('Данные успешно загружены с сервера');
-        return true;
-      } else {
-        throw new Error(data.error || 'Неизвестная ошибка при загрузке данных');
-      }
-    } catch (error) {
-      console.error('Ошибка при инициализации данных с сервера:', error);
-      this.logToServer(`Ошибка при инициализации данных с сервера: ${error.message}`);
-      return false;
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-  },
+
+    const data = await response.json();
+    console.log('Ответ сервера:', data);
+
+    if (data.success) {
+      this.setUserData(data.telegram_id, data.username);
+      this.setTotalClicks(data.totalClicks);
+      this.setCurrentUniverse(data.currentUniverse);
+      this.universes = data.universes || {};
+
+      console.log('Данные установлены в UniverseData:', JSON.stringify(this.getUserData()));
+      this.logToServer('Данные успешно загружены с сервера');
+      
+      // Добавьте эту проверку
+      setTimeout(() => {
+        const currentData = this.getUserData();
+        console.log('Текущие данные пользователя:', currentData);
+        this.logToServer(`Текущие данные пользователя: ${JSON.stringify(currentData)}`);
+      }, 1000);
+
+      return true;
+    } else {
+      throw new Error(data.error || 'Неизвестная ошибка при загрузке данных');
+    }
+  } catch (error) {
+    console.error('Ошибка при инициализации данных с сервера:', error);
+    this.logToServer(`Ошибка при инициализации данных с сервера: ${error.message}`);
+    return false;
+  }
+},
 
   setUserData(id, name) {
     console.log('setUserData вызван с:', id, name);
