@@ -24,7 +24,7 @@ const DamageIndicator = ({ x, y, damage }) => (
 );
 
 function EatsApp({ setIsTabOpen }) {
-  console.log('EatsApp рендерится с данными:', UniverseData.getUserData(), UniverseData.getTotalClicks());
+console.log('EatsApp рендерится с данными:', UniverseData.getUserData(), UniverseData.getTotalClicks());
   const currentUniverse = UniverseData.getCurrentUniverse();
 
   const [totalClicks, setTotalClicks] = useState(UniverseData.getTotalClicks());
@@ -60,16 +60,6 @@ function EatsApp({ setIsTabOpen }) {
 
   const activityTimeoutRef = useRef(null);
   const clickerRef = useRef(null);
-
-  const checkUserData = () => {
-    const { telegramId, username } = UniverseData.getUserData();
-    if (!telegramId || !username) {
-      console.error('Данные пользователя отсутствуют');
-      UniverseData.logToServer('Попытка выполнения действия без данных пользователя');
-      return false;
-    }
-    return true;
-  };
 
   useEffect(() => {
     const updateTotalClicks = (newTotal) => {
@@ -133,8 +123,6 @@ function EatsApp({ setIsTabOpen }) {
 
   const handleClick = useCallback((e) => {
     e.preventDefault();
-    if (!checkUserData()) return;
-
     setIsImageDistorted(true);
 
     const rect = clickerRef.current.getBoundingClientRect();
@@ -156,6 +144,38 @@ function EatsApp({ setIsTabOpen }) {
 
     handleClickFunction(energy, damageLevel, count, totalClicks, setCount, (newTotalClicks) => {
       updateTotalClicks(newTotalClicks);
+      
+      const { telegramId, username } 
+	  = UniverseData.getUserData();
+      if (telegramId) {
+        fetch('https://backend-gwc-1.onrender.com/api/users', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            telegram_id: telegramId,
+            username: username,
+            totalClicks: newTotalClicks,
+            currentUniverse: UniverseData.getCurrentUniverse(),
+          }),
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            console.log('Данные успешно обновлены на сервере');
+          } else {
+            console.error('Ошибка при обновлении данных на сервере:', data.error);
+          }
+        })
+        .catch(error => {
+          console.error('Ошибка при отправке данных на сервер:', error);
+        });
+      } else {
+        console.error('Telegram ID недоступен');
+        UniverseData.logToServer('Попытка обновления данных без Telegram ID');
+      }
+
       UniverseData.saveToServer();
     }, (newEnergy) => {
       setEnergy(newEnergy);
@@ -186,7 +206,6 @@ function EatsApp({ setIsTabOpen }) {
   }, [handleClick]);
 
   const handleDamageUpgrade = () => {
-    if (!checkUserData()) return;
     handleDamageUpgradeFunction(totalClicks, damageUpgradeCost, updateTotalClicks, (newLevel) => {
       setDamageLevel(newLevel);
       UniverseData.setUniverseData(currentUniverse, 'damageLevel', newLevel);
@@ -195,7 +214,6 @@ function EatsApp({ setIsTabOpen }) {
   };
 
   const handleEnergyUpgrade = () => {
-    if (!checkUserData()) return;
     handleEnergyUpgradeFunction(totalClicks, energyUpgradeCost, updateTotalClicks, (newLevel, newEnergyMax) => {
       setEnergyLevel(newLevel);
       setEnergyMax(newEnergyMax);
@@ -206,7 +224,6 @@ function EatsApp({ setIsTabOpen }) {
   };
 
   const handleRegenUpgrade = () => {
-    if (!checkUserData()) return;
     handleRegenUpgradeFunction(totalClicks, regenUpgradeCost, updateTotalClicks, (newLevel, newRegenRate) => {
       setRegenLevel(newLevel);
       setRegenRate(newRegenRate);
