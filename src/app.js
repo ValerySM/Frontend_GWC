@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import UniverseData from './UniverseData';
 
 function App() {
+  console.log('App component rendering');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [totalClicks, setTotalClicks] = useState(0);
@@ -11,6 +12,7 @@ function App() {
       console.log('Начало инициализации Telegram App');
       try {
         if (!window.Telegram || !window.Telegram.WebApp) {
+          console.error('Telegram WebApp API не доступен');
           throw new Error('Telegram WebApp API не доступен');
         }
 
@@ -21,6 +23,7 @@ function App() {
         console.log('Полученные данные initData:', JSON.stringify(initData));
         
         if (!initData || !initData.user) {
+          console.error('Данные пользователя недоступны');
           throw new Error('Данные пользователя недоступны');
         }
 
@@ -56,6 +59,8 @@ function App() {
     setTotalClicks(newTotalClicks);
     UniverseData.setTotalClicks(newTotalClicks);
   };
+
+  console.log('App state:', { isLoading, error, totalClicks });
 
   if (isLoading) {
     return <div>Загрузка...</div>;
