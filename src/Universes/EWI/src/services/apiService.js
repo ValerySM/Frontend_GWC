@@ -34,6 +34,16 @@ export const updateUserData = async (data) => {
 
 export const logToServer = async (message, telegramId, username) => {
   console.log('Отправка лога на сервер:', { message, telegramId, username });
+  if (!telegramId || !username) {
+    console.warn('Попытка отправки лога без данных пользователя');
+    // Попытка получить данные из localStorage
+    telegramId = localStorage.getItem('telegramId');
+    username = localStorage.getItem('username');
+    if (!telegramId || !username) {
+      console.error('Данные пользователя недоступны для отправки лога');
+      return;
+    }
+  }
   const response = await fetch(`${API_URL}/api/log`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

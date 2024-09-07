@@ -20,31 +20,35 @@ function App() {
         }
 
         const tg = window.Telegram.WebApp;
-        tg.expand();
-        tg.enableClosingConfirmation();
+        
+        // Ожидаем готовности WebApp
+        await new Promise(resolve => {
+          tg.onEvent('viewportChanged', resolve);
+          tg.expand();
+        });
 
-        const initData = tg.initDataUnsafe;
-        if (!initData || !initData.user) {
+        console.log('WebApp готов');
+
+        // Получаем данные пользователя
+        const initDataUnsafe = tg.initDataUnsafe || {};
+        const initData = tg.initData ? JSON.parse(atob(tg.initData)) : {};
+        const user = initDataUnsafe.user || initData.user;
+
+        if (!user) {
           throw new Error('Данные пользователя недоступны');
         }
 
-        const { id: telegramId, username, first_name } = initData.user;
+        const { id: telegramId, username, first_name } = user;
         const displayName = username || first_name;
 
-        console.log('Попытка инициализации с сервера', { telegramId, displayName });
+        console.log('Получены данные пользователя:', { telegramId, displayName });
+
         const success = await UniverseData.initFromServer(telegramId.toString(), displayName);
         
         if (success && UniverseData.isDataLoaded()) {
-          console.log('Установленные данные:', {
-            telegramId: UniverseData.getUserData().telegramId,
-            username: UniverseData.getUserData().username,
-            totalClicks: UniverseData.getTotalClicks(),
-            currentUniverse: UniverseData.getCurrentUniverse()
-          });
-
+          console.log('Установленные данные:', UniverseData.getUserData());
           setCurrentUniverse(UniverseData.getCurrentUniverse());
           await UniverseData.logToServer('Аутентификация успешна');
-
           tg.ready();
         } else {
           throw new Error('Не удалось загрузить данные пользователя');

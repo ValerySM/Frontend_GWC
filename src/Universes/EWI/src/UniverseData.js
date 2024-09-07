@@ -56,10 +56,18 @@ const UniverseData = {
     console.log('setUserData вызван с:', id, name);
     this.telegramId = id;
     this.username = name;
+    // Сохраняем данные в localStorage для персистентности
+    localStorage.setItem('telegramId', id);
+    localStorage.setItem('username', name);
     this.logToServer('Данные пользователя установлены');
   },
 
   getUserData() {
+    // Если данные отсутствуют в памяти, пытаемся восстановить из localStorage
+    if (!this.telegramId || !this.username) {
+      this.telegramId = localStorage.getItem('telegramId');
+      this.username = localStorage.getItem('username');
+    }
     console.log('getUserData вызван. telegramId:', this.telegramId, 'username:', this.username);
     return { telegramId: this.telegramId, username: this.username };
   },
@@ -70,6 +78,8 @@ const UniverseData = {
     this.totalClicks = 0;
     this.universes = {};
     this.currentUniverse = 'default';
+    localStorage.removeItem('telegramId');
+    localStorage.removeItem('username');
     this.logToServer('Данные пользователя очищены');
   },
 
