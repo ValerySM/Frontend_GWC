@@ -10,6 +10,7 @@ function App() {
   const [currentUniverse, setCurrentUniverse] = useState('EatsApp');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
     const initTelegramApp = async () => {
@@ -24,6 +25,8 @@ function App() {
         tg.enableClosingConfirmation();
 
         const initData = tg.initDataUnsafe;
+        console.log('Полученные данные initData:', JSON.stringify(initData));
+        
         if (!initData || !initData.user) {
           throw new Error('Данные пользователя недоступны');
         }
@@ -44,6 +47,7 @@ function App() {
 
           setCurrentUniverse(UniverseData.currentUniverse);
           await UniverseData.logToServer('Аутентификация успешна');
+          setIsInitialized(true);
 
           tg.ready();
         } else {
@@ -77,12 +81,26 @@ function App() {
     };
   }, []);
 
-  if (isLoading || !UniverseData.isDataLoaded()) {
+  useEffect(() => {
+    console.log('Текущее состояние:', {
+      isLoading,
+      isInitialized,
+      error,
+      currentUniverse,
+      UniverseDataLoaded: UniverseData.isDataLoaded()
+    });
+  }, [isLoading, isInitialized, error, currentUniverse]);
+
+  if (isLoading) {
     return <div>Загрузка...</div>;
   }
 
   if (error) {
     return <div>Произошла ошибка: {error}</div>;
+  }
+
+  if (!isInitialized || !UniverseData.isDataLoaded()) {
+    return <div>Инициализация данных...</div>;
   }
 
   return (
