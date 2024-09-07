@@ -26,9 +26,10 @@ const UniverseData = {
     try {
       const data = await authenticateUser(telegramId, username);
       if (data.success) {
-        this.setUserData(data.telegram_id, data.username);
-        this.setTotalClicks(data.totalClicks);
-        this.setCurrentUniverse(data.currentUniverse);
+        this.telegramId = data.telegram_id;
+        this.username = data.username;
+        this.totalClicks = data.totalClicks;
+        this.currentUniverse = data.currentUniverse;
         this.universes = data.universes || {};
         this.gameScores = data.gameScores || { appleCatcher: 0, purblePairs: 0 };
         this.eweData = data.eweData || {

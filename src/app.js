@@ -36,13 +36,13 @@ function App() {
         
         if (success && UniverseData.isDataLoaded()) {
           console.log('Установленные данные:', {
-            telegramId: UniverseData.getUserData().telegramId,
-            username: UniverseData.getUserData().username,
-            totalClicks: UniverseData.getTotalClicks(),
-            currentUniverse: UniverseData.getCurrentUniverse()
+            telegramId: UniverseData.telegramId,
+            username: UniverseData.username,
+            totalClicks: UniverseData.totalClicks,
+            currentUniverse: UniverseData.currentUniverse
           });
 
-          setCurrentUniverse(UniverseData.getCurrentUniverse());
+          setCurrentUniverse(UniverseData.currentUniverse);
           await UniverseData.logToServer('Аутентификация успешна');
 
           tg.ready();
