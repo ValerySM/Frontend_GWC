@@ -37,20 +37,12 @@ const UniverseData = {
 
       if (data.success) {
         this.setUserData(data.telegram_id, data.username);
-        this.setTotalClicks(data.totalClicks);
-        this.setCurrentUniverse(data.currentUniverse);
-        this.universes = data.universes || {};
-        this.gameScores = data.gameScores || { appleCatcher: 0, purblePairs: 0 };
-        this.eweData = data.eweData || {
-          tokens: 0,
-          farmedTokens: 0,
-          isFarming: false,
-          startTime: null,
-          elapsedFarmingTime: 0
-        };
+        this.setTotalClicks(data.universe_data.totalClicks);
+        this.setCurrentUniverse(data.universe_data.currentUniverse);
+        this.universes = data.universe_data.universes || {};
 
         console.log('Данные установлены в UniverseData:', JSON.stringify(this));
-        this.logToServer(`Данные успешно загружены с сервера: ${this.telegramId}, ${this.username}`);
+        this.logToServer('Данные успешно загружены с сервера');
         return true;
       } else {
         throw new Error(data.error || 'Неизвестная ошибка при загрузке данных');
@@ -71,10 +63,6 @@ const UniverseData = {
 
   getUserData() {
     console.log('getUserData вызван. telegramId:', this.telegramId, 'username:', this.username);
-    if (!this.telegramId || !this.username) {
-      console.error('Данные пользователя отсутствуют в UniverseData');
-      this.logToServer('Попытка получить данные пользователя, но они отсутствуют');
-    }
     return { telegramId: this.telegramId, username: this.username };
   },
 
@@ -192,9 +180,7 @@ const UniverseData = {
       username: username,
       totalClicks: this.totalClicks,
       currentUniverse: this.currentUniverse,
-      universes: this.universes,
-      gameScores: this.gameScores,
-      eweData: this.eweData
+      universes: this.universes
     };
 
     this.logToServer(`Отправка данных на сервер: ${JSON.stringify(dataToSend)}`);
