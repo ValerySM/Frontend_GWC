@@ -1,13 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
-import UniverseSwitcher from './components/UniverseSwitcher';
-import EatsApp from './Universes/EWI/EatsApp';
-import EWE from './Universes/EWE/EWE';
-import EcoGame from './Universes/ECI/EcoGame';
 import UniverseData from './UniverseData';
+import EatsApp from './EatsApp'; // Путь может отличаться
 
 function App() {
-  const [currentUniverse, setCurrentUniverse] = useState('EatsApp');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -42,7 +37,6 @@ function App() {
             currentUniverse: UniverseData.getCurrentUniverse()
           });
 
-          setCurrentUniverse(UniverseData.getCurrentUniverse());
           await UniverseData.logToServer('Аутентификация успешна');
 
           tg.ready();
@@ -61,23 +55,7 @@ function App() {
     initTelegramApp();
   }, []);
 
-  useEffect(() => {
-    const handleBackButton = () => {
-      console.log('Нажата кнопка "Назад"');
-    };
-
-    if (window.Telegram && window.Telegram.WebApp) {
-      window.Telegram.WebApp.onEvent('backButtonClicked', handleBackButton);
-    }
-
-    return () => {
-      if (window.Telegram && window.Telegram.WebApp) {
-        window.Telegram.WebApp.offEvent('backButtonClicked', handleBackButton);
-      }
-    };
-  }, []);
-
-  if (isLoading || !UniverseData.isDataLoaded()) {
+  if (isLoading) {
     return <div>Загрузка...</div>;
   }
 
@@ -85,29 +63,7 @@ function App() {
     return <div>Произошла ошибка: {error}</div>;
   }
 
-  return (
-    <Router basename="/Frontend_GWC">
-      <div className="App">
-        <UniverseSwitcher currentUniverse={currentUniverse} setCurrentUniverse={setCurrentUniverse} />
-        <Switch>
-          <Route exact path="/" render={() => {
-            console.log('Рендеринг вселенной:', currentUniverse);
-            switch(currentUniverse) {
-              case 'EatsApp':
-                return <EatsApp />;
-              case 'First':
-                return <EWE />;
-              case 'EcoGame':
-                return <EcoGame />;
-              default:
-                console.log('Неизвестная вселенная:', currentUniverse);
-                return <div>Неизвестная вселенная</div>;
-            }
-          }} />
-        </Switch>
-      </div>
-    </Router>
-  );
+  return <EatsApp />;
 }
 
 export default App;
