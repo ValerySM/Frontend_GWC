@@ -22,6 +22,7 @@ const UniverseData = {
     this.logToServer(`Инициализация с параметрами: telegramId=${telegramId}, username=${username}`);
 
     try {
+      console.log('Отправка запроса на сервер');
       const response = await fetch('https://backend-gwc-1.onrender.com/api/auth', {
         method: 'POST',
         headers: {
@@ -30,12 +31,13 @@ const UniverseData = {
         body: JSON.stringify({ telegramId, username }),
       });
 
+      console.log('Получен ответ от сервера:', response.status);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log('Ответ сервера:', data);
+      console.log('Данные от сервера:', data);
       this.logToServer(`Ответ сервера: ${JSON.stringify(data)}`);
 
       if (data.success) {
@@ -176,6 +178,7 @@ const UniverseData = {
       }),
     }).catch(error => console.error('Ошибка логирования на сервер:', error));
   },
+
 
   saveToServer() {
     const { telegramId, username } = this.getUserData();

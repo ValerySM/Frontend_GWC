@@ -15,14 +15,31 @@ function App() {
     const initTelegramApp = async () => {
       console.log('Initializing Telegram App');
       
-      // Получаем параметры из URL
-      const urlParams = new URLSearchParams(window.location.search);
-      const telegramId = urlParams.get('telegramId');
-      const username = urlParams.get('username');
-      console.log('URL параметры:', { telegramId, username });
+      let telegramId, username;
+
+      if (window.Telegram && window.Telegram.WebApp) {
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        
+        // Получаем данные из Telegram WebApp
+        const initData = tg.initDataUnsafe;
+        if (initData && initData.user) {
+          telegramId = initData.user.id.toString();
+          username = initData.user.username || initData.user.first_name;
+        }
+      }
+
+      // Если данные не получены из Telegram WebApp, пробуем получить из URL
+      if (!telegramId || !username) {
+        const urlParams = new URLSearchParams(window.location.search);
+        telegramId = urlParams.get('telegramId');
+        username = urlParams.get('username');
+      }
+
+      console.log('Полученные данные пользователя:', { telegramId, username });
 
       if (!telegramId || !username) {
-        console.error('Данные пользователя недоступны в URL');
+        console.error('Данные пользователя недоступны');
         setIsLoading(false);
         return;
       }
@@ -44,6 +61,10 @@ function App() {
           setCurrentUniverse(UniverseData.getCurrentUniverse());
           setIsAuthenticated(true);
           UniverseData.logToServer('Аутентификация успешна');
+
+          if (window.Telegram && window.Telegram.WebApp) {
+            window.Telegram.WebApp.ready();
+          }
         } else {
           console.error('Не удалось загрузить данные пользователя');
           setIsAuthenticated(false);
