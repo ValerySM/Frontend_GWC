@@ -64,6 +64,13 @@ const UniverseData = {
     this.logToServer(`Данные пользователя установлены: telegramId=${telegramId}, username=${username}`);
   },
 
+  setUserData(telegramId, username) {
+    console.log('setUserData вызван с:', telegramId, username);
+    this.telegramId = telegramId;
+    this.username = username;
+    this.logToServer(`Данные пользователя установлены: telegramId=${telegramId}, username=${username}`);
+  },
+
   getUserData() {
     console.log('getUserData вызван. telegramId:', this.telegramId, 'username:', this.username);
     return { telegramId: this.telegramId, username: this.username };
@@ -156,15 +163,15 @@ const UniverseData = {
   },
 
   logToServer(message) {
-    const { telegramId, username } = this.getUserData();
+    console.log('Отправка лога на сервер:', message);
     fetch(`https://backend-gwc-1.onrender.com/api/log`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        telegramId,
-        username,
+        telegramId: this.telegramId,
+        username: this.username,
         message: message
       }),
     }).catch(error => console.error('Ошибка логирования на сервер:', error));

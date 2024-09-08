@@ -15,16 +15,6 @@ function App() {
     const initTelegramApp = async () => {
       console.log('Initializing Telegram App');
       
-      if (!window.Telegram || !window.Telegram.WebApp) {
-        console.error('Telegram WebApp API не доступен');
-        setIsLoading(false);
-        return;
-      }
-
-      const tg = window.Telegram.WebApp;
-      tg.expand();
-      tg.enableClosingConfirmation();
-
       // Получаем параметры из URL
       const urlParams = new URLSearchParams(window.location.search);
       const telegramId = urlParams.get('telegramId');
@@ -33,7 +23,6 @@ function App() {
 
       if (!telegramId || !username) {
         console.error('Данные пользователя недоступны в URL');
-        UniverseData.logToServer('Данные пользователя недоступны в URL');
         setIsLoading(false);
         return;
       }
@@ -55,8 +44,6 @@ function App() {
           setCurrentUniverse(UniverseData.getCurrentUniverse());
           setIsAuthenticated(true);
           UniverseData.logToServer('Аутентификация успешна');
-
-          tg.ready();
         } else {
           console.error('Не удалось загрузить данные пользователя');
           setIsAuthenticated(false);
