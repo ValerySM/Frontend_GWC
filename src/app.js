@@ -27,9 +27,8 @@ function App() {
 
       // Получаем параметры из URL
       const urlParams = new URLSearchParams(window.location.search);
-      const telegramId = urlParams.get('telegram_id');
+      const telegramId = urlParams.get('telegramId');
       const username = urlParams.get('username');
-
       console.log('URL параметры:', { telegramId, username });
 
       if (!telegramId || !username) {

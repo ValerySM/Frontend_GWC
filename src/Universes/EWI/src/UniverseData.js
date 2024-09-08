@@ -17,7 +17,7 @@ const UniverseData = {
     elapsedFarmingTime: 0
   },
 
-   async initFromServer(telegramId, username) {
+  async initFromServer(telegramId, username) {
     console.log('initFromServer вызван с параметрами:', telegramId, username);
     this.logToServer(`Инициализация с параметрами: telegramId=${telegramId}, username=${username}`);
 
@@ -27,7 +27,7 @@ const UniverseData = {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ telegram_id: telegramId, username: username }),
+        body: JSON.stringify({ telegramId, username }),
       });
 
       if (!response.ok) {
@@ -39,7 +39,7 @@ const UniverseData = {
       this.logToServer(`Ответ сервера: ${JSON.stringify(data)}`);
 
       if (data.success) {
-        this.setUserData(data.telegram_id, data.username);
+        this.setUserData(data.telegramId, data.username);
         this.setTotalClicks(data.totalClicks);
         this.setCurrentUniverse(data.currentUniverse);
         this.universes = data.universes || {};
@@ -57,11 +57,11 @@ const UniverseData = {
     }
   },
 
-  setUserData(id, name) {
-    console.log('setUserData вызван с:', id, name);
-    this.telegramId = id;
-    this.username = name;
-    this.logToServer(`Данные пользователя установлены: ${id}, ${name}`);
+  setUserData(telegramId, username) {
+    console.log('setUserData вызван с:', telegramId, username);
+    this.telegramId = telegramId;
+    this.username = username;
+    this.logToServer(`Данные пользователя установлены: telegramId=${telegramId}, username=${username}`);
   },
 
   getUserData() {
@@ -163,8 +163,8 @@ const UniverseData = {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        telegram_id: telegramId,
-        username: username,
+        telegramId,
+        username,
         message: message
       }),
     }).catch(error => console.error('Ошибка логирования на сервер:', error));
@@ -179,8 +179,8 @@ const UniverseData = {
     }
 
     const dataToSend = {
-      telegram_id: telegramId,
-      username: username,
+      telegramId,
+      username,
       totalClicks: this.totalClicks,
       currentUniverse: this.currentUniverse,
       universes: this.universes
