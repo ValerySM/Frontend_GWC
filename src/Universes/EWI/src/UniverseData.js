@@ -37,9 +37,9 @@ const UniverseData = {
 
       if (data.success) {
         this.setUserData(data.telegram_id, data.username);
-        this.setTotalClicks(data.universe_data.totalClicks);
-        this.setCurrentUniverse(data.universe_data.currentUniverse);
-        this.universes = data.universe_data.universes || {};
+        this.setTotalClicks(data.totalClicks);
+        this.setCurrentUniverse(data.currentUniverse);
+        this.universes = data.universes || {};
 
         console.log('Данные установлены в UniverseData:', JSON.stringify(this));
         this.logToServer('Данные успешно загружены с сервера');

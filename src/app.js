@@ -6,25 +6,11 @@ import EWE from './Universes/EWE/EWE';
 import EcoGame from './Universes/ECI/EcoGame';
 import UniverseData from './UniverseData';
 
-
-logToServer(message) {
-    
-    fetch(`https://backend-gwc-1.onrender.com/api/log`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        
-        message: message
-      }),
-    }).catch(error => console.error('Ошибка логирования на сервер:', error));
-  };
 function App() {
   const [currentUniverse, setCurrentUniverse] = useState('EatsApp');
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-logToServer("Лог перед юзефект");
+
   useEffect(() => {
     const initTelegramApp = async () => {
       if (!window.Telegram || !window.Telegram.WebApp) {
@@ -34,25 +20,23 @@ logToServer("Лог перед юзефект");
       }
 
       const tg = window.Telegram.WebApp;
-
       tg.expand();
       tg.enableClosingConfirmation();
 
-      const initData = tg.initDataUnsafe;
-      if (!initData || !initData.user) {
+      // Получаем параметры из URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const telegramId = urlParams.get('telegram_id');
+      const username = urlParams.get('username');
+
+      if (!telegramId || !username) {
         console.error('Данные пользователя недоступны');
         setIsLoading(false);
         return;
       }
 
-      const { id: telegramId, username, first_name } = initData.user;
-      const displayName = username || first_name;
-
       try {
-        const success = await UniverseData.initFromServer(telegramId.toString(), displayName);
+        const success = await UniverseData.initFromServer(telegramId, username);
         
-        console.log('Данные после initFromServer:', UniverseData);
-
         if (success) {
           console.log('Установленные данные:', {
             telegramId: UniverseData.getUserData().telegramId,
