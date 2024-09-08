@@ -20,7 +20,7 @@ function App() {
         }
 
         const tg = window.Telegram.WebApp;
-        
+
         // Ожидаем готовности WebApp
         await new Promise(resolve => {
           tg.onEvent('viewportChanged', resolve);
@@ -29,22 +29,18 @@ function App() {
 
         console.log('WebApp готов');
 
-        // Получаем данные пользователя
-        const initDataUnsafe = tg.initDataUnsafe || {};
-        const initData = tg.initData ? JSON.parse(atob(tg.initData)) : {};
-        const user = initDataUnsafe.user || initData.user;
-
-        if (!user) {
+        // Получаем данные пользователя из URL
+        const params = new URLSearchParams(window.location.search);
+        const telegramId = params.get('telegram_id');
+        const username = params.get('username');
+        if (!telegramId || !username) {
           throw new Error('Данные пользователя недоступны');
         }
 
-        const { id: telegramId, username, first_name } = user;
-        const displayName = username || first_name;
+        console.log('Получены данные пользователя:', { telegramId, username });
 
-        console.log('Получены данные пользователя:', { telegramId, displayName });
+        const success = await UniverseData.initFromServer(telegramId.toString(), username);
 
-        const success = await UniverseData.initFromServer(telegramId.toString(), displayName);
-        
         if (success && UniverseData.isDataLoaded()) {
           console.log('Установленные данные:', UniverseData.getUserData());
           setCurrentUniverse(UniverseData.getCurrentUniverse());
