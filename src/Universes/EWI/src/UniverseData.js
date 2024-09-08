@@ -17,8 +17,10 @@ const UniverseData = {
     elapsedFarmingTime: 0
   },
 
-  async initFromServer(telegramId, username) {
+   async initFromServer(telegramId, username) {
     console.log('initFromServer вызван с параметрами:', telegramId, username);
+    this.logToServer(`Инициализация с параметрами: telegramId=${telegramId}, username=${username}`);
+
     try {
       const response = await fetch('https://backend-gwc-1.onrender.com/api/auth', {
         method: 'POST',
@@ -34,6 +36,7 @@ const UniverseData = {
 
       const data = await response.json();
       console.log('Ответ сервера:', data);
+      this.logToServer(`Ответ сервера: ${JSON.stringify(data)}`);
 
       if (data.success) {
         this.setUserData(data.telegram_id, data.username);

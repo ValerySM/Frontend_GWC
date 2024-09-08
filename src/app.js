@@ -13,6 +13,8 @@ function App() {
 
   useEffect(() => {
     const initTelegramApp = async () => {
+      console.log('Initializing Telegram App');
+      
       if (!window.Telegram || !window.Telegram.WebApp) {
         console.error('Telegram WebApp API не доступен');
         setIsLoading(false);
@@ -28,19 +30,25 @@ function App() {
       const telegramId = urlParams.get('telegram_id');
       const username = urlParams.get('username');
 
+      console.log('URL параметры:', { telegramId, username });
+
       if (!telegramId || !username) {
-        console.error('Данные пользователя недоступны');
+        console.error('Данные пользователя недоступны в URL');
+        UniverseData.logToServer('Данные пользователя недоступны в URL');
         setIsLoading(false);
         return;
       }
 
       try {
+        console.log('Инициализация данных с сервера');
         const success = await UniverseData.initFromServer(telegramId, username);
         
         if (success) {
+          console.log('Данные успешно загружены');
+          const userData = UniverseData.getUserData();
           console.log('Установленные данные:', {
-            telegramId: UniverseData.getUserData().telegramId,
-            username: UniverseData.getUserData().username,
+            telegramId: userData.telegramId,
+            username: userData.username,
             totalClicks: UniverseData.getTotalClicks(),
             currentUniverse: UniverseData.getCurrentUniverse()
           });
@@ -51,6 +59,7 @@ function App() {
 
           tg.ready();
         } else {
+          console.error('Не удалось загрузить данные пользователя');
           setIsAuthenticated(false);
           UniverseData.logToServer('Не удалось загрузить данные пользователя');
         }
@@ -64,22 +73,6 @@ function App() {
     };
 
     initTelegramApp();
-  }, []);
-
-  useEffect(() => {
-    const handleBackButton = () => {
-      console.log('Нажата кнопка "Назад"');
-    };
-
-    if (window.Telegram && window.Telegram.WebApp) {
-      window.Telegram.WebApp.onEvent('backButtonClicked', handleBackButton);
-    }
-
-    return () => {
-      if (window.Telegram && window.Telegram.WebApp) {
-        window.Telegram.WebApp.offEvent('backButtonClicked', handleBackButton);
-      }
-    };
   }, []);
 
   if (isLoading) {
