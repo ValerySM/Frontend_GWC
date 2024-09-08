@@ -12,34 +12,18 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    const initTelegramApp = async () => {
-      console.log('Initializing Telegram App');
+    const initApp = async () => {
+      console.log('Initializing App');
       
-      let telegramId, username;
+      // Получаем параметры из URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const telegramId = urlParams.get('telegramId');
+      const username = urlParams.get('username');
 
-      if (window.Telegram && window.Telegram.WebApp) {
-        const tg = window.Telegram.WebApp;
-        tg.expand();
-        
-        // Получаем данные из Telegram WebApp
-        const initData = tg.initDataUnsafe;
-        if (initData && initData.user) {
-          telegramId = initData.user.id.toString();
-          username = initData.user.username || initData.user.first_name;
-        }
-      }
-
-      // Если данные не получены из Telegram WebApp, пробуем получить из URL
-      if (!telegramId || !username) {
-        const urlParams = new URLSearchParams(window.location.search);
-        telegramId = urlParams.get('telegramId');
-        username = urlParams.get('username');
-      }
-
-      console.log('Полученные данные пользователя:', { telegramId, username });
+      console.log('URL параметры:', { telegramId, username });
 
       if (!telegramId || !username) {
-        console.error('Данные пользователя недоступны');
+        console.error('Данные пользователя недоступны в URL');
         setIsLoading(false);
         return;
       }
@@ -51,35 +35,23 @@ function App() {
         if (success) {
           console.log('Данные успешно загружены');
           const userData = UniverseData.getUserData();
-          console.log('Установленные данные:', {
-            telegramId: userData.telegramId,
-            username: userData.username,
-            totalClicks: UniverseData.getTotalClicks(),
-            currentUniverse: UniverseData.getCurrentUniverse()
-          });
+          console.log('Установленные данные:', userData);
 
           setCurrentUniverse(UniverseData.getCurrentUniverse());
           setIsAuthenticated(true);
-          UniverseData.logToServer('Аутентификация успешна');
-
-          if (window.Telegram && window.Telegram.WebApp) {
-            window.Telegram.WebApp.ready();
-          }
         } else {
           console.error('Не удалось загрузить данные пользователя');
           setIsAuthenticated(false);
-          UniverseData.logToServer('Не удалось загрузить данные пользователя');
         }
       } catch (error) {
         console.error('Ошибка во время аутентификации:', error);
-        UniverseData.logToServer(`Ошибка аутентификации: ${error.message}`);
         setIsAuthenticated(false);
       }
 
       setIsLoading(false);
     };
 
-    initTelegramApp();
+    initApp();
   }, []);
 
   if (isLoading) {
