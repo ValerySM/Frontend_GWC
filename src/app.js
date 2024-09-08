@@ -16,37 +16,54 @@ function App() {
       console.log('Начало инициализации Telegram App');
       try {
         if (!window.Telegram || !window.Telegram.WebApp) {
+          console.error('Telegram WebApp API не доступен');
           throw new Error('Telegram WebApp API не доступен');
         }
+        console.log('Telegram WebApp API доступен');
 
         const tg = window.Telegram.WebApp;
-
-        // Ожидаем готовности WebApp
+        
+        console.log('Ожидание готовности WebApp...');
         await new Promise(resolve => {
-          tg.onEvent('viewportChanged', resolve);
+          tg.onEvent('viewportChanged', () => {
+            console.log('Событие viewportChanged получено');
+            resolve();
+          });
           tg.expand();
         });
-
         console.log('WebApp готов');
 
         // Получаем данные пользователя из URL
         const params = new URLSearchParams(window.location.search);
         const telegramId = params.get('telegram_id');
         const username = params.get('username');
+
+        console.log('Параметры URL:', {
+          telegramId: telegramId || 'отсутствует',
+          username: username || 'отсутствует'
+        });
+
         if (!telegramId || !username) {
+          console.error('Данные пользователя недоступны в URL');
           throw new Error('Данные пользователя недоступны');
         }
 
-        console.log('Получены данные пользователя:', { telegramId, username });
+        console.log('Получены данные пользователя из URL:', { telegramId, username });
 
+        console.log('Инициализация данных с сервера...');
         const success = await UniverseData.initFromServer(telegramId.toString(), username);
-
+        
         if (success && UniverseData.isDataLoaded()) {
-          console.log('Установленные данные:', UniverseData.getUserData());
-          setCurrentUniverse(UniverseData.getCurrentUniverse());
+          console.log('Данные успешно загружены с сервера');
+          console.log('Установленные данные пользователя:', UniverseData.getUserData());
+          const currentUniverse = UniverseData.getCurrentUniverse();
+          console.log('Текущая вселенная:', currentUniverse);
+          setCurrentUniverse(currentUniverse);
           await UniverseData.logToServer('Аутентификация успешна');
+          console.log('Вызов tg.ready()');
           tg.ready();
         } else {
+          console.error('Не удалось загрузить данные пользователя');
           throw new Error('Не удалось загрузить данные пользователя');
         }
       } catch (error) {
@@ -54,6 +71,7 @@ function App() {
         await UniverseData.logToServer(`Ошибка инициализации: ${error.message}`);
         setError(error.message);
       } finally {
+        console.log('Инициализация завершена, isLoading установлен в false');
         setIsLoading(false);
       }
     };
@@ -67,24 +85,31 @@ function App() {
     };
 
     if (window.Telegram && window.Telegram.WebApp) {
+      console.log('Добавление обработчика для кнопки "Назад"');
       window.Telegram.WebApp.onEvent('backButtonClicked', handleBackButton);
+    } else {
+      console.warn('Telegram WebApp недоступен для добавления обработчика кнопки "Назад"');
     }
 
     return () => {
       if (window.Telegram && window.Telegram.WebApp) {
+        console.log('Удаление обработчика для кнопки "Назад"');
         window.Telegram.WebApp.offEvent('backButtonClicked', handleBackButton);
       }
     };
   }, []);
 
   if (isLoading) {
+    console.log('Отображение экрана загрузки');
     return <div>Загрузка...</div>;
   }
 
   if (error) {
+    console.log('Отображение экрана ошибки');
     return <div>Произошла ошибка: {error}</div>;
   }
 
+  console.log('Рендеринг основного приложения');
   return (
     <Router basename="/Frontend_GWC">
       <div className="App">
