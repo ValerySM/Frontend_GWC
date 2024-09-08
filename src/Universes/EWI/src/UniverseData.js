@@ -152,22 +152,26 @@ const UniverseData = {
     return this.eweData[key];
   },
 
-  logToServer(message) {
+  async logToServer(message) {
     const { telegramId, username } = this.getUserData();
-    fetch(`https://backend-gwc-1.onrender.com/api/log`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        telegram_id: telegramId,
-        username: username,
-        message: message
-      }),
-    }).catch(error => console.error('Ошибка логирования на сервер:', error));
+    try {
+      await fetch(`https://backend-gwc-1.onrender.com/api/log`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          telegram_id: telegramId,
+          username: username,
+          message: message
+        }),
+      });
+    } catch (error) {
+      console.error('Ошибка логирования на сервер:', error);
+    }
   },
 
-  saveToServer() {
+  async saveToServer() {
     const { telegramId, username } = this.getUserData();
     this.logToServer(`Попытка сохранения данных для пользователя: ${telegramId}, ${username}`);
     if (!telegramId) {
@@ -185,20 +189,21 @@ const UniverseData = {
 
     this.logToServer(`Отправка данных на сервер: ${JSON.stringify(dataToSend)}`);
 
-    fetch(`https://backend-gwc-1.onrender.com/api/users`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(dataToSend),
-    })
-    .then(response => {
+    try {
+      const response = await fetch(`https://backend-gwc-1.onrender.com/api/users`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(dataToSend),
+      });
+
       if (!response.ok) {
         throw new Error(`Ошибка HTTP! статус: ${response.status}`);
       }
-      return response.json();
-    })
-    .then(data => {
+
+      const data = await response.json();
+
       if (data.success) {
         this.logToServer('Данные успешно сохранены на сервере');
         if (window.Telegram && window.Telegram.WebApp) {
@@ -207,10 +212,9 @@ const UniverseData = {
       } else {
         this.logToServer(`Не удалось сохранить данные на сервере: ${data.error}`);
       }
-    })
-    .catch(error => {
+    } catch (error) {
       this.logToServer(`Ошибка сохранения данных на сервере: ${error}`);
-    });
+    }
   },
 };
 
