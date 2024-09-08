@@ -12,21 +12,30 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    const initApp = async () => {
-      console.log('Initializing App');
+    const initTelegramApp = async () => {
+      console.log('Initializing Telegram App');
       
-      // Получаем параметры из URL
-      const urlParams = new URLSearchParams(window.location.search);
-      const telegramId = urlParams.get('telegramId');
-      const username = urlParams.get('username');
-
-      console.log('URL параметры:', { telegramId, username });
-
-      if (!telegramId || !username) {
-        console.error('Данные пользователя недоступны в URL');
+      if (!window.Telegram || !window.Telegram.WebApp) {
+        console.error('Telegram WebApp API не доступен');
         setIsLoading(false);
         return;
       }
+
+      const tg = window.Telegram.WebApp;
+      tg.expand();
+
+      // Получаем данные пользователя из Telegram WebApp
+      const user = tg.initDataUnsafe?.user;
+      console.log('Данные пользователя из Telegram:', user);
+
+      if (!user) {
+        console.error('Данные пользователя недоступны');
+        setIsLoading(false);
+        return;
+      }
+
+      const telegramId = user.id.toString();
+      const username = user.username || `${user.first_name} ${user.last_name}`.trim();
 
       try {
         console.log('Инициализация данных с сервера');
@@ -39,19 +48,24 @@ function App() {
 
           setCurrentUniverse(UniverseData.getCurrentUniverse());
           setIsAuthenticated(true);
+          UniverseData.logToServer('Аутентификация успешна');
+
+          tg.ready();
         } else {
           console.error('Не удалось загрузить данные пользователя');
           setIsAuthenticated(false);
+          UniverseData.logToServer('Не удалось загрузить данные пользователя');
         }
       } catch (error) {
         console.error('Ошибка во время аутентификации:', error);
+        UniverseData.logToServer(`Ошибка аутентификации: ${error.message}`);
         setIsAuthenticated(false);
       }
 
       setIsLoading(false);
     };
 
-    initApp();
+    initTelegramApp();
   }, []);
 
   if (isLoading) {
