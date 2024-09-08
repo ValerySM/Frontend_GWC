@@ -6,23 +6,25 @@ import EWE from './Universes/EWE/EWE';
 import EcoGame from './Universes/ECI/EcoGame';
 import UniverseData from './UniverseData';
 
-const logToServer = (message) => {
-  fetch(`https://backend-gwc-1.onrender.com/api/log`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      message: message
-    }),
-  }).catch(error => console.error('Ошибка логирования на сервер:', error));
-};
 
+logToServer(message) {
+    
+    fetch(`https://backend-gwc-1.onrender.com/api/log`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        
+        message: message
+      }),
+    }).catch(error => console.error('Ошибка логирования на сервер:', error));
+  };
 function App() {
   const [currentUniverse, setCurrentUniverse] = useState('EatsApp');
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-
+logToServer("Лог перед юзефект");
   useEffect(() => {
     const initTelegramApp = async () => {
       if (!window.Telegram || !window.Telegram.WebApp) {
@@ -32,6 +34,7 @@ function App() {
       }
 
       const tg = window.Telegram.WebApp;
+
       tg.expand();
       tg.enableClosingConfirmation();
 
@@ -47,11 +50,21 @@ function App() {
 
       try {
         const success = await UniverseData.initFromServer(telegramId.toString(), displayName);
+        
+        console.log('Данные после initFromServer:', UniverseData);
 
         if (success) {
+          console.log('Установленные данные:', {
+            telegramId: UniverseData.getUserData().telegramId,
+            username: UniverseData.getUserData().username,
+            totalClicks: UniverseData.getTotalClicks(),
+            currentUniverse: UniverseData.getCurrentUniverse()
+          });
+
           setCurrentUniverse(UniverseData.getCurrentUniverse());
           setIsAuthenticated(true);
           UniverseData.logToServer('Аутентификация успешна');
+
           tg.ready();
         } else {
           setIsAuthenticated(false);
