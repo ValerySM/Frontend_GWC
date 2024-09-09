@@ -15,19 +15,26 @@ const UniverseData = {
   token: '',
   
   async initFromServer(telegramId, username) {
+    console.log(`Initializing from server for user: ${username} (ID: ${telegramId})`);
     try {
       const response = await axios.post(`${API_BASE_URL}/api/auth`, {
         telegram_id: telegramId,
         username: username
       });
 
+      console.log('Server response:', response.data);
+
       if (response.data.success) {
         this.token = response.data.token;
         localStorage.setItem('token', this.token);
-        await this.fetchUserData();
+        this.setUserData(response.data.user_data.telegram_id, response.data.user_data.username);
+        this.setTotalClicks(response.data.user_data.totalClicks);
+        this.setCurrentUniverse(response.data.user_data.currentUniverse);
+        console.log('User data set successfully');
         return true;
       } else {
-        throw new Error(response.data.error || 'Unknown error during authentication');
+        console.error('Server returned success: false');
+        return false;
       }
     } catch (error) {
       console.error('Error during initFromServer:', error);
@@ -35,27 +42,8 @@ const UniverseData = {
     }
   },
 
-  async fetchUserData() {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/api/user`, {
-        headers: { Authorization: `Bearer ${this.token}` }
-      });
-
-      if (response.data.success) {
-        this.setUserData(response.data.telegram_id, response.data.username);
-        this.setTotalClicks(response.data.totalClicks);
-        this.setCurrentUniverse(response.data.currentUniverse);
-        this.universes = response.data.universes;
-        console.log('User data fetched successfully:', this);
-      } else {
-        throw new Error('Failed to fetch user data');
-      }
-    } catch (error) {
-      console.error('Error fetching user data:', error);
-    }
-  },
-
   setUserData(id, name) {
+    console.log(`Setting user data: ID=${id}, Name=${name}`);
     this.telegramId = id;
     this.username = name;
   },
@@ -65,6 +53,7 @@ const UniverseData = {
   },
 
   setTotalClicks(clicks) {
+    console.log(`Setting total clicks: ${clicks}`);
     this.totalClicks = clicks;
     this.saveToServer();
   },
@@ -74,6 +63,7 @@ const UniverseData = {
   },
 
   setCurrentUniverse(universeName) {
+    console.log(`Setting current universe: ${universeName}`);
     this.currentUniverse = universeName;
     this.saveToServer();
   },
@@ -83,26 +73,28 @@ const UniverseData = {
   },
 
   async saveToServer() {
+    console.log('Saving data to server...');
     try {
-      await axios.put(`${API_BASE_URL}/api/user`, {
+      const response = await axios.put(`${API_BASE_URL}/api/user`, {
         totalClicks: this.totalClicks,
         currentUniverse: this.currentUniverse,
         universes: this.universes
       }, {
         headers: { Authorization: `Bearer ${this.token}` }
       });
-      console.log('Data saved to server successfully');
+      console.log('Server response to save:', response.data);
     } catch (error) {
       console.error('Error saving data to server:', error);
     }
   },
 
   async logToServer(message) {
+    console.log(`Logging to server: ${message}`);
     try {
-      await axios.post(`${API_BASE_URL}/api/log`, { message }, {
+      const response = await axios.post(`${API_BASE_URL}/api/log`, { message }, {
         headers: { Authorization: `Bearer ${this.token}` }
       });
-      console.log('Log sent to server successfully');
+      console.log('Log sent to server:', response.data);
     } catch (error) {
       console.error('Error sending log to server:', error);
     }
