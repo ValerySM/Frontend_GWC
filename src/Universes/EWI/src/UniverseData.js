@@ -1,67 +1,109 @@
 const UniverseData = {
-  // ... (остальной код остается без изменений)
+  telegramId: null,
+  username: null,
+  totalClicks: 0,
+  gameScores: {
+    appleCatcher: 0,
+    purblePairs: 0
+  },
+  universes: {},
+  currentUniverse: 'default',
+  
+  eweData: {
+    tokens: 0,
+    farmedTokens: 0,
+    isFarming: false,
+    startTime: null,
+    elapsedFarmingTime: 0
+  },
 
-  async initFromServer(telegramId, username) {
-    console.log('initFromServer вызван с параметрами:', telegramId, username);
-    this.logToServer(`Инициализация с параметрами: telegramId=${telegramId}, username=${username}`);
+  init() {
+    console.log('Initializing UniverseData');
+    if (window.Telegram && window.Telegram.WebApp) {
+      const webAppData = window.Telegram.WebApp.initDataUnsafe;
+      console.log('WebApp initDataUnsafe:', webAppData);
+      
+      if (webAppData && webAppData.user) {
+        this.telegramId = webAppData.user.id.toString();
+        this.username = webAppData.user.username || `${webAppData.user.first_name} ${webAppData.user.last_name}`.trim();
+        console.log(`Initialized with Telegram data: ID=${this.telegramId}, Username=${this.username}`);
+        return true;
+      } else {
+        console.error('WebApp user data is not available');
+        return false;
+      }
+    } else {
+      console.error('Telegram WebApp is not available');
+      return false;
+    }
+  },
 
+  async initFromServer() {
+    if (!this.telegramId || !this.username) {
+      console.error('Telegram ID or Username is not set. Call init() first.');
+      return false;
+    }
+
+    console.log(`Initializing from server for: ID=${this.telegramId}, Username=${this.username}`);
+    
     try {
-      console.log('Отправка запроса на сервер');
       const response = await fetch('https://backend-gwc-1.onrender.com/api/auth', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ telegramId, username }),
+        body: JSON.stringify({ telegramId: this.telegramId, username: this.username }),
       });
 
-      console.log('Получен ответ от сервера:', response.status);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log('Данные от сервера:', data);
-      this.logToServer(`Ответ сервера: ${JSON.stringify(data)}`);
+      console.log('Server response:', data);
 
       if (data.success) {
-        this.setUserData(data.telegramId, data.username);
-        this.setTotalClicks(data.totalClicks);
-        this.setCurrentUniverse(data.currentUniverse);
+        this.totalClicks = data.totalClicks || 0;
+        this.currentUniverse = data.currentUniverse || 'default';
         this.universes = data.universes || {};
-
-        console.log('Данные установлены в UniverseData:', JSON.stringify(this));
-        this.logToServer('Данные успешно загружены с сервера');
+        console.log('Data successfully loaded from server');
         return true;
       } else {
-        throw new Error(data.error || 'Неизвестная ошибка при загрузке данных');
+        throw new Error(data.error || 'Unknown error while loading data');
       }
     } catch (error) {
-      console.error('Ошибка при инициализации данных с сервера:', error);
-      this.logToServer(`Ошибка при инициализации данных с сервера: ${error.message}`);
+      console.error('Error initializing data from server:', error);
       return false;
     }
   },
 
-  // ... (остальной код остается без изменений)
+  getUserData() {
+    return { telegramId: this.telegramId, username: this.username };
+  },
+
+  setTotalClicks(clicks) {
+    this.totalClicks = clicks;
+    this.notifyListeners();
+    console.log(`Total clicks set to: ${clicks}`);
+  },
+
+  // ... (остальные методы остаются без изменений)
 
   saveToServer() {
-    const { telegramId, username } = this.getUserData();
-    this.logToServer(`Попытка сохранения данных для пользователя: ${telegramId}, ${username}`);
-    if (!telegramId) {
-      this.logToServer('Telegram ID недоступен');
+    if (!this.telegramId || !this.username) {
+      console.error('Cannot save: Telegram ID or Username is not set');
       return;
     }
 
     const dataToSend = {
-      telegramId,
-      username,
+      telegramId: this.telegramId,
+      username: this.username,
       totalClicks: this.totalClicks,
       currentUniverse: this.currentUniverse,
       universes: this.universes
     };
 
-    this.logToServer(`Отправка данных на сервер: ${JSON.stringify(dataToSend)}`);
+    console.log('Saving data to server:', dataToSend);
 
     fetch('https://backend-gwc-1.onrender.com/api/users', {
       method: 'PUT',
@@ -72,25 +114,22 @@ const UniverseData = {
     })
     .then(response => {
       if (!response.ok) {
-        throw new Error(`Ошибка HTTP! статус: ${response.status}`);
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
       return response.json();
     })
     .then(data => {
       if (data.success) {
-        this.logToServer('Данные успешно сохранены на сервере');
-        console.log('Данные успешно сохранены:', dataToSend);
+        console.log('Data successfully saved to server');
         if (window.Telegram && window.Telegram.WebApp) {
           window.Telegram.WebApp.sendData(JSON.stringify({action: 'save_success'}));
         }
       } else {
-        this.logToServer(`Не удалось сохранить данные на сервере: ${data.error}`);
-        console.error('Ошибка сохранения данных:', data.error);
+        console.error('Failed to save data to server:', data.error);
       }
     })
     .catch(error => {
-      this.logToServer(`Ошибка сохранения данных на сервере: ${error}`);
-      console.error('Ошибка сохранения данных:', error);
+      console.error('Error saving data to server:', error);
     });
   },
 };

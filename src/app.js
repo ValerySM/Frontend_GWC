@@ -12,69 +12,34 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    const initTelegramApp = async () => {
-      console.log('Initializing Telegram App');
+    const initApp = async () => {
+      console.log('Initializing App');
       
-      if (!window.Telegram || !window.Telegram.WebApp) {
-        console.error('Telegram WebApp API не доступен');
-        setIsLoading(false);
-        return;
-      }
-
-      const tg = window.Telegram.WebApp;
-      tg.expand();
-
-      console.log('Telegram WebApp объект:', tg);
-      console.log('InitData:', tg.initData);
-      console.log('InitDataUnsafe:', tg.initDataUnsafe);
-
-      // Получаем данные пользователя из Telegram WebApp
-      const user = tg.initDataUnsafe?.user;
-      console.log('Данные пользователя из Telegram:', user);
-
-      if (!user) {
-        console.error('Данные пользователя недоступны');
-        setIsLoading(false);
-        return;
-      }
-
-      const telegramId = user.id.toString();
-      const username = user.username || `${user.first_name} ${user.last_name}`.trim();
-
-      console.log('Extracted telegramId:', telegramId);
-      console.log('Extracted username:', username);
-
-      try {
-        console.log('Инициализация данных с сервера');
-        const success = await UniverseData.initFromServer(telegramId, username);
-        
-        console.log('Результат инициализации:', success);
-        
-        if (success) {
-          console.log('Данные успешно загружены');
-          const userData = UniverseData.getUserData();
-          console.log('Установленные данные:', userData);
-
-          setCurrentUniverse(UniverseData.getCurrentUniverse());
-          setIsAuthenticated(true);
-          UniverseData.logToServer('Аутентификация успешна');
-
-          tg.ready();
-        } else {
-          console.error('Не удалось загрузить данные пользователя');
+      if (UniverseData.init()) {
+        console.log('UniverseData initialized successfully');
+        try {
+          const serverInitSuccess = await UniverseData.initFromServer();
+          if (serverInitSuccess) {
+            console.log('Data loaded from server successfully');
+            setCurrentUniverse(UniverseData.getCurrentUniverse());
+            setIsAuthenticated(true);
+          } else {
+            console.error('Failed to load data from server');
+            setIsAuthenticated(false);
+          }
+        } catch (error) {
+          console.error('Error during server initialization:', error);
           setIsAuthenticated(false);
-          UniverseData.logToServer('Не удалось загрузить данные пользователя');
         }
-      } catch (error) {
-        console.error('Ошибка во время аутентификации:', error);
-        UniverseData.logToServer(`Ошибка аутентификации: ${error.message}`);
+      } else {
+        console.error('Failed to initialize UniverseData');
         setIsAuthenticated(false);
       }
 
       setIsLoading(false);
     };
 
-    initTelegramApp();
+    initApp();
   }, []);
 
   if (isLoading) {
