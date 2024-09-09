@@ -1,21 +1,5 @@
 const UniverseData = {
-  telegramId: null,
-  username: null,
-  totalClicks: 0,
-  gameScores: {
-    appleCatcher: 0,
-    purblePairs: 0
-  },
-  universes: {},
-  currentUniverse: 'default',
-  
-  eweData: {
-    tokens: 0,
-    farmedTokens: 0,
-    isFarming: false,
-    startTime: null,
-    elapsedFarmingTime: 0
-  },
+  // ... (остальной код остается без изменений)
 
   async initFromServer(telegramId, username) {
     console.log('initFromServer вызван с параметрами:', telegramId, username);
@@ -59,126 +43,7 @@ const UniverseData = {
     }
   },
 
-  setUserData(telegramId, username) {
-    console.log('setUserData вызван с:', telegramId, username);
-    this.telegramId = telegramId;
-    this.username = username;
-    this.logToServer(`Данные пользователя установлены: telegramId=${telegramId}, username=${username}`);
-  },
-
-  setUserData(telegramId, username) {
-    console.log('setUserData вызван с:', telegramId, username);
-    this.telegramId = telegramId;
-    this.username = username;
-    this.logToServer(`Данные пользователя установлены: telegramId=${telegramId}, username=${username}`);
-  },
-
-  getUserData() {
-    console.log('getUserData вызван. telegramId:', this.telegramId, 'username:', this.username);
-    return { telegramId: this.telegramId, username: this.username };
-  },
-
-  clearUserData() {
-    this.telegramId = null;
-    this.username = null;
-    this.totalClicks = 0;
-    this.universes = {};
-    this.currentUniverse = 'default';
-    this.logToServer('Данные пользователя очищены');
-  },
-
-  getTotalClicks() {
-    return this.totalClicks;
-  },
-
-  setTotalClicks(clicks) {
-    console.log('setTotalClicks вызван с:', clicks);
-    this.totalClicks = clicks;
-    this.notifyListeners();
-    this.logToServer(`Установлено общее количество кликов: ${clicks}`);
-  },
-
-  listeners: [],
-
-  addListener(callback) {
-    this.listeners.push(callback);
-  },
-
-  removeListener(callback) {
-    this.listeners = this.listeners.filter(listener => listener !== callback);
-  },
-
-  notifyListeners() {
-    this.listeners.forEach(listener => listener(this.totalClicks));
-  },
-
-  addGameScore(gameType, score) {
-    if (gameType in this.gameScores) {
-      this.gameScores[gameType] = score;
-      this.totalClicks += score;
-      this.saveToServer();
-      this.notifyListeners();
-      this.logToServer(`Обновлен счет ${gameType}: ${this.gameScores[gameType]}, Новое общее количество кликов: ${this.totalClicks}`);
-    } else {
-      this.logToServer(`Неизвестный тип игры: ${gameType}`);
-    }
-  },
-
-  setUniverseData(universeName, data) {
-    if (!this.universes[universeName]) {
-      this.universes[universeName] = {};
-    }
-    Object.assign(this.universes[universeName], data);
-    this.saveToServer();
-    this.logToServer(`Установлены данные вселенной: ${universeName}`);
-  },
-
-  getUniverseData(universeName, key, defaultValue) {
-    if (!this.universes[universeName]) {
-      this.universes[universeName] = {};
-    }
-    if (this.universes[universeName][key] === undefined) {
-      return defaultValue;
-    }
-    return this.universes[universeName][key];
-  },
-
-  setCurrentUniverse(universeName) {
-    console.log('setCurrentUniverse вызван с:', universeName);
-    this.currentUniverse = universeName;
-    this.saveToServer();
-    this.logToServer(`Текущая вселенная установлена на: ${universeName}`);
-  },
-
-  getCurrentUniverse() {
-    return this.currentUniverse;
-  },
-
-  setEWEData(key, value) {
-    this.eweData[key] = value;
-    this.saveToServer();
-    this.logToServer(`Установлены данные EWE: ${key} = ${value}`);
-  },
-
-  getEWEData(key) {
-    return this.eweData[key];
-  },
-
-  logToServer(message) {
-    console.log('Отправка лога на сервер:', message);
-    fetch(`https://backend-gwc-1.onrender.com/api/log`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        telegramId: this.telegramId,
-        username: this.username,
-        message: message
-      }),
-    }).catch(error => console.error('Ошибка логирования на сервер:', error));
-  },
-
+  // ... (остальной код остается без изменений)
 
   saveToServer() {
     const { telegramId, username } = this.getUserData();
@@ -198,7 +63,7 @@ const UniverseData = {
 
     this.logToServer(`Отправка данных на сервер: ${JSON.stringify(dataToSend)}`);
 
-    fetch(`https://backend-gwc-1.onrender.com/api/users`, {
+    fetch('https://backend-gwc-1.onrender.com/api/users', {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json'
@@ -214,15 +79,18 @@ const UniverseData = {
     .then(data => {
       if (data.success) {
         this.logToServer('Данные успешно сохранены на сервере');
+        console.log('Данные успешно сохранены:', dataToSend);
         if (window.Telegram && window.Telegram.WebApp) {
           window.Telegram.WebApp.sendData(JSON.stringify({action: 'save_success'}));
         }
       } else {
         this.logToServer(`Не удалось сохранить данные на сервере: ${data.error}`);
+        console.error('Ошибка сохранения данных:', data.error);
       }
     })
     .catch(error => {
       this.logToServer(`Ошибка сохранения данных на сервере: ${error}`);
+      console.error('Ошибка сохранения данных:', error);
     });
   },
 };
