@@ -1,6 +1,6 @@
 const UniverseData = {
-  telegramId: null,
-  username: null,
+  telegramId: '',
+  username: '',
   totalClicks: 0,
   gameScores: {
     appleCatcher: 0,
@@ -9,12 +9,13 @@ const UniverseData = {
   universes: {},
   currentUniverse: 'default',
   
-  eweData: {
-    tokens: 0,
-    farmedTokens: 0,
-    isFarming: false,
-    startTime: null,
-    elapsedFarmingTime: 0
+  initFromURL(params) {
+    this.telegramId = params.get('telegram_id') || '';
+    this.username = params.get('username') || '';
+    this.totalClicks = parseInt(params.get('totalClicks') || '0', 10);
+    this.currentUniverse = params.get('currentUniverse') || 'default';
+    
+    console.log('Данные инициализированы из URL:', this);
   },
 
   async initFromServer(telegramId, username) {
@@ -36,20 +37,19 @@ const UniverseData = {
       console.log('Ответ сервера:', data);
 
       if (data.success) {
-        this.setUserData(data.telegram_id, data.username);
-        this.setTotalClicks(data.universe_data.totalClicks);
-        this.setCurrentUniverse(data.universe_data.currentUniverse);
-        this.universes = data.universe_data.universes || {};
+        this.telegramId = data.telegram_id;
+        this.username = data.username;
+        this.totalClicks = data.totalClicks;
+        this.currentUniverse = data.currentUniverse;
+        this.universes = data.universes || {};
 
         console.log('Данные установлены в UniverseData:', JSON.stringify(this));
-        this.logToServer('Данные успешно загружены с сервера');
         return true;
       } else {
         throw new Error(data.error || 'Неизвестная ошибка при загрузке данных');
       }
     } catch (error) {
       console.error('Ошибка при инициализации данных с сервера:', error);
-      this.logToServer(`Ошибка при инициализации данных с сервера: ${error.message}`);
       return false;
     }
   },
