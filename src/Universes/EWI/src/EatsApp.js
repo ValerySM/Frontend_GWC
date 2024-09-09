@@ -24,7 +24,7 @@ const DamageIndicator = ({ x, y, damage }) => (
 );
 
 function EatsApp({ setIsTabOpen }) {
-  console.log('EatsApp рендерится с данными:', UniverseData.getUserData(), UniverseData.getTotalClicks());
+console.log('EatsApp рендерится с данными:', UniverseData.getUserData(), UniverseData.getTotalClicks());
   const currentUniverse = UniverseData.getCurrentUniverse();
 
   const [totalClicks, setTotalClicks] = useState(UniverseData.getTotalClicks());
@@ -153,8 +153,8 @@ function EatsApp({ setIsTabOpen }) {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            telegramId,
-            username,
+            telegram_id: telegramId,
+            username: username,
             totalClicks: newTotalClicks,
             currentUniverse: UniverseData.getCurrentUniverse(),
           }),

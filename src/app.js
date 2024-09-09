@@ -6,40 +6,96 @@ import EWE from './Universes/EWE/EWE';
 import EcoGame from './Universes/ECI/EcoGame';
 import UniverseData from './UniverseData';
 
+
+logToServer(message) {
+    
+    fetch(`https://backend-gwc-1.onrender.com/api/log`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        
+        message: message
+      }),
+    }).catch(error => console.error('Ошибка логирования на сервер:', error));
+  };
 function App() {
   const [currentUniverse, setCurrentUniverse] = useState('EatsApp');
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-
+logToServer("Лог перед юзефект");
   useEffect(() => {
-    const initApp = async () => {
-      console.log('Initializing App');
-      
-      if (UniverseData.init()) {
-        console.log('UniverseData initialized successfully');
-        try {
-          const serverInitSuccess = await UniverseData.initFromServer();
-          if (serverInitSuccess) {
-            console.log('Data loaded from server successfully');
-            setCurrentUniverse(UniverseData.getCurrentUniverse());
-            setIsAuthenticated(true);
-          } else {
-            console.error('Failed to load data from server');
-            setIsAuthenticated(false);
-          }
-        } catch (error) {
-          console.error('Error during server initialization:', error);
+    const initTelegramApp = async () => {
+      if (!window.Telegram || !window.Telegram.WebApp) {
+        console.error('Telegram WebApp API не доступен');
+        setIsLoading(false);
+        return;
+      }
+
+      const tg = window.Telegram.WebApp;
+
+      tg.expand();
+      tg.enableClosingConfirmation();
+
+      const initData = tg.initDataUnsafe;
+      if (!initData || !initData.user) {
+        console.error('Данные пользователя недоступны');
+        setIsLoading(false);
+        return;
+      }
+
+      const { id: telegramId, username, first_name } = initData.user;
+      const displayName = username || first_name;
+
+      try {
+        const success = await UniverseData.initFromServer(telegramId.toString(), displayName);
+        
+        console.log('Данные после initFromServer:', UniverseData);
+
+        if (success) {
+          console.log('Установленные данные:', {
+            telegramId: UniverseData.getUserData().telegramId,
+            username: UniverseData.getUserData().username,
+            totalClicks: UniverseData.getTotalClicks(),
+            currentUniverse: UniverseData.getCurrentUniverse()
+          });
+
+          setCurrentUniverse(UniverseData.getCurrentUniverse());
+          setIsAuthenticated(true);
+          UniverseData.logToServer('Аутентификация успешна');
+
+          tg.ready();
+        } else {
           setIsAuthenticated(false);
+          UniverseData.logToServer('Не удалось загрузить данные пользователя');
         }
-      } else {
-        console.error('Failed to initialize UniverseData');
+      } catch (error) {
+        console.error('Ошибка во время аутентификации:', error);
+        UniverseData.logToServer(`Ошибка аутентификации: ${error.message}`);
         setIsAuthenticated(false);
       }
 
       setIsLoading(false);
     };
 
-    initApp();
+    initTelegramApp();
+  }, []);
+
+  useEffect(() => {
+    const handleBackButton = () => {
+      console.log('Нажата кнопка "Назад"');
+    };
+
+    if (window.Telegram && window.Telegram.WebApp) {
+      window.Telegram.WebApp.onEvent('backButtonClicked', handleBackButton);
+    }
+
+    return () => {
+      if (window.Telegram && window.Telegram.WebApp) {
+        window.Telegram.WebApp.offEvent('backButtonClicked', handleBackButton);
+      }
+    };
   }, []);
 
   if (isLoading) {
