@@ -77,8 +77,14 @@ const UniverseData = {
     }
   },
 
+
+
   getUserData() {
     return { telegramId: this.telegramId, username: this.username };
+  },
+
+getTotalClicks() {
+    return this.totalClicks;
   },
 
   setTotalClicks(clicks) {
