@@ -3,23 +3,36 @@ import axios from 'axios';
 const API_BASE_URL = 'https://backend-gwc-1.onrender.com';
 
 const UniverseData = {
-  telegramId: '5859381541', // Фиксированный telegram_id для теста
+  telegramId: '123456789', // Фиксированный telegram_id для теста
   totalClicks: 50, // Начальное значение totalClicks для теста
 
-  async initFromServer() {
-    console.log('Initializing with fixed data');
-    console.log('Fixed telegram_id:', this.telegramId);
-    console.log('Initial totalClicks:', this.totalClicks);
-    return true;
+  async initFromServer(telegramId) {
+    console.log('Initializing from server for Telegram ID:', telegramId);
+    try {
+      const response = await axios.post(`${API_BASE_URL}/api/auth`, { telegram_id: telegramId });
+      console.log('Server response:', response.data);
+
+      if (response.data.success) {
+        this.setUserData(response.data.telegram_id);
+        this.setTotalClicks(response.data.totalClicks);
+        console.log('Data set in UniverseData:', JSON.stringify(this));
+        return true;
+      } else {
+        throw new Error(response.data.error || 'Unknown error loading data');
+      }
+    } catch (error) {
+      console.error('Error initializing data from server:', error.response ? error.response.data : error.message);
+      return false;
+    }
   },
 
-  setUserData(id) {
-    console.log('Setting user data:', id);
-    // Для теста мы не будем менять telegramId
+  setUserData(telegramId) {
+    console.log('Setting user data. Telegram ID:', telegramId);
+    this.telegramId = telegramId;
   },
 
   getUserData() {
-    console.log('Getting user data. telegramId:', this.telegramId);
+    console.log('Getting user data. Telegram ID:', this.telegramId);
     return { telegramId: this.telegramId };
   },
 
@@ -50,8 +63,14 @@ const UniverseData = {
   },
 
   async saveToServer() {
+    const { telegramId } = this.getUserData();
+    if (!telegramId) {
+      console.log('Telegram ID unavailable');
+      throw new Error('Telegram ID unavailable');
+    }
+
     const dataToSend = {
-      telegram_id: this.telegramId,
+      telegram_id: telegramId,
       totalClicks: this.totalClicks
     };
 
