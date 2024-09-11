@@ -14,7 +14,7 @@ const UniverseData = {
       console.log('Ответ сервера:', response.data);
 
       if (response.data.success) {
-        this.setTotalClicks(response.data.totalClicks); // Устанавливаем клики из ответа сервера
+        this.setTotalClicks(response.data.totalClicks || 0); // Защита от null значений
         this.isDataLoaded = true; // Данные загружены успешно
         console.log('Данные установлены в UniverseData. Всего кликов:', this.totalClicks);
         return true;
@@ -25,10 +25,6 @@ const UniverseData = {
       console.error('Ошибка при инициализации данных с сервера:', error.response ? error.response.data : error.message);
       return false;
     }
-  },
-
-  getUserData() {
-    return { telegramId: this.telegramId };
   },
 
   getTotalClicks() {
@@ -54,21 +50,6 @@ const UniverseData = {
     console.log('Количество кликов увеличено:', this.totalClicks);
     this.notifyListeners();
     return this.totalClicks;
-  },
-
-  listeners: [],
-
-  addListener(callback) {
-    this.listeners.push(callback); // Добавляем нового слушателя
-  },
-
-  removeListener(callback) {
-    this.listeners = this.listeners.filter(listener => listener !== callback); // Убираем слушателя
-  },
-
-  notifyListeners() {
-    console.log('Уведомляем слушателей. Текущие клики:', this.totalClicks);
-    this.listeners.forEach(listener => listener(this.totalClicks));
   },
 
   async saveToServer() {
