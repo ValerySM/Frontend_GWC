@@ -4,7 +4,8 @@ const API_BASE_URL = 'https://backend-gwc-1.onrender.com';
 
 const UniverseData = {
   telegramId: '123456789', // Фиксированный telegram_id для теста
-  totalClicks: 0,
+  totalClicks: null,
+  isDataLoaded: false,
 
   async initFromServer() {
     console.log('Initializing from server for Telegram ID:', this.telegramId);
@@ -13,10 +14,8 @@ const UniverseData = {
       console.log('Server response:', response.data);
 
       if (response.data.success) {
-        // Устанавливаем totalClicks только если оно больше текущего значения
-        if (response.data.totalClicks > this.totalClicks) {
-          this.setTotalClicks(response.data.totalClicks);
-        }
+        this.setTotalClicks(response.data.totalClicks);
+        this.isDataLoaded = true;
         console.log('Data set in UniverseData:', JSON.stringify(this));
         return true;
       } else {
@@ -34,6 +33,10 @@ const UniverseData = {
   },
 
   getTotalClicks() {
+    if (!this.isDataLoaded) {
+      console.warn('Attempting to get totalClicks before data is loaded');
+      return 0;
+    }
     console.log('Getting total clicks:', this.totalClicks);
     return this.totalClicks;
   },
@@ -45,6 +48,10 @@ const UniverseData = {
   },
 
   incrementTotalClicks() {
+    if (!this.isDataLoaded) {
+      console.warn('Attempting to increment totalClicks before data is loaded');
+      return 0;
+    }
     this.totalClicks += 1;
     console.log('Incremented total clicks:', this.totalClicks);
     this.notifyListeners();
@@ -67,6 +74,10 @@ const UniverseData = {
   },
 
   async saveToServer() {
+    if (!this.isDataLoaded) {
+      console.warn('Attempting to save data before it is loaded');
+      return;
+    }
     const dataToSend = {
       telegram_id: this.telegramId,
       totalClicks: this.totalClicks

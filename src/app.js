@@ -8,27 +8,25 @@ function App() {
   const [isError, setIsError] = useState(false);
 
   useEffect(() => {
-    const initializeData = async () => {
+    const loadData = async () => {
       try {
         const success = await UniverseData.initFromServer();
         if (success) {
           setIsLoading(false);
         } else {
           setIsError(true);
-          setIsLoading(false);
         }
       } catch (error) {
-        console.error('Error initializing data:', error);
+        console.error('Error loading data:', error);
         setIsError(true);
-        setIsLoading(false);
       }
     };
 
-    initializeData();
+    loadData();
   }, []);
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <div>Loading data...</div>;
   }
 
   if (isError) {
