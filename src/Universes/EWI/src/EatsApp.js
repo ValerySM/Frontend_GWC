@@ -1,49 +1,50 @@
-import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
-import EatsApp from './Universes/EWI/EatsApp';
+import React, { useState, useEffect, useCallback } from 'react';
+import './EatsApp.css';
+import clickerImage from '../public/clicker-image.png';
 import UniverseData from './UniverseData';
 
-function App() {
-  const [isLoading, setIsLoading] = useState(true);
-  const [isError, setIsError] = useState(false);
+function EatsApp() {
+  const [totalClicks, setTotalClicks] = useState(UniverseData.getTotalClicks());
 
   useEffect(() => {
-    const initializeData = async () => {
-      try {
-        const success = await UniverseData.initFromServer();
-        if (success) {
-          setIsLoading(false);
-        } else {
-          setIsError(true);
-          setIsLoading(false);
-        }
-      } catch (error) {
-        console.error('Error initializing data:', error);
-        setIsError(true);
-        setIsLoading(false);
-      }
+    console.log('EatsApp mounted. Initial total clicks:', UniverseData.getTotalClicks());
+    const updateTotalClicks = (newTotal) => {
+      console.log('Listener called. New total clicks:', newTotal);
+      setTotalClicks(newTotal);
     };
 
-    initializeData();
+    UniverseData.addListener(updateTotalClicks);
+
+    return () => {
+      UniverseData.removeListener(updateTotalClicks);
+    };
   }, []);
 
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
-
-  if (isError) {
-    return <div>Error loading data. Please try again later.</div>;
-  }
+  const handleClick = useCallback(async () => {
+    console.log('Click handled. Current total clicks:', totalClicks);
+    const newTotalClicks = UniverseData.incrementTotalClicks();
+    console.log('New total clicks:', newTotalClicks);
+    try {
+      await UniverseData.saveToServer();
+      console.log('Save to server completed. Current UniverseData:', UniverseData.getTotalClicks());
+    } catch (error) {
+      console.error('Error saving to server:', error);
+    }
+  }, [totalClicks]);
 
   return (
-    <Router basename="/Frontend_GWC">
-      <div className="App">
-        <Switch>
-          <Route exact path="/" component={EatsApp} />
-        </Switch>
-      </div>
-    </Router>
+    <div className="App">
+      <header className="App-header">
+        <div className="balance-container">
+          <img src={clickerImage} alt="Balance Icon" className="balance-icon" />
+          <p>{totalClicks}</p>
+        </div>
+        <div className="clicker-container" onClick={handleClick}>
+          <img src={clickerImage} alt="Clicker" className="clicker-image" />
+        </div>
+      </header>
+    </div>
   );
 }
 
-export default App;
+export default EatsApp;
