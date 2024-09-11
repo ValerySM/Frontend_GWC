@@ -3,7 +3,7 @@ import axios from 'axios';
 const API_BASE_URL = 'https://backend-gwc-1.onrender.com';
 
 const UniverseData = {
-  telegramId: '5859381541', // Фиксированный telegram_id для теста
+  telegramId: '123456789', // Фиксированный telegram_id для теста
   totalClicks: 0,
 
   async initFromServer() {
@@ -13,7 +13,10 @@ const UniverseData = {
       console.log('Server response:', response.data);
 
       if (response.data.success) {
-        this.setTotalClicks(response.data.totalClicks);
+        // Устанавливаем totalClicks только если оно больше текущего значения
+        if (response.data.totalClicks > this.totalClicks) {
+          this.setTotalClicks(response.data.totalClicks);
+        }
         console.log('Data set in UniverseData:', JSON.stringify(this));
         return true;
       } else {
@@ -39,6 +42,13 @@ const UniverseData = {
     console.log('Setting total clicks:', clicks);
     this.totalClicks = clicks;
     this.notifyListeners();
+  },
+
+  incrementTotalClicks() {
+    this.totalClicks += 1;
+    console.log('Incremented total clicks:', this.totalClicks);
+    this.notifyListeners();
+    return this.totalClicks;
   },
 
   listeners: [],

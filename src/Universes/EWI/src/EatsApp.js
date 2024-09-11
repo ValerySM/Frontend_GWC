@@ -22,9 +22,8 @@ function EatsApp() {
 
   const handleClick = useCallback(async () => {
     console.log('Click handled. Current total clicks:', totalClicks);
-    const newTotalClicks = totalClicks + 1;
+    const newTotalClicks = UniverseData.incrementTotalClicks();
     console.log('New total clicks:', newTotalClicks);
-    UniverseData.setTotalClicks(newTotalClicks);
     try {
       await UniverseData.saveToServer();
       console.log('Save to server completed. Current UniverseData:', UniverseData.getTotalClicks());
