@@ -3,7 +3,7 @@ import axios from 'axios';
 const API_BASE_URL = 'https://backend-gwc-1.onrender.com';
 
 const UniverseData = {
-  telegramId: '123456789', // Фиксированный telegram_id для теста
+  telegramId: '5859381541', // Фиксированный telegram_id для теста
   totalClicks: null,
   isDataLoaded: false,
 
