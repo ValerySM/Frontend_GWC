@@ -7,7 +7,7 @@ function EatsApp() {
   const [totalClicks, setTotalClicks] = useState(UniverseData.getTotalClicks());
 
   useEffect(() => {
-    console.log('Component mounted. Initial total clicks:', UniverseData.getTotalClicks());
+    console.log('EatsApp mounted. Initial total clicks:', UniverseData.getTotalClicks());
     const updateTotalClicks = (newTotal) => {
       console.log('Listener called. New total clicks:', newTotal);
       setTotalClicks(newTotal);

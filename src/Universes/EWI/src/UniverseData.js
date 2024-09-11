@@ -4,16 +4,15 @@ const API_BASE_URL = 'https://backend-gwc-1.onrender.com';
 
 const UniverseData = {
   telegramId: '5859381541', // Фиксированный telegram_id для теста
-  totalClicks: 50, // Начальное значение totalClicks для теста
+  totalClicks: 0,
 
-  async initFromServer(telegramId) {
-    console.log('Initializing from server for Telegram ID:', telegramId);
+  async initFromServer() {
+    console.log('Initializing from server for Telegram ID:', this.telegramId);
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/auth`, { telegram_id: telegramId });
+      const response = await axios.get(`${API_BASE_URL}/api/user?telegram_id=${this.telegramId}`);
       console.log('Server response:', response.data);
 
       if (response.data.success) {
-        this.setUserData(response.data.telegram_id);
         this.setTotalClicks(response.data.totalClicks);
         console.log('Data set in UniverseData:', JSON.stringify(this));
         return true;
@@ -24,11 +23,6 @@ const UniverseData = {
       console.error('Error initializing data from server:', error.response ? error.response.data : error.message);
       return false;
     }
-  },
-
-  setUserData(telegramId) {
-    console.log('Setting user data. Telegram ID:', telegramId);
-    this.telegramId = telegramId;
   },
 
   getUserData() {
@@ -63,14 +57,8 @@ const UniverseData = {
   },
 
   async saveToServer() {
-    const { telegramId } = this.getUserData();
-    if (!telegramId) {
-      console.log('Telegram ID unavailable');
-      throw new Error('Telegram ID unavailable');
-    }
-
     const dataToSend = {
-      telegram_id: telegramId,
+      telegram_id: this.telegramId,
       totalClicks: this.totalClicks
     };
 
