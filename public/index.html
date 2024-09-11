@@ -1,38 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+  <head>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+	
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Your Game App</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Добавляем ссылки на CSS файлы, если они есть -->
-    <link rel="stylesheet" href="./static/css/main.css">
-</head>
-<body>
+    <title>E>E>E</title>
+  </head>
+  <body>
     <div id="root"></div>
-    
-    <!-- Добавляем скрипты -->
-    <script src="./static/js/main.js"></script>
-    <!-- Если у вас есть дополнительные чанки, добавьте их здесь -->
-    <script src="./static/js/chunk.js"></script>
-    
-    <!-- Если вы не уверены в точных именах файлов, можно использовать шаблон -->
-    <script>
-        // Этот скрипт найдет все JS файлы в папке static/js и подключит их
-        fetch('./static/js/')
-            .then(response => response.text())
-            .then(text => {
-                const parser = new DOMParser();
-                const htmlDocument = parser.parseFromString(text, "text/html");
-                const scripts = htmlDocument.getElementsByTagName("a");
-                for (let script of scripts) {
-                    if (script.href.endsWith('.js')) {
-                        const scriptElement = document.createElement('script');
-                        scriptElement.src = script.href;
-                        document.body.appendChild(scriptElement);
-                    }
-                }
-            });
-    </script>
-</body>
+  </body>
 </html>

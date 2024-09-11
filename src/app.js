@@ -1,68 +1,102 @@
-import React, { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Route, Switch, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 import UniverseSwitcher from './components/UniverseSwitcher';
 import EatsApp from './Universes/EWI/EatsApp';
 import EWE from './Universes/EWE/EWE';
 import EcoGame from './Universes/ECI/EcoGame';
 import UniverseData from './UniverseData';
 
-function AppContent() {
+
+logToServer(message) {
+    
+    fetch(`https://backend-gwc-1.onrender.com/api/log`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        
+        message: message
+      }),
+    }).catch(error => console.error('Ошибка логирования на сервер:', error));
+  };
+function App() {
+  const [currentUniverse, setCurrentUniverse] = useState('EatsApp');
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const location = useLocation();
-
+logToServer("Лог перед юзефект");
   useEffect(() => {
-    const initApp = async () => {
+    const initTelegramApp = async () => {
+      if (!window.Telegram || !window.Telegram.WebApp) {
+        console.error('Telegram WebApp API не доступен');
+        setIsLoading(false);
+        return;
+      }
+
+      const tg = window.Telegram.WebApp;
+
+      tg.expand();
+      tg.enableClosingConfirmation();
+
+      const initData = tg.initDataUnsafe;
+      if (!initData || !initData.user) {
+        console.error('Данные пользователя недоступны');
+        setIsLoading(false);
+        return;
+      }
+
+      const { id: telegramId, username, first_name } = initData.user;
+      const displayName = username || first_name;
+
       try {
-        const params = new URLSearchParams(location.search);
-        const telegramId = params.get('telegram_id');
-        const username = params.get('username');
+        const success = await UniverseData.initFromServer(telegramId.toString(), displayName);
+        
+        console.log('Данные после initFromServer:', UniverseData);
 
-        if (telegramId && username) {
-          const success = await UniverseData.initFromServer(telegramId, username);
-          if (success) {
-            setIsAuthenticated(true);
-            UniverseData.logToServer('Аутентификация успешна через URL параметры');
-          } else {
-            throw new Error('Не удалось загрузить данные пользователя');
-          }
-        } else if (window.Telegram && window.Telegram.WebApp) {
-          const tg = window.Telegram.WebApp;
-          tg.expand();
-          tg.enableClosingConfirmation();
+        if (success) {
+          console.log('Установленные данные:', {
+            telegramId: UniverseData.getUserData().telegramId,
+            username: UniverseData.getUserData().username,
+            totalClicks: UniverseData.getTotalClicks(),
+            currentUniverse: UniverseData.getCurrentUniverse()
+          });
 
-          const initData = tg.initDataUnsafe;
-          if (!initData || !initData.user) {
-            throw new Error('Данные пользователя недоступны в Telegram WebApp');
-          }
+          setCurrentUniverse(UniverseData.getCurrentUniverse());
+          setIsAuthenticated(true);
+          UniverseData.logToServer('Аутентификация успешна');
 
-          const { id, username: tgUsername, first_name } = initData.user;
-          const displayName = tgUsername || first_name;
-
-          const success = await UniverseData.initFromServer(id.toString(), displayName);
-          if (success) {
-            setIsAuthenticated(true);
-            UniverseData.logToServer('Аутентификация успешна через Telegram WebApp');
-          } else {
-            throw new Error('Не удалось загрузить данные пользователя через Telegram WebApp');
-          }
+          tg.ready();
         } else {
-          throw new Error('Нет доступных данных для аутентификации');
+          setIsAuthenticated(false);
+          UniverseData.logToServer('Не удалось загрузить данные пользователя');
         }
       } catch (error) {
-        console.error('Ошибка инициализации:', error);
+        console.error('Ошибка во время аутентификации:', error);
         UniverseData.logToServer(`Ошибка аутентификации: ${error.message}`);
         setIsAuthenticated(false);
-      } finally {
-        setIsLoading(false);
-        if (window.Telegram && window.Telegram.WebApp) {
-          window.Telegram.WebApp.ready();
-        }
       }
+
+      setIsLoading(false);
     };
 
-    initApp();
-  }, [location]);
+    initTelegramApp();
+  }, []);
+
+  useEffect(() => {
+    const handleBackButton = () => {
+      console.log('Нажата кнопка "Назад"');
+    };
+
+    if (window.Telegram && window.Telegram.WebApp) {
+      window.Telegram.WebApp.onEvent('backButtonClicked', handleBackButton);
+    }
+
+    return () => {
+      if (window.Telegram && window.Telegram.WebApp) {
+        window.Telegram.WebApp.offEvent('backButtonClicked', handleBackButton);
+      }
+    };
+  }, []);
 
   if (isLoading) {
     return <div>Загрузка...</div>;
@@ -73,33 +107,24 @@ function AppContent() {
   }
 
   return (
-    <div className="App">
-      <UniverseSwitcher 
-        currentUniverse={UniverseData.getCurrentUniverse()} 
-        setCurrentUniverse={(universe) => UniverseData.setCurrentUniverse(universe)}
-      />
-      <Switch>
-        <Route exact path="/" render={() => {
-          switch(UniverseData.getCurrentUniverse()) {
-            case 'EatsApp':
-              return <EatsApp />;
-            case 'First':
-              return <EWE />;
-            case 'EcoGame':
-              return <EcoGame />;
-            default:
-              return <EatsApp />;
-          }
-        }} />
-      </Switch>
-    </div>
-  );
-}
-
-function App() {
-  return (
     <Router basename="/Frontend_GWC">
-      <AppContent />
+      <div className="App">
+        <UniverseSwitcher currentUniverse={currentUniverse} setCurrentUniverse={setCurrentUniverse} />
+        <Switch>
+          <Route exact path="/" render={() => {
+            switch(currentUniverse) {
+              case 'EatsApp':
+                return <EatsApp />;
+              case 'First':
+                return <EWE />;
+              case 'EcoGame':
+                return <EcoGame />;
+              default:
+                return <EatsApp />;
+            }
+          }} />
+        </Switch>
+      </div>
     </Router>
   );
 }
