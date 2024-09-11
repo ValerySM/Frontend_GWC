@@ -10,10 +10,13 @@ function App() {
   useEffect(() => {
     const loadData = async () => {
       try {
+        console.log("Starting data initialization...");
         const success = await UniverseData.initFromServer();
         if (success) {
+          console.log("Data loaded successfully. Total clicks:", UniverseData.getTotalClicks());
           setIsLoading(false);
         } else {
+          console.error("Failed to load data");
           setIsError(true);
         }
       } catch (error) {
@@ -26,11 +29,11 @@ function App() {
   }, []);
 
   if (isLoading) {
-    return <div>Loading data...</div>;
+    return <div style={{fontSize: '24px', textAlign: 'center', marginTop: '50px'}}>Loading data...</div>;
   }
 
   if (isError) {
-    return <div>Error loading data. Please try again later.</div>;
+    return <div style={{fontSize: '24px', textAlign: 'center', marginTop: '50px'}}>Error loading data. Please try again later.</div>;
   }
 
   return (

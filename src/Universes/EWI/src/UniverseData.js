@@ -16,7 +16,7 @@ const UniverseData = {
       if (response.data.success) {
         this.setTotalClicks(response.data.totalClicks);
         this.isDataLoaded = true;
-        console.log('Data set in UniverseData:', JSON.stringify(this));
+        console.log('Data set in UniverseData. Total clicks:', this.totalClicks);
         return true;
       } else {
         throw new Error(response.data.error || 'Unknown error loading data');
