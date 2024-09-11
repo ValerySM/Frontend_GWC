@@ -8,6 +8,7 @@ function EatsApp() {
 
   useEffect(() => {
     const updateTotalClicks = (newTotal) => {
+      console.log('Updating total clicks:', newTotal);
       setTotalClicks(newTotal);
     };
 
@@ -19,7 +20,9 @@ function EatsApp() {
   }, []);
 
   const handleClick = useCallback(() => {
+    console.log('Click handled');
     const newTotalClicks = totalClicks + 1;
+    console.log('New total clicks:', newTotalClicks);
     UniverseData.setTotalClicks(newTotalClicks);
     UniverseData.saveToServer();
   }, [totalClicks]);

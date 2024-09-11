@@ -49,23 +49,9 @@ const UniverseData = {
   },
 
   setTotalClicks(clicks) {
-    console.log('setTotalClicks вызван с:', clicks);
+    console.log('Setting total clicks:', clicks);
     this.totalClicks = clicks;
     this.notifyListeners();
-  },
-
-  listeners: [],
-
-  addListener(callback) {
-    this.listeners.push(callback);
-  },
-
-  removeListener(callback) {
-    this.listeners = this.listeners.filter(listener => listener !== callback);
-  },
-
-  notifyListeners() {
-    this.listeners.forEach(listener => listener(this.totalClicks));
   },
 
   saveToServer() {
@@ -80,7 +66,7 @@ const UniverseData = {
       totalClicks: this.totalClicks
     };
 
-    console.log(`Отправка данных на сервер: ${JSON.stringify(dataToSend)}`);
+    console.log(`Отправка данных на сервер:`, dataToSend);
 
     fetch(`https://backend-gwc-1.onrender.com/api/users`, {
       method: 'PUT',
