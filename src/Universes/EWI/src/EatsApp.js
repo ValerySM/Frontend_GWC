@@ -5,33 +5,38 @@ import UniverseData from './UniverseData';
 
 function EatsApp() {
   const [totalClicks, setTotalClicks] = useState(() => {
-    console.log("Initial state setup. Total clicks from UniverseData:", UniverseData.getTotalClicks());
+    console.log("Инициализация состояния. Всего кликов из UniverseData:", UniverseData.getTotalClicks());
     return UniverseData.getTotalClicks();
   });
 
   useEffect(() => {
-    console.log('EatsApp mounted. Current total clicks:', totalClicks);
+    console.log('EatsApp смонтирован. Текущее количество кликов:', totalClicks);
     const updateTotalClicks = (newTotal) => {
-      console.log('Listener called. New total clicks:', newTotal);
+      console.log('Обновление слушателя. Новое количество кликов:', newTotal);
       setTotalClicks(newTotal);
     };
 
-    UniverseData.addListener(updateTotalClicks);
+    UniverseData.addListener(updateTotalClicks); // Добавляем слушатель для обновления данных
 
     return () => {
-      UniverseData.removeListener(updateTotalClicks);
+      UniverseData.removeListener(updateTotalClicks); // Удаляем слушатель при размонтировании компонента
     };
-  }, []);
+  }, [totalClicks]);
 
   const handleClick = useCallback(async () => {
-    console.log('Click handled. Current total clicks:', totalClicks);
+    if (!UniverseData.isDataLoaded) {
+      console.error('Данные ещё не загружены. Нельзя кликнуть.');
+      return; // Запрещаем клики до загрузки данных
+    }
+
+    console.log('Обработка клика. Текущее количество кликов:', totalClicks);
     const newTotalClicks = UniverseData.incrementTotalClicks();
-    console.log('New total clicks:', newTotalClicks);
+    console.log('Новое количество кликов:', newTotalClicks);
     try {
-      await UniverseData.saveToServer();
-      console.log('Save to server completed. Current UniverseData:', UniverseData.getTotalClicks());
+      await UniverseData.saveToServer(); // Сохраняем данные на сервере
+      console.log('Сохранение на сервере завершено. Текущее количество кликов:', UniverseData.getTotalClicks());
     } catch (error) {
-      console.error('Error saving to server:', error);
+      console.error('Ошибка при сохранении на сервере:', error);
     }
   }, [totalClicks]);
 
