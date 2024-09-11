@@ -4,47 +4,42 @@ import EatsApp from './Universes/EWI/EatsApp';
 import UniverseData from './UniverseData';
 
 function App() {
-  const [isLoading, setIsLoading] = useState(true); // Состояние для отображения загрузки
-  const [isError, setIsError] = useState(false);    // Состояние для отображения ошибки
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
 
   useEffect(() => {
-    const loadData = async () => {
+    const initializeData = async () => {
       try {
-        console.log("Начинаем инициализацию данных...");
-        const startTime = Date.now();
-        const success = await UniverseData.initFromServer(); // Инициализация данных с сервера
-        const elapsedTime = Date.now() - startTime;
-
+        const success = await UniverseData.initFromServer();
         if (success) {
-          console.log("Данные успешно загружены. Всего кликов:", UniverseData.getTotalClicks());
-          const remainingTime = Math.max(0, 2000 - elapsedTime); // Минимальное время загрузки
-          setTimeout(() => setIsLoading(false), remainingTime); // Отображаем экран загрузки
+          setIsLoading(false);
         } else {
-          throw new Error("Ошибка при загрузке данных");
+          setIsError(true);
+          setIsLoading(false);
         }
       } catch (error) {
-        console.error('Ошибка при загрузке данных:', error);
+        console.error('Error initializing data:', error);
         setIsError(true);
-        setIsLoading(false); // В случае ошибки, убираем экран загрузки
+        setIsLoading(false);
       }
     };
 
-    loadData();
+    initializeData();
   }, []);
 
   if (isLoading) {
-    return <div style={{fontSize: '24px', textAlign: 'center', marginTop: '50px'}}>Загрузка данных...</div>; // Экран загрузки
+    return <div>Loading...</div>;
   }
 
   if (isError) {
-    return <div style={{fontSize: '24px', textAlign: 'center', marginTop: '50px'}}>Ошибка при загрузке данных. Попробуйте позже.</div>; // Экран ошибки
+    return <div>Error loading data. Please try again later.</div>;
   }
 
   return (
     <Router basename="/Frontend_GWC">
       <div className="App">
         <Switch>
-          <Route exact path="/" component={EatsApp} /> {/* Рендер приложения после успешной загрузки */}
+          <Route exact path="/" component={EatsApp} />
         </Switch>
       </div>
     </Router>
