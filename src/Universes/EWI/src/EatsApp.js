@@ -7,8 +7,9 @@ function EatsApp() {
   const [totalClicks, setTotalClicks] = useState(UniverseData.getTotalClicks());
 
   useEffect(() => {
+    console.log('Component mounted. Initial total clicks:', UniverseData.getTotalClicks());
     const updateTotalClicks = (newTotal) => {
-      console.log('Updating total clicks:', newTotal);
+      console.log('Listener called. New total clicks:', newTotal);
       setTotalClicks(newTotal);
     };
 
@@ -19,12 +20,17 @@ function EatsApp() {
     };
   }, []);
 
-  const handleClick = useCallback(() => {
-    console.log('Click handled');
+  const handleClick = useCallback(async () => {
+    console.log('Click handled. Current total clicks:', totalClicks);
     const newTotalClicks = totalClicks + 1;
     console.log('New total clicks:', newTotalClicks);
     UniverseData.setTotalClicks(newTotalClicks);
-    UniverseData.saveToServer();
+    try {
+      await UniverseData.saveToServer();
+      console.log('Save to server completed. Current UniverseData:', UniverseData.getTotalClicks());
+    } catch (error) {
+      console.error('Error saving to server:', error);
+    }
   }, [totalClicks]);
 
   return (

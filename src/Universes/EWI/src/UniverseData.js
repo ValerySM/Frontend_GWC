@@ -1,50 +1,30 @@
+import axios from 'axios';
+
+const API_BASE_URL = 'https://backend-gwc-1.onrender.com';
+
 const UniverseData = {
-  telegramId: null,
-  totalClicks: 0,
+  telegramId: '5859381541', // Фиксированный telegram_id для теста
+  totalClicks: 50, // Начальное значение totalClicks для теста
 
-  async initFromServer(telegramId) {
-    console.log('initFromServer вызван с параметром:', telegramId);
-    try {
-      const response = await fetch('https://backend-gwc-1.onrender.com/api/auth', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ telegram_id: telegramId }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log('Ответ сервера:', data);
-
-      if (data.success) {
-        this.setUserData(data.telegram_id);
-        this.setTotalClicks(data.totalClicks);
-        console.log('Данные установлены в UniverseData:', JSON.stringify(this));
-        return true;
-      } else {
-        throw new Error(data.error || 'Неизвестная ошибка при загрузке данных');
-      }
-    } catch (error) {
-      console.error('Ошибка при инициализации данных с сервера:', error);
-      return false;
-    }
+  async initFromServer() {
+    console.log('Initializing with fixed data');
+    console.log('Fixed telegram_id:', this.telegramId);
+    console.log('Initial totalClicks:', this.totalClicks);
+    return true;
   },
 
   setUserData(id) {
-    console.log('setUserData вызван с:', id);
-    this.telegramId = id;
+    console.log('Setting user data:', id);
+    // Для теста мы не будем менять telegramId
   },
 
   getUserData() {
-    console.log('getUserData вызван. telegramId:', this.telegramId);
+    console.log('Getting user data. telegramId:', this.telegramId);
     return { telegramId: this.telegramId };
   },
 
   getTotalClicks() {
+    console.log('Getting total clicks:', this.totalClicks);
     return this.totalClicks;
   },
 
@@ -54,43 +34,41 @@ const UniverseData = {
     this.notifyListeners();
   },
 
-  saveToServer() {
-    const { telegramId } = this.getUserData();
-    if (!telegramId) {
-      console.log('Telegram ID недоступен');
-      return;
-    }
+  listeners: [],
 
+  addListener(callback) {
+    this.listeners.push(callback);
+  },
+
+  removeListener(callback) {
+    this.listeners = this.listeners.filter(listener => listener !== callback);
+  },
+
+  notifyListeners() {
+    console.log('Notifying listeners. Current clicks:', this.totalClicks);
+    this.listeners.forEach(listener => listener(this.totalClicks));
+  },
+
+  async saveToServer() {
     const dataToSend = {
-      telegram_id: telegramId,
+      telegram_id: this.telegramId,
       totalClicks: this.totalClicks
     };
 
-    console.log(`Отправка данных на сервер:`, dataToSend);
+    console.log('Sending data to server:', dataToSend);
 
-    fetch(`https://backend-gwc-1.onrender.com/api/users`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(dataToSend),
-    })
-    .then(response => {
-      if (!response.ok) {
-        throw new Error(`Ошибка HTTP! статус: ${response.status}`);
-      }
-      return response.json();
-    })
-    .then(data => {
-      if (data.success) {
-        console.log('Данные успешно сохранены на сервере');
+    try {
+      const response = await axios.put(`${API_BASE_URL}/api/users`, dataToSend);
+      if (response.data.success) {
+        console.log('Data successfully saved on server');
       } else {
-        console.log(`Не удалось сохранить данные на сервере: ${data.error}`);
+        console.log('Failed to save data on server:', response.data.error);
       }
-    })
-    .catch(error => {
-      console.log(`Ошибка сохранения данных на сервере: ${error}`);
-    });
+      return response.data;
+    } catch (error) {
+      console.log('Error saving data on server:', error.response ? error.response.data : error.message);
+      throw error;
+    }
   },
 };
 
