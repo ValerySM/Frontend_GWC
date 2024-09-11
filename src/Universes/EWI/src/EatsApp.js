@@ -4,10 +4,13 @@ import clickerImage from '../public/clicker-image.png';
 import UniverseData from './UniverseData';
 
 function EatsApp() {
-  const [totalClicks, setTotalClicks] = useState(UniverseData.getTotalClicks());
+  const [totalClicks, setTotalClicks] = useState(() => {
+    console.log("Initial state setup. Total clicks from UniverseData:", UniverseData.getTotalClicks());
+    return UniverseData.getTotalClicks();
+  });
 
   useEffect(() => {
-    console.log('EatsApp mounted. Initial total clicks:', UniverseData.getTotalClicks());
+    console.log('EatsApp mounted. Current total clicks:', totalClicks);
     const updateTotalClicks = (newTotal) => {
       console.log('Listener called. New total clicks:', newTotal);
       setTotalClicks(newTotal);

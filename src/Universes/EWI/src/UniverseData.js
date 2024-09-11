@@ -4,7 +4,7 @@ const API_BASE_URL = 'https://backend-gwc-1.onrender.com';
 
 const UniverseData = {
   telegramId: '5859381541', // Фиксированный telegram_id для теста
-  totalClicks: 0,
+  totalClicks: null,
   isDataLoaded: false,
 
   async initFromServer() {
@@ -32,16 +32,26 @@ const UniverseData = {
   },
 
   getTotalClicks() {
+    if (!this.isDataLoaded) {
+      console.warn('Attempting to get totalClicks before data is loaded');
+      return 0;
+    }
     return this.totalClicks;
   },
 
   setTotalClicks(clicks) {
+    console.log('Setting total clicks:', clicks);
     this.totalClicks = clicks;
     this.notifyListeners();
   },
 
   incrementTotalClicks() {
+    if (!this.isDataLoaded) {
+      console.warn('Attempting to increment totalClicks before data is loaded');
+      return 0;
+    }
     this.totalClicks += 1;
+    console.log('Incremented total clicks:', this.totalClicks);
     this.notifyListeners();
     return this.totalClicks;
   },
@@ -57,14 +67,21 @@ const UniverseData = {
   },
 
   notifyListeners() {
+    console.log('Notifying listeners. Current clicks:', this.totalClicks);
     this.listeners.forEach(listener => listener(this.totalClicks));
   },
 
   async saveToServer() {
+    if (!this.isDataLoaded) {
+      console.warn('Attempting to save data before it is loaded');
+      return;
+    }
     const dataToSend = {
       telegram_id: this.telegramId,
       totalClicks: this.totalClicks
     };
+
+    console.log('Sending data to server:', dataToSend);
 
     try {
       const response = await axios.put(`${API_BASE_URL}/api/users`, dataToSend);

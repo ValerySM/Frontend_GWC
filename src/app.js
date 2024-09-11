@@ -11,17 +11,22 @@ function App() {
     const loadData = async () => {
       try {
         console.log("Starting data initialization...");
+        const startTime = Date.now();
         const success = await UniverseData.initFromServer();
+        const elapsedTime = Date.now() - startTime;
+
         if (success) {
           console.log("Data loaded successfully. Total clicks:", UniverseData.getTotalClicks());
-          setIsLoading(false);
+          // Обеспечиваем минимальное время отображения загрузочного экрана
+          const remainingTime = Math.max(0, 2000 - elapsedTime);
+          setTimeout(() => setIsLoading(false), remainingTime);
         } else {
-          console.error("Failed to load data");
-          setIsError(true);
+          throw new Error("Failed to load data");
         }
       } catch (error) {
         console.error('Error loading data:', error);
         setIsError(true);
+        setIsLoading(false);
       }
     };
 
