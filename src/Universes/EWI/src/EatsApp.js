@@ -263,7 +263,7 @@ console.log('EatsApp рендерится с данными:', UniverseData.getU
   const remainingEnergyPercentage = ((energyMax - energy) / energyMax) * 100;
 
   return (
-    <div className={`App`}>
+    <div className={App}>
       <header className="App-header">
         <div className='bg'>
           <div className="abg-wr-4">
@@ -284,7 +284,7 @@ console.log('EatsApp рендерится с данными:', UniverseData.getU
           <p>Energy: {Math.floor(energy)}/{energyMax}</p>
         </div>
         <div className="clicker-container" ref={clickerRef}>
-          <img src={clickerImage} alt="Clicker" className={`clicker-image ${isImageDistorted ? 'distorted' : ''}`} />
+          <img src={clickerImage} alt="Clicker" className={clicker-image ${isImageDistorted ? 'distorted' : ''}} />
           <div className="progress-circle" style={{ boxShadow: '0px 0px 10px 5px gray' }}>
             <CircularProgressbar
               value={remainingEnergyPercentage}
@@ -318,7 +318,7 @@ console.log('EatsApp рендерится с данными:', UniverseData.getU
           </div>
         )}
         {isTabOpenState && (
-          <div className={`tab-content ${isTabOpenState ? 'open' : ''}`}>
+          <div className={tab-content ${isTabOpenState ? 'open' : ''}}>
             <button className="back-button" onClick={handleBackButtonClick}>Back</button>
             {tabContent}
           </div>
