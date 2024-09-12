@@ -24,7 +24,7 @@ const DamageIndicator = ({ x, y, damage }) => (
 );
 
 function EatsApp({ setIsTabOpen }) {
-  console.log('EatsApp рендерится с данными:', UniverseData.getUserData(), UniverseData.getTotalClicks());
+console.log('EatsApp рендерится с данными:', UniverseData.getUserData(), UniverseData.getTotalClicks());
   const currentUniverse = UniverseData.getCurrentUniverse();
 
   const [totalClicks, setTotalClicks] = useState(UniverseData.getTotalClicks());
@@ -263,7 +263,7 @@ function EatsApp({ setIsTabOpen }) {
   const remainingEnergyPercentage = ((energyMax - energy) / energyMax) * 100;
 
   return (
-    <div className="App">
+    <div className={App}>
       <header className="App-header">
         <div className='bg'>
           <div className="abg-wr-4">
@@ -284,11 +284,7 @@ function EatsApp({ setIsTabOpen }) {
           <p>Energy: {Math.floor(energy)}/{energyMax}</p>
         </div>
         <div className="clicker-container" ref={clickerRef}>
-          <img 
-            src={clickerImage} 
-            alt="Clicker" 
-            className={`clicker-image ${isImageDistorted ? 'distorted' : ''}`} 
-          />
+          <img src={clickerImage} alt="Clicker" className={clicker-image ${isImageDistorted ? 'distorted' : ''}} />
           <div className="progress-circle" style={{ boxShadow: '0px 0px 10px 5px gray' }}>
             <CircularProgressbar
               value={remainingEnergyPercentage}
@@ -322,7 +318,7 @@ function EatsApp({ setIsTabOpen }) {
           </div>
         )}
         {isTabOpenState && (
-          <div className={`tab-content ${isTabOpenState ? 'open' : ''}`}>
+          <div className={tab-content ${isTabOpenState ? 'open' : ''}}>
             <button className="back-button" onClick={handleBackButtonClick}>Back</button>
             {tabContent}
           </div>
