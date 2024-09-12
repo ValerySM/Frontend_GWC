@@ -35,9 +35,9 @@ function App() {
       }
 
       try {
-        UniverseData.setUserData(telegramId);
-        UniverseData.setTotalClicks(totalClicks);
-        UniverseData.setCurrentUniverse('EatsApp'); // Или другая начальная вселенная
+        UniverseData.telegramId = telegramId;
+        UniverseData.totalClicks = totalClicks;
+        UniverseData.currentUniverse = 'EatsApp';
 
         console.log('Данные установлены в UniverseData:', JSON.stringify(UniverseData));
 
@@ -57,21 +57,14 @@ function App() {
     initApp();
   }, []);
 
-  useEffect(() => {
-    const handleBackButton = () => {
-      console.log('Нажата кнопка "Назад"');
-    };
-
-    if (window.Telegram && window.Telegram.WebApp) {
-      window.Telegram.WebApp.onEvent('backButtonClicked', handleBackButton);
+  const handleUniverseChange = async (newUniverse) => {
+    try {
+      await UniverseData.setCurrentUniverse(newUniverse);
+      setCurrentUniverse(newUniverse);
+    } catch (error) {
+      console.error('Ошибка при смене вселенной:', error);
     }
-
-    return () => {
-      if (window.Telegram && window.Telegram.WebApp) {
-        window.Telegram.WebApp.offEvent('backButtonClicked', handleBackButton);
-      }
-    };
-  }, []);
+  };
 
   return (
     <Router basename="/Frontend_GWC">
@@ -80,7 +73,7 @@ function App() {
           <div>Загрузка...</div>
         ) : isAuthenticated ? (
           <>
-            <UniverseSwitcher currentUniverse={currentUniverse} setCurrentUniverse={setCurrentUniverse} />
+            <UniverseSwitcher currentUniverse={currentUniverse} setCurrentUniverse={handleUniverseChange} />
             <Switch>
               <Route exact path="/" render={() => {
                 switch(currentUniverse) {
