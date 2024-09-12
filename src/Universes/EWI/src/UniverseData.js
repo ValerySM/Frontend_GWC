@@ -7,7 +7,6 @@ const UniverseData = {
     this.currentUniverse = universeName;
     await this.saveToServer();
     this.logToServer(`Текущая вселенная установлена на: ${universeName}`);
-
   },
 
   async incrementTotalClicks(amount = 1) {
@@ -31,7 +30,7 @@ const UniverseData = {
       });
 
       if (!response.ok) {
-        throw new Error(HTTP error! status: ${response.status});
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
@@ -47,7 +46,7 @@ const UniverseData = {
   },
 
   logToServer(message) {
-    fetch(https://backend-gwc-1.onrender.com/api/log, {
+    fetch('https://backend-gwc-1.onrender.com/api/log', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
