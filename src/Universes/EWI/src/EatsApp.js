@@ -284,7 +284,7 @@ console.log('EatsApp рендерится с данными:', UniverseData.getU
           <p>Energy: {Math.floor(energy)}/{energyMax}</p>
         </div>
         <div className="clicker-container" ref={clickerRef}>
-          <img src={clickerImage} alt="Clicker" className={clicker-image ${isImageDistorted ? 'distorted' : ''}} />
+          <img src={clickerImage} alt="Clicker" className={`clicker-image ${isImageDistorted ? 'distorted' : ''}`} />
           <div className="progress-circle" style={{ boxShadow: '0px 0px 10px 5px gray' }}>
             <CircularProgressbar
               value={remainingEnergyPercentage}
