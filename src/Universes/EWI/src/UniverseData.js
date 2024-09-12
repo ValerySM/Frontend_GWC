@@ -6,7 +6,8 @@ const UniverseData = {
   async setCurrentUniverse(universeName) {
     this.currentUniverse = universeName;
     await this.saveToServer();
-    this.logToServer(Текущая вселенная установлена на: ${universeName});
+    this.logToServer(`Текущая вселенная установлена на: ${universeName}`);
+
   },
 
   async incrementTotalClicks(amount = 1) {
