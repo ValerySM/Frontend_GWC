@@ -318,7 +318,7 @@ console.log('EatsApp рендерится с данными:', UniverseData.getU
           </div>
         )}
         {isTabOpenState && (
-          <div className={tab-content ${isTabOpenState ? 'open' : ''}}>
+          <div className={`tab-content ${isTabOpenState ? 'open' : ''}`}>
             <button className="back-button" onClick={handleBackButtonClick}>Back</button>
             {tabContent}
           </div>
