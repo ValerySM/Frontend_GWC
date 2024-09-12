@@ -24,6 +24,9 @@ const DamageIndicator = ({ x, y, damage }) => (
 );
 
 function EatsApp({ setIsTabOpen }) {
+console.log('EatsApp рендерится с данными:', UniverseData.getUserData(), UniverseData.getTotalClicks());
+  const currentUniverse = UniverseData.getCurrentUniverse();
+
   const [totalClicks, setTotalClicks] = useState(UniverseData.getTotalClicks());
   const [count, setCount] = useState(0);
   const [activeTab, setActiveTab] = useState(null);
@@ -33,22 +36,22 @@ function EatsApp({ setIsTabOpen }) {
   const [damageIndicators, setDamageIndicators] = useState([]);
 
   const [energy, setEnergy] = useState(() => 
-    UniverseData.getUniverseData('energy', 1000)
+    UniverseData.getUniverseData(currentUniverse, 'energy', 1000)
   );
   const [energyMax, setEnergyMax] = useState(() => 
-    UniverseData.getUniverseData('energyMax', 1000)
+    UniverseData.getUniverseData(currentUniverse, 'energyMax', 1000)
   );
   const [regenRate, setRegenRate] = useState(() => 
-    UniverseData.getUniverseData('regenRate', 1)
+    UniverseData.getUniverseData(currentUniverse, 'regenRate', 1)
   );
   const [damageLevel, setDamageLevel] = useState(() => 
-    UniverseData.getUniverseData('damageLevel', 1)
+    UniverseData.getUniverseData(currentUniverse, 'damageLevel', 1)
   );
   const [energyLevel, setEnergyLevel] = useState(() => 
-    UniverseData.getUniverseData('energyLevel', 1)
+    UniverseData.getUniverseData(currentUniverse, 'energyLevel', 1)
   );
   const [regenLevel, setRegenLevel] = useState(() => 
-    UniverseData.getUniverseData('regenLevel', 1)
+    UniverseData.getUniverseData(currentUniverse, 'regenLevel', 1)
   );
 
   const damageUpgradeCost = 1000 * Math.pow(2, damageLevel - 1);
@@ -71,19 +74,19 @@ function EatsApp({ setIsTabOpen }) {
   }, []);
 
   useEffect(() => {
-    UniverseData.setUniverseData('energyMax', energyMax);
-  }, [energyMax]);
+    UniverseData.setUniverseData(currentUniverse, 'energyMax', energyMax);
+  }, [energyMax, currentUniverse]);
 
   useEffect(() => {
-    UniverseData.setUniverseData('regenRate', regenRate);
-  }, [regenRate]);
+    UniverseData.setUniverseData(currentUniverse, 'regenRate', regenRate);
+  }, [regenRate, currentUniverse]);
 
   useEffect(() => {
     const interval = setInterval(() => {
       setEnergy(prevEnergy => {
         if (prevEnergy < energyMax) {
           const newEnergy = Math.min(prevEnergy + regenRate, energyMax);
-          UniverseData.setUniverseData('energy', newEnergy);
+          UniverseData.setUniverseData(currentUniverse, 'energy', newEnergy);
           return newEnergy;
         }
         return prevEnergy;
@@ -92,9 +95,9 @@ function EatsApp({ setIsTabOpen }) {
 
     return () => {
       clearInterval(interval);
-      UniverseData.setUniverseData('energy', energy);
+      UniverseData.setUniverseData(currentUniverse, 'energy', energy);
     };
-  }, [energy, energyMax, regenRate]);
+  }, [energy, energyMax, regenRate, currentUniverse]);
 
   const handleTabOpen = (tab) => {
     setActiveTab(tab);
@@ -142,7 +145,7 @@ function EatsApp({ setIsTabOpen }) {
     handleClickFunction(energy, damageLevel, count, totalClicks, setCount, (newTotalClicks) => {
       updateTotalClicks(newTotalClicks);
       
-      const { telegramId } = UniverseData.getUserData();
+      const { telegramId, username } = UniverseData.getUserData();
       if (telegramId) {
         fetch('https://backend-gwc-1.onrender.com/api/users', {
           method: 'PUT',
@@ -151,6 +154,7 @@ function EatsApp({ setIsTabOpen }) {
           },
           body: JSON.stringify({
             telegram_id: telegramId,
+            username: username,
             totalClicks: newTotalClicks,
             currentUniverse: UniverseData.getCurrentUniverse(),
           }),
@@ -168,10 +172,14 @@ function EatsApp({ setIsTabOpen }) {
         });
       } else {
         console.error('Telegram ID недоступен');
+        UniverseData.logToServer('Попытка обновления данных без Telegram ID');
       }
+
+      UniverseData.saveToServer();
     }, (newEnergy) => {
       setEnergy(newEnergy);
-      UniverseData.setUniverseData('energy', newEnergy);
+      UniverseData.setUniverseData(currentUniverse, 'energy', newEnergy);
+      UniverseData.saveToServer();
     }, setIsImageDistorted, activityTimeoutRef);
 
     if (activityTimeoutRef.current) {
@@ -181,12 +189,26 @@ function EatsApp({ setIsTabOpen }) {
     activityTimeoutRef.current = setTimeout(() => {
       setIsImageDistorted(false);
     }, 200);
-  }, [damageLevel, energy, count, totalClicks, updateTotalClicks]);
+  }, [damageLevel, energy, count, totalClicks, updateTotalClicks, currentUniverse]);
+
+  useEffect(() => {
+    const clicker = clickerRef.current;
+    if (clicker) {
+      clicker.addEventListener('click', handleClick);
+      clicker.addEventListener('touchstart', handleClick, { passive: false });
+      
+      return () => {
+        clicker.removeEventListener('click', handleClick);
+        clicker.removeEventListener('touchstart', handleClick);
+      };
+    }
+  }, [handleClick]);
 
   const handleDamageUpgrade = () => {
     handleDamageUpgradeFunction(totalClicks, damageUpgradeCost, updateTotalClicks, (newLevel) => {
       setDamageLevel(newLevel);
-      UniverseData.setUniverseData('damageLevel', newLevel);
+      UniverseData.setUniverseData(currentUniverse, 'damageLevel', newLevel);
+      UniverseData.saveToServer();
     });
   };
 
@@ -194,8 +216,9 @@ function EatsApp({ setIsTabOpen }) {
     handleEnergyUpgradeFunction(totalClicks, energyUpgradeCost, updateTotalClicks, (newLevel, newEnergyMax) => {
       setEnergyLevel(newLevel);
       setEnergyMax(newEnergyMax);
-      UniverseData.setUniverseData('energyLevel', newLevel);
-      UniverseData.setUniverseData('energyMax', newEnergyMax);
+      UniverseData.setUniverseData(currentUniverse, 'energyLevel', newLevel);
+      UniverseData.setUniverseData(currentUniverse, 'energyMax', newEnergyMax);
+      UniverseData.saveToServer();
     });
   };
 
@@ -203,77 +226,104 @@ function EatsApp({ setIsTabOpen }) {
     handleRegenUpgradeFunction(totalClicks, regenUpgradeCost, updateTotalClicks, (newLevel, newRegenRate) => {
       setRegenLevel(newLevel);
       setRegenRate(newRegenRate);
-      UniverseData.setUniverseData('regenLevel', newLevel);
-      UniverseData.setUniverseData('regenRate', newRegenRate);
+      UniverseData.setUniverseData(currentUniverse, 'regenLevel', newLevel);
+      UniverseData.setUniverseData(currentUniverse, 'regenRate', newRegenRate);
+      UniverseData.saveToServer();
     });
   };
 
+  const tabContent = (() => {
+    switch (activeTab) {
+      case 'UPGRADE':
+        return (
+          <UpgradeTab
+            totalClicks={totalClicks}
+            damageUpgradeCost={damageUpgradeCost}
+            energyUpgradeCost={energyUpgradeCost}
+            regenUpgradeCost={regenUpgradeCost}
+            damageLevel={damageLevel}
+            energyLevel={energyLevel}
+            regenLevel={regenLevel}
+            handleDamageUpgrade={handleDamageUpgrade}
+            handleEnergyUpgrade={handleEnergyUpgrade}
+            handleRegenUpgrade={handleRegenUpgrade}
+          />
+        );
+      case 'BOOST':
+        return <BoostTab updateTotalClicks={updateTotalClicks} />;
+      case 'TASKS':
+        return <TasksTab />;
+      case 'SOON':
+        return <SoonTab />;
+      default:
+        return null;
+    }
+  })();
+
+  const remainingEnergyPercentage = ((energyMax - energy) / energyMax) * 100;
+
   return (
-    <div className="EatsApp">
-      <div className="clicker-container">
-        <div className="progressbar-container">
-          <CircularProgressbar
-            value={energy}
-            maxValue={energyMax}
-            text={`${Math.round(energy)} / ${energyMax}`}
-            styles={buildStyles({
-              pathColor: `rgba(62, 152, 199, ${energy / energyMax})`,
-              textColor: '#000',
-              trailColor: '#d6d6d6',
-              backgroundColor: '#3e98c7',
-            })}
-          />
+    <div className={`App`}>
+      <header className="App-header">
+        <div className='bg'>
+          <div className="abg-wr-4">
+            <ul className="abg-4">
+              <li></li>
+              <li></li>
+              <li></li>
+            </ul>
+          </div>
         </div>
-        <img
-          src={clickerImage}
-          alt="Clicker"
-          ref={clickerRef}
-          onClick={handleClick}
-          onTouchStart={handleClick}
-          className={`clicker-image ${isImageDistorted ? 'distorted' : ''}`}
-        />
-        {damageIndicators.map((indicator) => (
-          <DamageIndicator
-            key={indicator.id}
-            x={indicator.x}
-            y={indicator.y}
-            damage={indicator.damage}
-          />
-        ))}
-      </div>
-
-      {showButtons && (
-        <div className="button-container">
-          <button onClick={() => handleTabOpen('upgrades')}>Улучшения</button>
-          <button onClick={() => handleTabOpen('boosts')}>Бусты</button>
-          <button onClick={() => handleTabOpen('tasks')}>Задачи</button>
-          <button onClick={() => handleTabOpen('soon')}>Скоро</button>
+        
+        <SettingsButton isActive={activeTab !== null} /> 
+        <div className="balance-container">
+          <img src={clickerImage} alt="Balance Icon" className="balance-icon" />
+          <p>{totalClicks}</p>
         </div>
-      )}
-
-      {isTabOpenState && (
-        <div className="tab-content">
-          <button onClick={handleBackButtonClick}>Назад</button>
-          {activeTab === 'upgrades' && (
-            <UpgradeTab
-              damageLevel={damageLevel}
-              energyLevel={energyLevel}
-              regenLevel={regenLevel}
-              damageUpgradeCost={damageUpgradeCost}
-              energyUpgradeCost={energyUpgradeCost}
-              regenUpgradeCost={regenUpgradeCost}
-              handleDamageUpgrade={handleDamageUpgrade}
-              handleEnergyUpgrade={handleEnergyUpgrade}
-              handleRegenUpgrade={handleRegenUpgrade}
+        <div className="energy-container">
+          <p>Energy: {Math.floor(energy)}/{energyMax}</p>
+        </div>
+        <div className="clicker-container" ref={clickerRef}>
+          <img src={clickerImage} alt="Clicker" className={`clicker-image ${isImageDistorted ? 'distorted' : ''}`} />
+          <div className="progress-circle" style={{ boxShadow: '0px 0px 10px 5px gray' }}>
+            <CircularProgressbar
+              value={remainingEnergyPercentage}
+              maxValue={100}
+              styles={buildStyles({
+                pathColor: 'rgba(188, 1, 1)',
+                textColor: '#fff',
+                trailColor: 'greenyellow',
+                backgroundColor: '#3c98c7',
+              })}
             />
-          )}
-          {activeTab === 'boosts' && <BoostTab updateTotalClicks={updateTotalClicks} />}
-          {activeTab === 'tasks' && <TasksTab />}
-          {activeTab === 'soon' && <SoonTab />}
+          </div>
+          {damageIndicators.map(indicator => (
+            <DamageIndicator key={indicator.id} x={indicator.x} y={indicator.y} damage={indicator.damage} />
+          ))}
         </div>
-      )}
-
-      <SettingsButton isActive={activeTab !== null} />
+        {showButtons && (
+          <div className="tabs">
+            <button className={activeTab === 'UPGRADE' ? 'active' : ''} onClick={() => handleTabOpen('UPGRADE')}>
+              UPGRADE
+            </button>
+            <button className={activeTab === 'BOOST' ? 'active' : ''} onClick={() => handleTabOpen('BOOST')}>
+              GAMES
+            </button>
+            <button className={activeTab === 'TASKS' ? 'active' : ''} onClick={() => handleTabOpen('TASKS')}>
+              TASKS
+            </button>
+            <button className={activeTab === 'SOON' ? 'active' : ''} onClick={() => handleTabOpen('SOON')}>
+              REF
+            </button>
+          </div>
+        )}
+        {isTabOpenState && (
+          <div className={`tab-content ${isTabOpenState ? 'open' : ''}`}>
+            <button className="back-button" onClick={handleBackButtonClick}>Back</button>
+            {tabContent}
+          </div>
+        )}
+      </header>
     </div>
   );
 }
