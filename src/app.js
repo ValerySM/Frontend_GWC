@@ -13,28 +13,28 @@ function App() {
 
   useEffect(() => {
     const initApp = async () => {
-      if (!window.Telegram || !window.Telegram.WebApp) {
-        console.error('Telegram WebApp API не доступен');
-        setIsLoading(false);
-        return;
-      }
-
-      const tg = window.Telegram.WebApp;
-
-      tg.expand();
-      tg.enableClosingConfirmation();
-
-      const urlParams = new URLSearchParams(window.location.search);
-      const telegramId = urlParams.get('telegram_id');
-      const totalClicks = parseInt(urlParams.get('totalClicks'), 10) || 0;
-
-      if (!telegramId) {
-        console.error('Данные пользователя недоступны');
-        setIsLoading(false);
-        return;
-      }
-
       try {
+        if (!window.Telegram || !window.Telegram.WebApp) {
+          console.error('Telegram WebApp API не доступен');
+          setIsLoading(false);
+          return;
+        }
+
+        const tg = window.Telegram.WebApp;
+
+        tg.expand();
+        tg.enableClosingConfirmation();
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const telegramId = urlParams.get('telegram_id');
+        const totalClicks = parseInt(urlParams.get('totalClicks'), 10) || 0;
+
+        if (!telegramId) {
+          console.error('Данные пользователя недоступны');
+          setIsLoading(false);
+          return;
+        }
+
         UniverseData.telegramId = telegramId;
         UniverseData.totalClicks = totalClicks;
         UniverseData.currentUniverse = 'EatsApp';
@@ -49,9 +49,9 @@ function App() {
         console.error('Ошибка во время инициализации:', error);
         UniverseData.logToServer(`Ошибка инициализации: ${error.message}`);
         setIsAuthenticated(false);
+      } finally {
+        setIsLoading(false);
       }
-
-      setIsLoading(false);
     };
 
     initApp();
