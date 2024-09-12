@@ -1,62 +1,61 @@
-const UniverseData = {
-  telegramId: null,
-  totalClicks: 0,
-  currentUniverse: 'default',
-  
-  async setCurrentUniverse(universeName) {
-    this.currentUniverse = universeName;
-    await this.saveToServer();
-    this.logToServer(`Текущая вселенная установлена на: ${universeName}`);
-  },
+class UniverseData {
+  constructor() {
+    this.listeners = [];
+    this.universeData = {
+      totalClicks: 0,
+      energy: 1000,
+      energyMax: 1000,
+      regenRate: 1,
+      damageLevel: 1,
+      energyLevel: 1,
+      regenLevel: 1,
+      currentUniverse: 'default',
+      telegramId: null,
+      username: '',
+    };
+  }
 
-  async incrementTotalClicks(amount = 1) {
-    this.totalClicks += amount;
-    await this.saveToServer();
-    return this.totalClicks;
-  },
+  getUserData() {
+    return {
+      telegramId: this.universeData.telegramId,
+      username: this.universeData.username,
+    };
+  }
 
-  async saveToServer() {
-    try {
-      const response = await fetch('https://backend-gwc-1.onrender.com/api/users', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          telegram_id: this.telegramId,
-          totalClicks: this.totalClicks,
-          currentUniverse: this.currentUniverse,
-        }),
-      });
+  getCurrentUniverse() {
+    return this.universeData.currentUniverse;
+  }
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+  getTotalClicks() {
+    return this.universeData.totalClicks;
+  }
 
-      const data = await response.json();
-      if (data.success) {
-        console.log('Данные успешно сохранены на сервере');
-      } else {
-        console.error('Не удалось сохранить данные на сервере:', data.error);
-      }
-    } catch (error) {
-      console.error('Ошибка при сохранении данных на сервере:', error);
-      throw error;
-    }
-  },
+  setTotalClicks(newTotal) {
+    this.universeData.totalClicks = newTotal;
+    this.notifyListeners(newTotal);
+  }
 
-  logToServer(message) {
-    fetch(`https://backend-gwc-1.onrender.com/api/log`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        telegram_id: this.telegramId,
-        message: message
-      }),
-    }).catch(error => console.error('Ошибка логирования на сервер:', error));
-  },
-};
+  getUniverseData(key, defaultValue = 0) {
+    return this.universeData[key] || defaultValue;
+  }
 
-export default UniverseData;
+  setUniverseData(key, value) {
+    this.universeData[key] = value;
+    this.notifyListeners();
+  }
+
+  addListener(listener) {
+    this.listeners.push(listener);
+  }
+
+  removeListener(listener) {
+    this.listeners = this.listeners.filter(l => l !== listener);
+  }
+
+  notifyListeners(newTotal) {
+    this.listeners.forEach(listener => listener(newTotal));
+  }
+}
+
+const universeData = new UniverseData();
+export default universeData;
