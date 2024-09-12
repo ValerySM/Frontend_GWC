@@ -26,17 +26,16 @@ function App() {
 
       const urlParams = new URLSearchParams(window.location.search);
       const telegramId = urlParams.get('telegram_id');
-      const username = urlParams.get('username');
       const totalClicks = parseInt(urlParams.get('totalClicks'), 10) || 0;
 
-      if (!telegramId || !username) {
+      if (!telegramId) {
         console.error('Данные пользователя недоступны');
         setIsLoading(false);
         return;
       }
 
       try {
-        UniverseData.setUserData(telegramId, username);
+        UniverseData.setUserData(telegramId);
         UniverseData.setTotalClicks(totalClicks);
         UniverseData.setCurrentUniverse('EatsApp'); // Или другая начальная вселенная
 

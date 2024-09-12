@@ -1,6 +1,5 @@
 const UniverseData = {
   telegramId: null,
-  username: null,
   totalClicks: 0,
   gameScores: {
     appleCatcher: 0,
@@ -17,15 +16,15 @@ const UniverseData = {
     elapsedFarmingTime: 0
   },
 
-  async initFromServer(telegramId, username) {
-    console.log('initFromServer вызван с параметрами:', telegramId, username);
+  async initFromServer(telegramId) {
+    console.log('initFromServer вызван с параметрами:', telegramId);
     try {
       const response = await fetch('https://backend-gwc-1.onrender.com/api/auth', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ telegram_id: telegramId, username: username }),
+        body: JSON.stringify({ telegram_id: telegramId }),
       });
 
       if (!response.ok) {
@@ -36,10 +35,10 @@ const UniverseData = {
       console.log('Ответ сервера:', data);
 
       if (data.success) {
-        this.setUserData(data.telegram_id, data.username);
-        this.setTotalClicks(data.universe_data.totalClicks);
-        this.setCurrentUniverse(data.universe_data.currentUniverse);
-        this.universes = data.universe_data.universes || {};
+        this.setUserData(data.telegram_id);
+        this.setTotalClicks(data.totalClicks);
+        this.setCurrentUniverse(data.currentUniverse);
+        this.universes = data.universes || {};
 
         console.log('Данные установлены в UniverseData:', JSON.stringify(this));
         this.logToServer('Данные успешно загружены с сервера');
@@ -54,21 +53,19 @@ const UniverseData = {
     }
   },
 
-  setUserData(id, name) {
-    console.log('setUserData вызван с:', id, name);
+  setUserData(id) {
+    console.log('setUserData вызван с:', id);
     this.telegramId = id;
-    this.username = name;
-    this.logToServer(`Данные пользователя установлены: ${id}, ${name}`);
+    this.logToServer(`Данные пользователя установлены: ${id}`);
   },
 
   getUserData() {
-    console.log('getUserData вызван. telegramId:', this.telegramId, 'username:', this.username);
-    return { telegramId: this.telegramId, username: this.username };
+    console.log('getUserData вызван. telegramId:', this.telegramId);
+    return { telegramId: this.telegramId };
   },
 
   clearUserData() {
     this.telegramId = null;
-    this.username = null;
     this.totalClicks = 0;
     this.universes = {};
     this.currentUniverse = 'default';
@@ -153,7 +150,7 @@ const UniverseData = {
   },
 
   logToServer(message) {
-    const { telegramId, username } = this.getUserData();
+    const { telegramId } = this.getUserData();
     fetch(`https://backend-gwc-1.onrender.com/api/log`, {
       method: 'POST',
       headers: {
@@ -161,15 +158,14 @@ const UniverseData = {
       },
       body: JSON.stringify({
         telegram_id: telegramId,
-        username: username,
         message: message
       }),
     }).catch(error => console.error('Ошибка логирования на сервер:', error));
   },
 
   saveToServer() {
-    const { telegramId, username } = this.getUserData();
-    this.logToServer(`Попытка сохранения данных для пользователя: ${telegramId}, ${username}`);
+    const { telegramId } = this.getUserData();
+    this.logToServer(`Попытка сохранения данных для пользователя: ${telegramId}`);
     if (!telegramId) {
       this.logToServer('Telegram ID недоступен');
       return;
@@ -177,7 +173,6 @@ const UniverseData = {
 
     const dataToSend = {
       telegram_id: telegramId,
-      username: username,
       totalClicks: this.totalClicks,
       currentUniverse: this.currentUniverse,
       universes: this.universes
