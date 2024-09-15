@@ -5,7 +5,7 @@ import EatsApp from './Universes/EWI/EatsApp';
 import EWE from './Universes/EWE/EWE';
 import EcoGame from './Universes/ECI/EcoGame';
 
-const BACKEND_URL = 'https://click-counter-test.onrender.com';
+const BACKEND_URL = 'https://backend-gwc-1.onrender.com';
 
 function App() {
   const [currentUniverse, setCurrentUniverse] = useState('EatsApp');
