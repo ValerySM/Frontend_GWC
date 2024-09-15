@@ -1,217 +1,108 @@
-const UniverseData = {
-  telegramId: null,
-  username: null,
-  totalClicks: 0,
-  gameScores: {
-    appleCatcher: 0,
-    purblePairs: 0
-  },
-  universes: {},
-  currentUniverse: 'default',
-  
-  eweData: {
-    tokens: 0,
-    farmedTokens: 0,
-    isFarming: false,
-    startTime: null,
-    elapsedFarmingTime: 0
-  },
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
+import axios from 'axios';
+import EatsApp from './Universes/EWI/EatsApp';
+import EWE from './Universes/EWE/EWE';
+import EcoGame from './Universes/ECI/EcoGame';
 
-  async initFromServer(telegramId, username) {
-    console.log('initFromServer вызван с параметрами:', telegramId, username);
-    try {
-      const response = await fetch('https://backend-gwc-1.onrender.com/api/auth', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ telegram_id: telegramId, username: username }),
-      });
+const BACKEND_URL = 'https://click-counter-test.onrender.com';
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+function App() {
+  const [currentUniverse, setCurrentUniverse] = useState('EatsApp');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [totalClicks, setTotalClicks] = useState(0);
+  const [userId, setUserId] = useState(null);
+  const [error, setError] = useState(null);
 
-      const data = await response.json();
-      console.log('Ответ сервера:', data);
+  // Инициализация приложения и загрузка данных с сервера
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const userIdParam = urlParams.get('user_id');
 
-      if (data.success) {
-        this.setUserData(data.telegram_id, data.username);
-        this.setTotalClicks(data.universe_data.totalClicks);
-        this.setCurrentUniverse(data.universe_data.currentUniverse);
-        this.universes = data.universe_data.universes || {};
-
-        console.log('Данные установлены в UniverseData:', JSON.stringify(this));
-        this.logToServer('Данные успешно загружены с сервера');
-        return true;
-      } else {
-        throw new Error(data.error || 'Неизвестная ошибка при загрузке данных');
-      }
-    } catch (error) {
-      console.error('Ошибка при инициализации данных с сервера:', error);
-      this.logToServer(`Ошибка при инициализации данных с сервера: ${error.message}`);
-      return false;
-    }
-  },
-
-  setUserData(id, name) {
-    console.log('setUserData вызван с:', id, name);
-    this.telegramId = id;
-    this.username = name;
-    this.logToServer(`Данные пользователя установлены: ${id}, ${name}`);
-  },
-
-  getUserData() {
-    console.log('getUserData вызван. telegramId:', this.telegramId, 'username:', this.username);
-    return { telegramId: this.telegramId, username: this.username };
-  },
-
-  clearUserData() {
-    this.telegramId = null;
-    this.username = null;
-    this.totalClicks = 0;
-    this.universes = {};
-    this.currentUniverse = 'default';
-    this.logToServer('Данные пользователя очищены');
-  },
-
-  getTotalClicks() {
-    return this.totalClicks;
-  },
-
-  setTotalClicks(clicks) {
-    console.log('setTotalClicks вызван с:', clicks);
-    this.totalClicks = clicks;
-    this.notifyListeners();
-    this.logToServer(`Установлено общее количество кликов: ${clicks}`);
-  },
-
-  listeners: [],
-
-  addListener(callback) {
-    this.listeners.push(callback);
-  },
-
-  removeListener(callback) {
-    this.listeners = this.listeners.filter(listener => listener !== callback);
-  },
-
-  notifyListeners() {
-    this.listeners.forEach(listener => listener(this.totalClicks));
-  },
-
-  addGameScore(gameType, score) {
-    if (gameType in this.gameScores) {
-      this.gameScores[gameType] = score;
-      this.totalClicks += score;
-      this.saveToServer();
-      this.notifyListeners();
-      this.logToServer(`Обновлен счет ${gameType}: ${this.gameScores[gameType]}, Новое общее количество кликов: ${this.totalClicks}`);
+    if (userIdParam) {
+      setUserId(userIdParam);
+      authenticateUser(userIdParam);
     } else {
-      this.logToServer(`Неизвестный тип игры: ${gameType}`);
+      console.error('Данные пользователя недоступны');
+      setIsLoading(false);
     }
-  },
+  }, []);
 
-  setUniverseData(universeName, data) {
-    if (!this.universes[universeName]) {
-      this.universes[universeName] = {};
+  const authenticateUser = async (userId) => {
+    try {
+      const response = await axios.post(`${BACKEND_URL}/auth`, { user_id: userId });
+      setTotalClicks(response.data.clicks);
+      setCurrentUniverse(response.data.universe || 'EatsApp');
+      setIsAuthenticated(true);
+    } catch (error) {
+      console.error('Ошибка аутентификации:', error);
+      setError('Не удалось загрузить данные пользователя');
+      setIsAuthenticated(false);
+    } finally {
+      setIsLoading(false);
     }
-    Object.assign(this.universes[universeName], data);
-    this.saveToServer();
-    this.logToServer(`Установлены данные вселенной: ${universeName}`);
-  },
+  };
 
-  getUniverseData(universeName, key, defaultValue) {
-    if (!this.universes[universeName]) {
-      this.universes[universeName] = {};
-    }
-    if (this.universes[universeName][key] === undefined) {
-      return defaultValue;
-    }
-    return this.universes[universeName][key];
-  },
+  // Обновление кликов на сервере
+  const updateClicks = async (newClicks) => {
+    setTotalClicks(newClicks);
 
-  setCurrentUniverse(universeName) {
-    console.log('setCurrentUniverse вызван с:', universeName);
-    this.currentUniverse = universeName;
-    this.saveToServer();
-    this.logToServer(`Текущая вселенная установлена на: ${universeName}`);
-  },
-
-  getCurrentUniverse() {
-    return this.currentUniverse;
-  },
-
-  setEWEData(key, value) {
-    this.eweData[key] = value;
-    this.saveToServer();
-    this.logToServer(`Установлены данные EWE: ${key} = ${value}`);
-  },
-
-  getEWEData(key) {
-    return this.eweData[key];
-  },
-
-  logToServer(message) {
-    const { telegramId, username } = this.getUserData();
-    fetch(`https://backend-gwc-1.onrender.com/api/log`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        telegram_id: telegramId,
-        username: username,
-        message: message
-      }),
-    }).catch(error => console.error('Ошибка логирования на сервер:', error));
-  },
-
-  saveToServer() {
-    const { telegramId, username } = this.getUserData();
-    this.logToServer(`Попытка сохранения данных для пользователя: ${telegramId}, ${username}`);
-    if (!telegramId) {
-      this.logToServer('Telegram ID недоступен');
-      return;
-    }
-
-    const dataToSend = {
-      telegram_id: telegramId,
-      username: username,
-      totalClicks: this.totalClicks,
-      currentUniverse: this.currentUniverse,
-      universes: this.universes
-    };
-
-    this.logToServer(`Отправка данных на сервер: ${JSON.stringify(dataToSend)}`);
-
-    fetch(`https://backend-gwc-1.onrender.com/api/users`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(dataToSend),
-    })
-    .then(response => {
-      if (!response.ok) {
-        throw new Error(`Ошибка HTTP! статус: ${response.status}`);
+    if (userId) {
+      try {
+        await axios.post(`${BACKEND_URL}/update_clicks`, {
+          user_id: userId,
+          clicks: newClicks
+        });
+      } catch (error) {
+        console.error('Ошибка обновления кликов на сервере:', error);
+        setError('Не удалось обновить количество кликов');
       }
-      return response.json();
-    })
-    .then(data => {
-      if (data.success) {
-        this.logToServer('Данные успешно сохранены на сервере');
-        if (window.Telegram && window.Telegram.WebApp) {
-          window.Telegram.WebApp.sendData(JSON.stringify({action: 'save_success'}));
-        }
-      } else {
-        this.logToServer(`Не удалось сохранить данные на сервере: ${data.error}`);
-      }
-    })
-    .catch(error => {
-      this.logToServer(`Ошибка сохранения данных на сервере: ${error}`);
-    });
-  },
-};
+    }
+  };
 
-export default UniverseData;
+  const handleClick = () => {
+    const newCount = totalClicks + 1;
+    updateClicks(newCount);
+  };
+
+  if (isLoading) {
+    return <div>Загрузка...</div>;
+  }
+
+  if (!isAuthenticated) {
+    return <div>{error || 'Ошибка аутентификации. Пожалуйста, попробуйте снова.'}</div>;
+  }
+
+  return (
+    <Router basename="/Frontend_GWC">
+      <div className="App">
+        <div className="flex flex-col items-center justify-center h-screen">
+          <h1 className="text-3xl mb-4">Счетчик: {totalClicks}</h1>
+          <button
+            onClick={handleClick}
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          >
+            Click
+          </button>
+        </div>
+        <Switch>
+          <Route exact path="/" render={() => {
+            switch (currentUniverse) {
+              case 'EatsApp':
+                return <EatsApp totalClicks={totalClicks} updateClicks={updateClicks} />;
+              case 'EWE':
+                return <EWE />;
+              case 'EcoGame':
+                return <EcoGame />;
+              default:
+                return <EatsApp totalClicks={totalClicks} updateClicks={updateClicks} />;
+            }
+          }} />
+        </Switch>
+      </div>
+    </Router>
+  );
+}
+
+export default App;
