@@ -24,7 +24,7 @@ const DamageIndicator = ({ x, y, damage }) => (
 );
 
 function EatsApp({ setIsTabOpen }) {
-  console.log('EatsApp рендерится с данными:', UniverseData.getUserData(), UniverseData.getTotalClicks());
+console.log('EatsApp рендерится с данными:', UniverseData.getUserData(), UniverseData.getTotalClicks());
   const currentUniverse = UniverseData.getCurrentUniverse();
 
   const [totalClicks, setTotalClicks] = useState(UniverseData.getTotalClicks());
@@ -250,7 +250,7 @@ function EatsApp({ setIsTabOpen }) {
           />
         );
       case 'BOOST':
-        return <BoostTab />;
+        return <BoostTab updateTotalClicks={updateTotalClicks} />;
       case 'TASKS':
         return <TasksTab />;
       case 'SOON':
@@ -260,10 +260,10 @@ function EatsApp({ setIsTabOpen }) {
     }
   })();
 
-  const remainingEnergyPercentage = (energy / energyMax) * 100;
+  const remainingEnergyPercentage = ((energyMax - energy) / energyMax) * 100;
 
   return (
-    <div className="App">
+    <div className={`App`}>
       <header className="App-header">
         <div className='bg'>
           <div className="abg-wr-4">
