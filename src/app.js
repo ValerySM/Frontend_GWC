@@ -34,9 +34,10 @@ function App() {
   const authenticateUser = async (telegramId, username) => {
     try {
       const response = await axios.post(`${BACKEND_URL}/api/auth`, { 
-        telegram_id: telegramId,
+        telegram_id: telegramId, // должен соответствовать серверу
         username: username
       });
+      console.log('Server response:', response.data); // Для отладки
       if (response.data.success) {
         setTotalClicks(response.data.totalClicks);
         setCurrentUniverse(response.data.currentUniverse || 'EatsApp');
@@ -59,10 +60,10 @@ function App() {
     if (telegramId) {
       try {
         const response = await axios.post(`${BACKEND_URL}/api/update_clicks`, {
-          telegram_id: telegramId,
+          telegram_id: telegramId, // должен соответствовать серверу
           totalClicks: newClicks,
           currentUniverse: currentUniverse,
-          upgrades: {} // You might want to implement upgrades logic
+          upgrades: {} // Вы можете реализовать логику обновления
         });
         if (!response.data.success) {
           throw new Error(response.data.error || 'Failed to update clicks');
