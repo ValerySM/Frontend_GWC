@@ -8,90 +8,71 @@ import EcoGame from './Universes/ECI/EcoGame';
 const BACKEND_URL = 'https://backend-gwc-1.onrender.com';
 
 function App() {
-  const [currentUniverse, setCurrentUniverse] = useState('EatsApp');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [totalClicks, setTotalClicks] = useState(0);
-  const [telegramId, setTelegramId] = useState(null);
+  const [count, setCount] = useState(0);
+  const [userId, setUserId] = useState(null);
   const [error, setError] = useState(null);
+  const [currentUniverse, setCurrentUniverse] = useState('EatsApp');
+  const [universes, setUniverses] = useState({});
 
-  // Инициализация приложения и загрузка данных с сервера
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const telegramIdParam = urlParams.get('telegram_id');
-    const totalClicksParam = urlParams.get('totalClicks');
+    const userIdParam = urlParams.get('user_id');
+    const clicksParam = urlParams.get('clicks');
 
-    if (telegramIdParam) {
-      setTelegramId(telegramIdParam);
-      authenticateUser(telegramIdParam, totalClicksParam);
-    } else {
-      console.error('Данные пользователя недоступны');
-      setIsLoading(false);
+    if (userIdParam) {
+      setUserId(userIdParam);
+      setCount(parseInt(clicksParam) || 0);
+      authenticateUser(userIdParam);
     }
   }, []);
 
-  const authenticateUser = async (telegramId, totalClicks) => {
+  const authenticateUser = async (userId) => {
     try {
-      const response = await axios.post(`${BACKEND_URL}/auth`, { 
-        telegram_id: telegramId
-      });
-      console.log('Server response:', response.data); // Для отладки
-
-      if (response.data.success) {
-        setTotalClicks(totalClicks || response.data.totalClicks);
-        setCurrentUniverse(response.data.currentUniverse || 'EatsApp');
-        setIsAuthenticated(true);
-      } else {
-        throw new Error(response.data.error || 'Authentication failed');
-      }
+      const response = await axios.post(`${BACKEND_URL}/auth`, { user_id: userId });
+      setCount(response.data.clicks);
     } catch (error) {
-      console.error('Ошибка аутентификации:', error);
+      console.error('Error authenticating user:', error);
       setError('Не удалось загрузить данные пользователя');
-      setIsAuthenticated(false);
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  // Обновление кликов на сервере
-  const updateClicks = async (newClicks) => {
-    setTotalClicks(newClicks);
-    if (telegramId) {
+  const handleClick = async () => {
+    const newCount = count + 1;
+    setCount(newCount);
+
+    if (userId) {
       try {
-        const response = await axios.post(`${BACKEND_URL}/update_clicks`, {
-          telegram_id: telegramId,
-          totalClicks: newClicks,
-          currentUniverse: currentUniverse,
-          upgrades: {} // Вы можете реализовать логику обновления
+        await axios.post(`${BACKEND_URL}/update_clicks`, {
+          user_id: userId,
+          clicks: newCount
         });
-        if (!response.data.success) {
-          throw new Error(response.data.error || 'Failed to update clicks');
-        }
       } catch (error) {
-        console.error('Ошибка обновления кликов на сервере:', error);
+        console.error('Error updating clicks:', error);
         setError('Не удалось обновить количество кликов');
       }
     }
   };
 
-  const handleClick = () => {
-    const newCount = totalClicks + 1;
-    updateClicks(newCount);
+  const updateUniverseData = (universeName, data) => {
+    setUniverses(prevUniverses => ({
+      ...prevUniverses,
+      [universeName]: { ...prevUniverses[universeName], ...data }
+    }));
   };
 
-  if (isLoading) {
-    return <div>Загрузка...</div>;
-  }
+  const getUniverseData = (universeName, key, defaultValue) => {
+    return universes[universeName]?.[key] ?? defaultValue;
+  };
 
-  if (!isAuthenticated) {
-    return <div>{error || 'Ошибка аутентификации. Пожалуйста, попробуйте снова.'}</div>;
+  if (error) {
+    return <div className="text-red-500">{error}</div>;
   }
 
   return (
     <Router basename="/Frontend_GWC">
       <div className="App">
         <div className="flex flex-col items-center justify-center h-screen">
-          <h1 className="text-3xl mb-4">Счетчик: {totalClicks}</h1>
+          <h1 className="text-3xl mb-4">Счетчик: {count}</h1>
           <button
             onClick={handleClick}
             className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
@@ -103,13 +84,13 @@ function App() {
           <Route exact path="/" render={() => {
             switch (currentUniverse) {
               case 'EatsApp':
-                return <EatsApp totalClicks={totalClicks} updateClicks={updateClicks} />;
+                return <EatsApp count={count} updateCount={setCount} updateUniverseData={updateUniverseData} getUniverseData={getUniverseData} />;
               case 'EWE':
-                return <EWE />;
+                return <EWE count={count} updateCount={setCount} updateUniverseData={updateUniverseData} getUniverseData={getUniverseData} />;
               case 'EcoGame':
-                return <EcoGame />;
+                return <EcoGame count={count} updateCount={setCount} updateUniverseData={updateUniverseData} getUniverseData={getUniverseData} />;
               default:
-                return <EatsApp totalClicks={totalClicks} updateClicks={updateClicks} />;
+                return <EatsApp count={count} updateCount={setCount} updateUniverseData={updateUniverseData} getUniverseData={getUniverseData} />;
             }
           }} />
         </Switch>
