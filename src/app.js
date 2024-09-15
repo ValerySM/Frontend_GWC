@@ -12,29 +12,38 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [totalClicks, setTotalClicks] = useState(0);
-  const [userId, setUserId] = useState(null);
+  const [telegramId, setTelegramId] = useState(null);
+  const [username, setUsername] = useState(null);
   const [error, setError] = useState(null);
 
   // Инициализация приложения и загрузка данных с сервера
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const userIdParam = urlParams.get('user_id');
-
-    if (userIdParam) {
-      setUserId(userIdParam);
-      authenticateUser(userIdParam);
+    const telegramIdParam = urlParams.get('telegram_id');
+    const usernameParam = urlParams.get('username');
+    if (telegramIdParam && usernameParam) {
+      setTelegramId(telegramIdParam);
+      setUsername(usernameParam);
+      authenticateUser(telegramIdParam, usernameParam);
     } else {
       console.error('Данные пользователя недоступны');
       setIsLoading(false);
     }
   }, []);
 
-  const authenticateUser = async (userId) => {
+  const authenticateUser = async (telegramId, username) => {
     try {
-      const response = await axios.post(`${BACKEND_URL}/auth`, { user_id: userId });
-      setTotalClicks(response.data.clicks);
-      setCurrentUniverse(response.data.universe || 'EatsApp');
-      setIsAuthenticated(true);
+      const response = await axios.post(`${BACKEND_URL}/api/auth`, { 
+        telegram_id: telegramId,
+        username: username
+      });
+      if (response.data.success) {
+        setTotalClicks(response.data.totalClicks);
+        setCurrentUniverse(response.data.currentUniverse || 'EatsApp');
+        setIsAuthenticated(true);
+      } else {
+        throw new Error(response.data.error || 'Authentication failed');
+      }
     } catch (error) {
       console.error('Ошибка аутентификации:', error);
       setError('Не удалось загрузить данные пользователя');
@@ -47,13 +56,17 @@ function App() {
   // Обновление кликов на сервере
   const updateClicks = async (newClicks) => {
     setTotalClicks(newClicks);
-
-    if (userId) {
+    if (telegramId) {
       try {
-        await axios.post(`${BACKEND_URL}/update_clicks`, {
-          user_id: userId,
-          clicks: newClicks
+        const response = await axios.post(`${BACKEND_URL}/api/update_clicks`, {
+          telegram_id: telegramId,
+          totalClicks: newClicks,
+          currentUniverse: currentUniverse,
+          upgrades: {} // You might want to implement upgrades logic
         });
+        if (!response.data.success) {
+          throw new Error(response.data.error || 'Failed to update clicks');
+        }
       } catch (error) {
         console.error('Ошибка обновления кликов на сервере:', error);
         setError('Не удалось обновить количество кликов');
