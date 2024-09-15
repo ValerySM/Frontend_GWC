@@ -42,10 +42,13 @@ function App() {
 
     if (userId) {
       try {
-        await axios.post(`${BACKEND_URL}/update_clicks`, {
+        const response = await axios.post(`${BACKEND_URL}/update_clicks`, {
           user_id: userId,
           clicks: newCount
         });
+        if (response.data.success) {
+          setCount(response.data.clicks);
+        }
       } catch (error) {
         console.error('Error updating clicks:', error);
         setError('Не удалось обновить количество кликов');
@@ -62,6 +65,11 @@ function App() {
 
   const getUniverseData = (universeName, key, defaultValue) => {
     return universes[universeName]?.[key] ?? defaultValue;
+  };
+
+  const logToServer = (message) => {
+    axios.post(`${BACKEND_URL}/api/log`, { user_id: userId, message })
+      .catch(error => console.error('Error logging to server:', error));
   };
 
   if (error) {
@@ -84,13 +92,13 @@ function App() {
           <Route exact path="/" render={() => {
             switch (currentUniverse) {
               case 'EatsApp':
-                return <EatsApp count={count} updateCount={setCount} updateUniverseData={updateUniverseData} getUniverseData={getUniverseData} />;
+                return <EatsApp count={count} updateCount={setCount} updateUniverseData={updateUniverseData} getUniverseData={getUniverseData} logToServer={logToServer} />;
               case 'EWE':
-                return <EWE count={count} updateCount={setCount} updateUniverseData={updateUniverseData} getUniverseData={getUniverseData} />;
+                return <EWE count={count} updateCount={setCount} updateUniverseData={updateUniverseData} getUniverseData={getUniverseData} logToServer={logToServer} />;
               case 'EcoGame':
-                return <EcoGame count={count} updateCount={setCount} updateUniverseData={updateUniverseData} getUniverseData={getUniverseData} />;
+                return <EcoGame count={count} updateCount={setCount} updateUniverseData={updateUniverseData} getUniverseData={getUniverseData} logToServer={logToServer} />;
               default:
-                return <EatsApp count={count} updateCount={setCount} updateUniverseData={updateUniverseData} getUniverseData={getUniverseData} />;
+                return <EatsApp count={count} updateCount={setCount} updateUniverseData={updateUniverseData} getUniverseData={getUniverseData} logToServer={logToServer} />;
             }
           }} />
         </Switch>
