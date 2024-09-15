@@ -13,33 +13,32 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [totalClicks, setTotalClicks] = useState(0);
   const [telegramId, setTelegramId] = useState(null);
-  const [username, setUsername] = useState(null);
   const [error, setError] = useState(null);
 
   // Инициализация приложения и загрузка данных с сервера
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const telegramIdParam = urlParams.get('telegram_id');
-    const usernameParam = urlParams.get('username');
-    if (telegramIdParam && usernameParam) {
+    const totalClicksParam = urlParams.get('totalClicks');
+
+    if (telegramIdParam) {
       setTelegramId(telegramIdParam);
-      setUsername(usernameParam);
-      authenticateUser(telegramIdParam, usernameParam);
+      authenticateUser(telegramIdParam, totalClicksParam);
     } else {
       console.error('Данные пользователя недоступны');
       setIsLoading(false);
     }
   }, []);
 
-  const authenticateUser = async (telegramId, username) => {
+  const authenticateUser = async (telegramId, totalClicks) => {
     try {
-      const response = await axios.post(`${BACKEND_URL}/api/auth`, { 
-        telegram_id: telegramId, // должен соответствовать серверу
-        username: username
+      const response = await axios.post(`${BACKEND_URL}/auth`, { 
+        telegram_id: telegramId
       });
       console.log('Server response:', response.data); // Для отладки
+
       if (response.data.success) {
-        setTotalClicks(response.data.totalClicks);
+        setTotalClicks(totalClicks || response.data.totalClicks);
         setCurrentUniverse(response.data.currentUniverse || 'EatsApp');
         setIsAuthenticated(true);
       } else {
@@ -59,8 +58,8 @@ function App() {
     setTotalClicks(newClicks);
     if (telegramId) {
       try {
-        const response = await axios.post(`${BACKEND_URL}/api/update_clicks`, {
-          telegram_id: telegramId, // должен соответствовать серверу
+        const response = await axios.post(`${BACKEND_URL}/update_clicks`, {
+          telegram_id: telegramId,
           totalClicks: newClicks,
           currentUniverse: currentUniverse,
           upgrades: {} // Вы можете реализовать логику обновления
