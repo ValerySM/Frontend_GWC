@@ -1,48 +1,68 @@
 import React, { useState, useEffect } from 'react';
-import '../css/app.css'; 
-import UniverseSwitcher from './components/UniverseSwitcher';
-import EatsApp from './Universes/EWI/EatsApp';
-import EWE from './Universes/EWE/EWE';
-import EcoGame from './Universes/ECI/EcoGame';
+import LoadingScreen from './LoadingScreen';
+import EatsApp from './EatsApp';
+
+const BACKEND_URL = 'https://backend-gwc-1.onrender.com';
 
 function App() {
-  const [currentUniverse, setCurrentUniverse] = useState('EatsApp');
+  const [loading, setLoading] = useState(true);
+  const [userData, setUserData] = useState(null);
 
   useEffect(() => {
-    if (window.TelegramWebApps) {
-      window.TelegramWebApps.ready();
-      
-      // Пример использования Telegram Web App API
-      window.TelegramWebApps.onEvent('backButtonClicked', () => {
-        console.log('Back button clicked');
-      });
+    const fetchUserData = async () => {
+      // Инициализация Telegram Web App
+      if (window.Telegram && window.Telegram.WebApp) {
+        window.Telegram.WebApp.ready();
+      }
 
-      // Пример получения данных из Telegram Web App
-      console.log(window.TelegramWebApps.initData);
-    }
+      const urlParams = new URLSearchParams(window.location.search);
+      const userId = urlParams.get('user_id');
+      
+      if (!userId) {
+        console.error('No user ID provided');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(`${BACKEND_URL}/start`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ user_id: userId }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+
+        const data = await response.json();
+        setUserData(data);
+        setLoading(false);
+
+        // Расширяем окно приложения на весь экран
+        if (window.Telegram && window.Telegram.WebApp) {
+          window.Telegram.WebApp.expand();
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
   }, []);
 
-  const renderGame = () => {
-    switch (currentUniverse) {
-      case 'EatsApp':
-        return <EatsApp />;
-      case 'First':
-        return <EWE />;
-      case 'EcoGame':
-        return <EcoGame />;
-      default:
-        return null;
-    }
-  };
+  if (loading) {
+    return <LoadingScreen />;
+  }
 
-  return (
-    <div className="App">
-      <header className="App-header">
-        <UniverseSwitcher currentUniverse={currentUniverse} setCurrentUniverse={setCurrentUniverse} />
-        {renderGame()}
-      </header>
-    </div>
-  );
+  if (!userData) {
+    return <div>Error: Unable to load user data</div>;
+  }
+
+  return <EatsApp userData={userData} />;
 }
 
 export default App;

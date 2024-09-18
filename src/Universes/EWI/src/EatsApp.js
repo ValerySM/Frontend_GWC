@@ -6,16 +6,10 @@ import UpgradeTab from './components/UpgradeTab';
 import BoostTab from './components/BoostTab';
 import TasksTab from './components/TasksTab';
 import SettingsButton from './components/SettingsButton';
-import clickerImage from '../public/clicker-image.png'
-import SoonTab from './components/SoonTab'
-import UniverseData from './UniverseData';
+import clickerImage from '../public/clicker-image.png';
+import SoonTab from './components/SoonTab';
 
-import {
-  handleClick,
-  handleDamageUpgrade,
-  handleEnergyUpgrade,
-  handleRegenUpgrade
-} from './scripts/functions';
+const BACKEND_URL = 'https://backend-gwc-1.onrender.com';
 
 const DamageIndicator = ({ x, y, damage }) => (
   <div className="damage-indicator" style={{ left: x, top: y }}>
@@ -23,10 +17,8 @@ const DamageIndicator = ({ x, y, damage }) => (
   </div>
 );
 
-function EatsApp({ setIsTabOpen }) {
-  const currentUniverse = UniverseData.getCurrentUniverse();
-
-  const [totalClicks, setTotalClicks] = useState(UniverseData.getTotalClicks());
+function EatsApp({ userData }) {
+  const [totalClicks, setTotalClicks] = useState(userData.totalClicks);
   const [count, setCount] = useState(0);
   const [activeTab, setActiveTab] = useState(null);
   const [isImageDistorted, setIsImageDistorted] = useState(false);
@@ -34,35 +26,12 @@ function EatsApp({ setIsTabOpen }) {
   const [showButtons, setShowButtons] = useState(true);
   const [damageIndicators, setDamageIndicators] = useState([]);
 
-  const [energy, setEnergy] = useState(() => {
-    const savedEnergy = UniverseData.getUniverseData(currentUniverse, 'energy', 1000);
-    const lastUpdate = UniverseData.getUniverseData(currentUniverse, 'lastUpdate', Date.now());
-    const energyMax = UniverseData.getUniverseData(currentUniverse, 'energyMax', 1000);
-    const regenRate = UniverseData.getUniverseData(currentUniverse, 'regenRate', 1);
-
-    const now = Date.now();
-    const elapsedSeconds = Math.floor((now - lastUpdate) / 1000);
-    const regenAmount = Math.min(elapsedSeconds * regenRate, energyMax - savedEnergy);
-    
-    return Math.min(savedEnergy + regenAmount, energyMax);
-  });
-
-  const [energyMax, setEnergyMax] = useState(() => 
-    UniverseData.getUniverseData(currentUniverse, 'energyMax', 1000)
-  );
-  const [regenRate, setRegenRate] = useState(() => 
-    UniverseData.getUniverseData(currentUniverse, 'regenRate', 1)
-  );
-
-  const [damageLevel, setDamageLevel] = useState(() => 
-    UniverseData.getUniverseData(currentUniverse, 'damageLevel', 1)
-  );
-  const [energyLevel, setEnergyLevel] = useState(() => 
-    UniverseData.getUniverseData(currentUniverse, 'energyLevel', 1)
-  );
-  const [regenLevel, setRegenLevel] = useState(() => 
-    UniverseData.getUniverseData(currentUniverse, 'regenLevel', 1)
-  );
+  const [energy, setEnergy] = useState(userData.energy);
+  const [energyMax, setEnergyMax] = useState(userData.energyMax);
+  const [regenRate, setRegenRate] = useState(userData.regenRate);
+  const [damageLevel, setDamageLevel] = useState(userData.damageLevel);
+  const [energyLevel, setEnergyLevel] = useState(userData.energyLevel);
+  const [regenLevel, setRegenLevel] = useState(userData.regenLevel);
 
   const damageUpgradeCost = 1000 * Math.pow(2, damageLevel - 1);
   const energyUpgradeCost = 1000 * Math.pow(2, energyLevel - 1);
@@ -71,97 +40,110 @@ function EatsApp({ setIsTabOpen }) {
   const activityTimeoutRef = useRef(null);
   const clickerRef = useRef(null);
 
-  useEffect(() => {
-    const updateTotalClicks = (newTotal) => {
-      setTotalClicks(newTotal);
-    };
-
-    UniverseData.addListener(updateTotalClicks);
-
-    return () => {
-      UniverseData.removeListener(updateTotalClicks);
-    };
-  }, []);
-
-  useEffect(() => {
-    const savedData = localStorage.getItem('universeData');
-    if (!savedData) {
-      UniverseData.resetToDefaults();
-      setTotalClicks(100000);
-      setEnergy(1000);
-      setEnergyMax(1000);
-      setRegenRate(1);
-      setDamageLevel(1);
-      setEnergyLevel(1);
-      setRegenLevel(1);
-    }
-  }, []);
-
-  useEffect(() => {
-    UniverseData.setUniverseData(currentUniverse, 'energy', energy);
-  }, [energy, currentUniverse]);
-
-  useEffect(() => {
-    UniverseData.setUniverseData(currentUniverse, 'energyMax', energyMax);
-  }, [energyMax, currentUniverse]);
-
-  useEffect(() => {
-    UniverseData.setUniverseData(currentUniverse, 'regenRate', regenRate);
-  }, [regenRate, currentUniverse]);
-
-  useEffect(() => {
-    UniverseData.setUniverseData(currentUniverse, 'damageLevel', damageLevel);
-  }, [damageLevel, currentUniverse]);
-
-  useEffect(() => {
-    UniverseData.setUniverseData(currentUniverse, 'energyLevel', energyLevel);
-  }, [energyLevel, currentUniverse]);
-
-  useEffect(() => {
-    UniverseData.setUniverseData(currentUniverse, 'regenLevel', regenLevel);
-  }, [regenLevel, currentUniverse]);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setEnergy(prevEnergy => {
-        if (prevEnergy < energyMax) {
-          const newEnergy = Math.min(prevEnergy + regenRate, energyMax);
-          UniverseData.setUniverseData(currentUniverse, 'energy', newEnergy);
-          UniverseData.setUniverseData(currentUniverse, 'lastUpdate', Date.now());
-          return newEnergy;
-        }
-        return prevEnergy;
+  const sendUpdatesToServer = useCallback(async (updates) => {
+    try {
+      await fetch(`${BACKEND_URL}/update`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_id: userData.user_id,
+          updates: updates
+        }),
       });
-    }, 1000);
+    } catch (error) {
+      console.error('Error sending updates to server:', error);
+    }
+  }, [userData.user_id]);
 
-    return () => {
-      clearInterval(interval);
-      UniverseData.setUniverseData(currentUniverse, 'energy', energy);
-      UniverseData.setUniverseData(currentUniverse, 'lastUpdate', Date.now());
-    };
-  }, [currentUniverse, energy, energyMax, regenRate]);
+  const handleClick = useCallback(() => {
+    if (energy > 0) {
+      const newTotalClicks = totalClicks + damageLevel;
+      const newEnergy = Math.max(0, energy - 1);
+      
+      setTotalClicks(newTotalClicks);
+      setEnergy(newEnergy);
+      setCount(prevCount => prevCount + 1);
+      
+      sendUpdatesToServer({
+        totalClicks: newTotalClicks,
+        energy: newEnergy
+      });
+    }
+  }, [damageLevel, energy, totalClicks, sendUpdatesToServer]);
 
   const handleTabOpen = (tab) => {
     setActiveTab(tab);
     setIsTabOpenState(true);
-    setIsTabOpen(true);
     setShowButtons(false);
   };
 
   const handleBackButtonClick = () => {
     setActiveTab(null);
     setIsTabOpenState(false);
-    setIsTabOpen(false);
     setShowButtons(true);
   };
 
-  const updateTotalClicks = (additionalClicks) => {
-    setTotalClicks(prevTotal => {
-      const newTotal = prevTotal + additionalClicks;
-      UniverseData.setTotalClicks(newTotal);
-      return newTotal;
-    });
+  const handleDamageUpgrade = () => {
+    if (totalClicks >= damageUpgradeCost) {
+      const newDamageLevel = damageLevel + 1;
+      const newTotalClicks = totalClicks - damageUpgradeCost;
+      setDamageLevel(newDamageLevel);
+      setTotalClicks(newTotalClicks);
+      sendUpdatesToServer({
+        damageLevel: newDamageLevel,
+        totalClicks: newTotalClicks
+      });
+    }
   };
+
+  const handleEnergyUpgrade = () => {
+    if (totalClicks >= energyUpgradeCost) {
+      const newEnergyLevel = energyLevel + 1;
+      const newEnergyMax = energyMax + 100;
+      const newTotalClicks = totalClicks - energyUpgradeCost;
+      setEnergyLevel(newEnergyLevel);
+      setEnergyMax(newEnergyMax);
+      setTotalClicks(newTotalClicks);
+      sendUpdatesToServer({
+        energyLevel: newEnergyLevel,
+        energyMax: newEnergyMax,
+        totalClicks: newTotalClicks
+      });
+    }
+  };
+
+  const handleRegenUpgrade = () => {
+    if (totalClicks >= regenUpgradeCost) {
+      const newRegenLevel = regenLevel + 1;
+      const newRegenRate = regenRate + 1;
+      const newTotalClicks = totalClicks - regenUpgradeCost;
+      setRegenLevel(newRegenLevel);
+      setRegenRate(newRegenRate);
+      setTotalClicks(newTotalClicks);
+      sendUpdatesToServer({
+        regenLevel: newRegenLevel,
+        regenRate: newRegenRate,
+        totalClicks: newTotalClicks
+      });
+    }
+  };
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setEnergy(prevEnergy => {
+        if (prevEnergy < energyMax) {
+          const newEnergy = Math.min(prevEnergy + regenRate, energyMax);
+          sendUpdatesToServer({ energy: newEnergy });
+          return newEnergy;
+        }
+        return prevEnergy;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [energyMax, regenRate, sendUpdatesToServer]);
 
   const handleInteraction = useCallback((e) => {
     e.preventDefault();
@@ -184,7 +166,7 @@ function EatsApp({ setIsTabOpen }) {
       setDamageIndicators(prev => prev.filter(indicator => indicator.id !== newIndicator.id));
     }, 1000);
 
-    handleClick(energy, damageLevel, count, totalClicks, setCount, updateTotalClicks, setEnergy, setIsImageDistorted, activityTimeoutRef, setRegenRate);
+    handleClick();
 
     if (activityTimeoutRef.current) {
       clearTimeout(activityTimeoutRef.current);
@@ -193,7 +175,7 @@ function EatsApp({ setIsTabOpen }) {
     activityTimeoutRef.current = setTimeout(() => {
       setIsImageDistorted(false);
     }, 200);
-  }, [damageLevel, energy, count, totalClicks]);
+  }, [damageLevel, handleClick]);
 
   useEffect(() => {
     const clicker = clickerRef.current;
@@ -208,40 +190,37 @@ function EatsApp({ setIsTabOpen }) {
     }
   }, [handleInteraction]);
 
-  const tabContent = (() => {
-    switch (activeTab) {
-      case 'UPGRADE':
-        return (
-          <UpgradeTab
-            totalClicks={totalClicks}
-            damageUpgradeCost={damageUpgradeCost}
-            energyUpgradeCost={energyUpgradeCost}
-            regenUpgradeCost={regenUpgradeCost}
-            damageLevel={damageLevel}
-            energyLevel={energyLevel}
-            regenLevel={regenLevel}
-            handleDamageUpgrade={() => handleDamageUpgrade(totalClicks, damageUpgradeCost, updateTotalClicks, setDamageLevel, damageLevel)}
-            handleEnergyUpgrade={() => handleEnergyUpgrade(totalClicks, energyUpgradeCost, updateTotalClicks, setEnergyMax, setEnergyLevel, energyMax, energyLevel)}
-            handleRegenUpgrade={() => handleRegenUpgrade(totalClicks, regenUpgradeCost, updateTotalClicks, setRegenRate, setRegenLevel, regenRate, regenLevel)}
-          />
-        );
-      case 'BOOST':
-        return <BoostTab updateTotalClicks={updateTotalClicks} />;
-      case 'TASKS':
-        return <TasksTab />;
-      case 'SOON':
-        return <SoonTab />;
-      default:
-        return null;
+  useEffect(() => {
+    // Обработчик события закрытия приложения
+    const handleClose = () => {
+      sendUpdatesToServer({
+        totalClicks,
+        energy,
+        energyMax,
+        regenRate,
+        damageLevel,
+        energyLevel,
+        regenLevel
+      });
+    };
+
+    if (window.Telegram && window.Telegram.WebApp) {
+      window.Telegram.WebApp.onEvent('viewportChanged', handleClose);
     }
-  })();
+
+    return () => {
+      if (window.Telegram && window.Telegram.WebApp) {
+        window.Telegram.WebApp.offEvent('viewportChanged', handleClose);
+      }
+    };
+  }, [totalClicks, energy, energyMax, regenRate, damageLevel, energyLevel, regenLevel, sendUpdatesToServer]);
 
   const remainingEnergyPercentage = ((energyMax - energy) / energyMax) * 100;
 
   return (
-    <div className={`App`}>
+    <div className="App">
       <header className="App-header">
-        <SettingsButton isActive={activeTab !== null} /> 
+        <SettingsButton isActive={activeTab !== null} />
         <div className="balance-container">
           <img src={clickerImage} alt="Balance Icon" className="balance-icon" />
           <p>{totalClicks}</p>
@@ -249,8 +228,7 @@ function EatsApp({ setIsTabOpen }) {
         <div className="energy-container">
           <p>Energy: {Math.floor(energy)}/{energyMax}</p>
         </div>
-        <div className="clicker-container"
-             ref={clickerRef}>
+        <div className="clicker-container" ref={clickerRef}>
           <img src={clickerImage} alt="Clicker" className={`clicker-image ${isImageDistorted ? 'distorted' : ''}`} />
           <div className="progress-circle" style={{ boxShadow: '0px 0px 10px 5px gray' }}>
             <CircularProgressbar
@@ -287,7 +265,23 @@ function EatsApp({ setIsTabOpen }) {
         {isTabOpenState && (
           <div className={`tab-content ${isTabOpenState ? 'open' : ''}`}>
             <button className="back-button" onClick={handleBackButtonClick}>Back</button>
-            {tabContent}
+            {activeTab === 'UPGRADE' && (
+              <UpgradeTab
+                totalClicks={totalClicks}
+                damageUpgradeCost={damageUpgradeCost}
+                energyUpgradeCost={energyUpgradeCost}
+                regenUpgradeCost={regenUpgradeCost}
+                damageLevel={damageLevel}
+                energyLevel={energyLevel}
+                regenLevel={regenLevel}
+                handleDamageUpgrade={handleDamageUpgrade}
+                handleEnergyUpgrade={handleEnergyUpgrade}
+                handleRegenUpgrade={handleRegenUpgrade}
+              />
+            )}
+            {activeTab === 'BOOST' && <BoostTab />}
+            {activeTab === 'TASKS' && <TasksTab />}
+            {activeTab === 'SOON' && <SoonTab />}
           </div>
         )}
       </header>
