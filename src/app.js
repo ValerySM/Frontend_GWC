@@ -4,28 +4,44 @@ import EatsApp from './EatsApp';
 
 const BACKEND_URL = 'https://backend-gwc.onrender.com';
 
+function sendLog(message) {
+  fetch(`${BACKEND_URL}/log`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ message }),
+  }).catch(error => console.error('Error sending log:', error));
+}
+
 function App() {
   const [loading, setLoading] = useState(true);
   const [userData, setUserData] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchUserData = async () => {
-      // Инициализация Telegram Web App
+      sendLog('Fetching user data');
+      
       if (window.Telegram && window.Telegram.WebApp) {
         window.Telegram.WebApp.ready();
+        sendLog('Telegram WebApp is ready');
+      } else {
+        sendLog('Telegram WebApp is not available');
       }
 
-      const urlParams = new URLSearchParams(window.location.search);
-      const userId = urlParams.get('user_id');
+      const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
       
       if (!userId) {
-        console.error('No user ID provided');
+        sendLog('No user ID provided');
+        setError('No user ID provided. Please make sure you're opening this app from the Telegram bot.');
         setLoading(false);
         return;
       }
 
       try {
-        const response = await fetch(`${BACKEND_URL}/start`, {
+        sendLog(`Sending request to ${BACKEND_URL}/auth`);
+        const response = await fetch(`${BACKEND_URL}/auth`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -33,20 +49,24 @@ function App() {
           body: JSON.stringify({ user_id: userId }),
         });
 
+        sendLog(`Response status: ${response.status}`);
+
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
 
         const data = await response.json();
+        sendLog(`Received user data: ${JSON.stringify(data)}`);
         setUserData(data);
         setLoading(false);
 
-        // Расширяем окно приложения на весь экран
         if (window.Telegram && window.Telegram.WebApp) {
           window.Telegram.WebApp.expand();
+          sendLog('Expanded Telegram WebApp');
         }
       } catch (error) {
-        console.error('Error fetching user data:', error);
+        sendLog(`Error fetching user data: ${error.message}`);
+        setError('Failed to load user data. Please try again later.');
         setLoading(false);
       }
     };
@@ -58,10 +78,15 @@ function App() {
     return <LoadingScreen />;
   }
 
-  if (!userData) {
-    return <div>Error: Unable to load user data</div>;
+  if (error) {
+    return <div style={{color: 'white', textAlign: 'center', padding: '20px'}}>{error}</div>;
   }
 
+  if (!userData) {
+    return <div style={{color: 'white', textAlign: 'center', padding: '20px'}}>Error: Unable to load user data</div>;
+  }
+
+  sendLog('Rendering EatsApp');
   return <EatsApp userData={userData} />;
 }
 

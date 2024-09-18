@@ -9,7 +9,17 @@ import SettingsButton from './components/SettingsButton';
 import clickerImage from '../public/clicker-image.png';
 import SoonTab from './components/SoonTab';
 
-const BACKEND_URL = 'https://backend-gwc-1.onrender.com';
+const BACKEND_URL = 'https://backend-gwc.onrender.com';
+
+function sendLog(message) {
+  fetch(`${BACKEND_URL}/log`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ message }),
+  }).catch(error => console.error('Error sending log:', error));
+}
 
 const DamageIndicator = ({ x, y, damage }) => (
   <div className="damage-indicator" style={{ left: x, top: y }}>
@@ -18,7 +28,9 @@ const DamageIndicator = ({ x, y, damage }) => (
 );
 
 function EatsApp({ userData }) {
-  const [totalClicks, setTotalClicks] = useState(userData.totalClicks);
+  sendLog(`EatsApp received userData: ${JSON.stringify(userData)}`);
+
+  const [totalClicks, setTotalClicks] = useState(userData?.totalClicks || 0);
   const [count, setCount] = useState(0);
   const [activeTab, setActiveTab] = useState(null);
   const [isImageDistorted, setIsImageDistorted] = useState(false);
@@ -26,12 +38,12 @@ function EatsApp({ userData }) {
   const [showButtons, setShowButtons] = useState(true);
   const [damageIndicators, setDamageIndicators] = useState([]);
 
-  const [energy, setEnergy] = useState(userData.energy);
-  const [energyMax, setEnergyMax] = useState(userData.energyMax);
-  const [regenRate, setRegenRate] = useState(userData.regenRate);
-  const [damageLevel, setDamageLevel] = useState(userData.damageLevel);
-  const [energyLevel, setEnergyLevel] = useState(userData.energyLevel);
-  const [regenLevel, setRegenLevel] = useState(userData.regenLevel);
+  const [energy, setEnergy] = useState(userData?.energy || 0);
+  const [energyMax, setEnergyMax] = useState(userData?.energyMax || 1000);
+  const [regenRate, setRegenRate] = useState(userData?.regenRate || 1);
+  const [damageLevel, setDamageLevel] = useState(userData?.damageLevel || 1);
+  const [energyLevel, setEnergyLevel] = useState(userData?.energyLevel || 1);
+  const [regenLevel, setRegenLevel] = useState(userData?.regenLevel || 1);
 
   const damageUpgradeCost = 1000 * Math.pow(2, damageLevel - 1);
   const energyUpgradeCost = 1000 * Math.pow(2, energyLevel - 1);
@@ -42,20 +54,25 @@ function EatsApp({ userData }) {
 
   const sendUpdatesToServer = useCallback(async (updates) => {
     try {
-      await fetch(`${BACKEND_URL}/update`, {
+      sendLog(`Sending updates to server: ${JSON.stringify(updates)}`);
+      const response = await fetch(`${BACKEND_URL}/update`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          user_id: userData.user_id,
+          user_id: userData.telegram_id,
           updates: updates
         }),
       });
+      if (!response.ok) {
+        throw new Error(`Server responded with ${response.status}`);
+      }
+      sendLog('Updates sent successfully');
     } catch (error) {
-      console.error('Error sending updates to server:', error);
+      sendLog(`Error sending updates to server: ${error.message}`);
     }
-  }, [userData.user_id]);
+  }, [userData.telegram_id]);
 
   const handleClick = useCallback(() => {
     if (energy > 0) {
@@ -191,7 +208,6 @@ function EatsApp({ userData }) {
   }, [handleInteraction]);
 
   useEffect(() => {
-    // Обработчик события закрытия приложения
     const handleClose = () => {
       sendUpdatesToServer({
         totalClicks,
@@ -215,7 +231,21 @@ function EatsApp({ userData }) {
     };
   }, [totalClicks, energy, energyMax, regenRate, damageLevel, energyLevel, regenLevel, sendUpdatesToServer]);
 
+  useEffect(() => {
+    sendLog('EatsApp mounted');
+    return () => {
+      sendLog('EatsApp unmounted');
+    };
+  }, []);
+
   const remainingEnergyPercentage = ((energyMax - energy) / energyMax) * 100;
+
+  sendLog('Rendering EatsApp');
+
+  if (!userData) {
+    sendLog('EatsApp received null or undefined userData');
+    return <div>Error: Invalid user data</div>;
+  }
 
   return (
     <div className="App">
