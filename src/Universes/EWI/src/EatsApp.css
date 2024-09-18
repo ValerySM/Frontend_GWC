@@ -29,10 +29,18 @@
 .balance-container {
   font-size: large;
   font-weight: 700;
-  color: rgba(188, 1, 1, 0.6);
+  color: #fff; /* Основной цвет текста */
+  text-shadow: 
+    0 0 5px #00ffff, /* Голубое свечение */
+    0 0 10px #00ffff, 
+    0 0 15px #00ffff, 
+    0 0 20px #ff00ff, /* Розовое свечение */
+    0 0 25px #ff00ff, 
+    0 0 30px #ff00ff;
   display: flex;
   align-items: center;
 }
+
 
 .balance-icon {
   width: 32px;
@@ -50,15 +58,45 @@
   position: relative;
   height: max-content;
   cursor: pointer;
+  /* color:#b20bff ; */
 }
 
+/* Стиль для круга прогресса с переливающимся свечением */
+/* Стиль для круга прогресса с плавным переливанием свечения */
 .progress-circle {
   opacity: 0.6;
   position: absolute;
   z-index: -1;
   width: 92%;
   border-radius: 50%;
+  animation: pulse 2s infinite ease-in-out; /* Анимация плавного переливания */
 }
+
+/* Анимация для плавного переливания */
+@keyframes pulse {
+  0% {
+    box-shadow: 
+      0 0 15px #00ffff, /* Голубое свечение */
+      0 0 30px #00ffff, 
+      0 0 45px #ff00ff, /* Розовое свечение */
+      0 0 50px #ff00ff;
+  }
+  50% {
+    box-shadow: 
+      0 0 30px #00ffff, /* Увеличенное голубое свечение */
+      0 0 50px #00ffff, 
+      0 0 60px #ff00ff, /* Увеличенное розовое свечение */
+      0 0 70px #ff00ff;
+  }
+  100% {
+    box-shadow: 
+      0 0 15px #00ffff, /* Голубое свечение */
+      0 0 30px #00ffff, 
+      0 0 45px #ff00ff, /* Розовое свечение */
+      0 0 50px #ff00ff;
+  }
+}
+
 
 .clicker-image {
   transition: transform 0.2s;
@@ -98,8 +136,16 @@
   height: 10%;
   font-size: 150%;
   margin-top: 10px;
-  color: rgba(188, 1, 1, 0.6);
+  color: #fff; /* Основной цвет текста */
+  text-shadow: 
+    0 0 5px #00ffff, /* Голубое свечение */
+    0 0 10px #00ffff, 
+    0 0 15px #00ffff, 
+    0 0 20px #ff00ff, /* Розовое свечение */
+    0 0 25px #ff00ff, 
+    0 0 30px #ff00ff;
 }
+
 
 .tab-content {
   height: 100vh;
@@ -109,7 +155,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(188, 1, 1, 0.6); 
+  background-color: rgba(0, 0, 0, 0.6); 
   z-index: 10; 
   transform: translateY(100%);
   transition: transform 0.5s ease-out, opacity 0.5s ease-out;
@@ -121,17 +167,73 @@
   opacity: 1;
 }
 
+.tabs {
+  display: flex;
+  /* gap: 10px; Пробел между кнопками */
+}
 .tabs button {
   border-radius: 5px;
-  background-color: rgba(214, 24, 24, 0.6);
+  background-color: rgba(255, 255, 255, 0.6);
   color: rgb(196, 255, 2);
   border: none;
   padding: 10px 20px;
   cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  font-weight: bold;
+  transition: color 0.3s ease;
+  z-index: 1;
+  animation: glow 1.8s infinite alternate;
+}
+
+.tabs button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 300%;
+  height: 300%;
+  background: radial-gradient(circle, rgba(255,255,255,0.5) 20%, rgba(245, 242, 242, 0) 60%);
+  transition: transform 0.5s ease;
+  transform: translate(-50%, -50%) scale(0);
+  z-index: -1;
+}
+
+@keyframes glow {
+  0% { 
+    color: rgba(196, 255, 2, 1);
+    text-shadow: 
+      0 0 5px #00ffff, /* Голубое свечение */
+      0 0 10px #00ffff, 
+      0 0 15px #00ffff, 
+      0 0 20px #ff00ff, /* Розовое свечение */
+      0 0 25px #ff00ff, 
+      0 0 30px #ff00ff;
+    box-shadow: 
+      0 0 10px #00ffff, /* Голубое свечение */
+      0 0 20px #0084ff, 
+      0 0 30px #ff00ff, /* Розовое свечение */
+      0 0 10px #ff00ff;
+  }
+  100% { 
+    color: #fff;
+    text-shadow: 
+      0 0 10px #00ffff, 
+      0 0 20px #00ffff, 
+      0 0 30px #00ffff, 
+      0 0 10px #ff00ff, 
+      0 0 10px #ff00ff, 
+      0 0 10px #ff00ff;
+    box-shadow: 
+      0 0 15px #00ffff, 
+      0 0 15px #00ffff, 
+      0 0 15px #ff00ff, 
+      0 0 2px #ff00ff;
+  }
 }
 
 .back-button {
-  background-color: rgba(253, 1, 1, 0.6);
+  background-color: rgba(1, 245, 253, 0.6);
   color: rgb(195, 255, 0);
   border: none;
   padding: 10px 20px;
@@ -215,47 +317,26 @@
   opacity: 0.6;
 }
 
-@keyframes animationbg-4a {
-  0% {
-    background-position: 0% 0%;
-  }
-  50% {
-    background-position: 100% 100%;
-  }
-  100% {
-    background-position: 0% 0%;
-  }
-}
-
-@keyframes animationbg-4b {
-  2% {
-    transform: translateX(1);
-  }
-  25% {
-    transform: translateX(-25%);
-  }
-  50% {
-    transform: translateX(-50%);
-  }
-  75% {
-    transform: translateX(-25%);
-  }
-  100% {
-    transform: translateX(1);
-  }
-}
 
 .damage-indicator {
   position: absolute;
   font-size: 20px;
   font-weight: bold;
-  color: #ff0000;
-  text-shadow: 1px 1px 2px #000000;
-  pointer-events: none;
+  color: #fff; /* Основной цвет текста */
+  text-shadow: 
+    0 0 5px #00ffff, /* Голубое свечение */
+    0 0 10px #00ffff, 
+    0 0 15px #00ffff, 
+    0 0 20px #ff00ff, /* Розовое свечение */
+    0 0 25px #ff00ff, 
+    0 0 30px #ff00ff;
   animation: fadeOut 1s forwards;
 }
 
 @keyframes fadeOut {
   0% { opacity: 1; transform: translateY(0); }
   100% { opacity: 0; transform: translateY(-20px); }
+}
+.balance-text{
+  color: white;
 }

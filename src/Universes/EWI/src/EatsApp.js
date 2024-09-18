@@ -6,15 +6,15 @@ import UpgradeTab from './components/UpgradeTab';
 import BoostTab from './components/BoostTab';
 import TasksTab from './components/TasksTab';
 import SettingsButton from './components/SettingsButton';
-import clickerImage from '../public/clicker-image.png';
-import SoonTab from './components/SoonTab';
+import clickerImage from '../public/clicker-image.png'
+import SoonTab from './components/SoonTab'
 import UniverseData from './UniverseData';
 
 import {
-  handleClick as handleClickFunction,
-  handleDamageUpgrade as handleDamageUpgradeFunction,
-  handleEnergyUpgrade as handleEnergyUpgradeFunction,
-  handleRegenUpgrade as handleRegenUpgradeFunction
+  handleClick,
+  handleDamageUpgrade,
+  handleEnergyUpgrade,
+  handleRegenUpgrade
 } from './scripts/functions';
 
 const DamageIndicator = ({ x, y, damage }) => (
@@ -24,7 +24,6 @@ const DamageIndicator = ({ x, y, damage }) => (
 );
 
 function EatsApp({ setIsTabOpen }) {
-console.log('EatsApp рендерится с данными:', UniverseData.getUserData(), UniverseData.getTotalClicks());
   const currentUniverse = UniverseData.getCurrentUniverse();
 
   const [totalClicks, setTotalClicks] = useState(UniverseData.getTotalClicks());
@@ -35,15 +34,26 @@ console.log('EatsApp рендерится с данными:', UniverseData.getU
   const [showButtons, setShowButtons] = useState(true);
   const [damageIndicators, setDamageIndicators] = useState([]);
 
-  const [energy, setEnergy] = useState(() => 
-    UniverseData.getUniverseData(currentUniverse, 'energy', 1000)
-  );
+  const [energy, setEnergy] = useState(() => {
+    const savedEnergy = UniverseData.getUniverseData(currentUniverse, 'energy', 1000);
+    const lastUpdate = UniverseData.getUniverseData(currentUniverse, 'lastUpdate', Date.now());
+    const energyMax = UniverseData.getUniverseData(currentUniverse, 'energyMax', 1000);
+    const regenRate = UniverseData.getUniverseData(currentUniverse, 'regenRate', 1);
+
+    const now = Date.now();
+    const elapsedSeconds = Math.floor((now - lastUpdate) / 1000);
+    const regenAmount = Math.min(elapsedSeconds * regenRate, energyMax - savedEnergy);
+    
+    return Math.min(savedEnergy + regenAmount, energyMax);
+  });
+
   const [energyMax, setEnergyMax] = useState(() => 
     UniverseData.getUniverseData(currentUniverse, 'energyMax', 1000)
   );
   const [regenRate, setRegenRate] = useState(() => 
     UniverseData.getUniverseData(currentUniverse, 'regenRate', 1)
   );
+
   const [damageLevel, setDamageLevel] = useState(() => 
     UniverseData.getUniverseData(currentUniverse, 'damageLevel', 1)
   );
@@ -74,6 +84,24 @@ console.log('EatsApp рендерится с данными:', UniverseData.getU
   }, []);
 
   useEffect(() => {
+    const savedData = localStorage.getItem('universeData');
+    if (!savedData) {
+      UniverseData.resetToDefaults();
+      setTotalClicks(100000);
+      setEnergy(1000);
+      setEnergyMax(1000);
+      setRegenRate(1);
+      setDamageLevel(1);
+      setEnergyLevel(1);
+      setRegenLevel(1);
+    }
+  }, []);
+
+  useEffect(() => {
+    UniverseData.setUniverseData(currentUniverse, 'energy', energy);
+  }, [energy, currentUniverse]);
+
+  useEffect(() => {
     UniverseData.setUniverseData(currentUniverse, 'energyMax', energyMax);
   }, [energyMax, currentUniverse]);
 
@@ -82,11 +110,24 @@ console.log('EatsApp рендерится с данными:', UniverseData.getU
   }, [regenRate, currentUniverse]);
 
   useEffect(() => {
+    UniverseData.setUniverseData(currentUniverse, 'damageLevel', damageLevel);
+  }, [damageLevel, currentUniverse]);
+
+  useEffect(() => {
+    UniverseData.setUniverseData(currentUniverse, 'energyLevel', energyLevel);
+  }, [energyLevel, currentUniverse]);
+
+  useEffect(() => {
+    UniverseData.setUniverseData(currentUniverse, 'regenLevel', regenLevel);
+  }, [regenLevel, currentUniverse]);
+
+  useEffect(() => {
     const interval = setInterval(() => {
       setEnergy(prevEnergy => {
         if (prevEnergy < energyMax) {
           const newEnergy = Math.min(prevEnergy + regenRate, energyMax);
           UniverseData.setUniverseData(currentUniverse, 'energy', newEnergy);
+          UniverseData.setUniverseData(currentUniverse, 'lastUpdate', Date.now());
           return newEnergy;
         }
         return prevEnergy;
@@ -96,8 +137,9 @@ console.log('EatsApp рендерится с данными:', UniverseData.getU
     return () => {
       clearInterval(interval);
       UniverseData.setUniverseData(currentUniverse, 'energy', energy);
+      UniverseData.setUniverseData(currentUniverse, 'lastUpdate', Date.now());
     };
-  }, [energy, energyMax, regenRate, currentUniverse]);
+  }, [currentUniverse, energy, energyMax, regenRate]);
 
   const handleTabOpen = (tab) => {
     setActiveTab(tab);
@@ -113,15 +155,15 @@ console.log('EatsApp рендерится с данными:', UniverseData.getU
     setShowButtons(true);
   };
 
-  const updateTotalClicks = useCallback((additionalClicks) => {
+  const updateTotalClicks = (additionalClicks) => {
     setTotalClicks(prevTotal => {
       const newTotal = prevTotal + additionalClicks;
       UniverseData.setTotalClicks(newTotal);
       return newTotal;
     });
-  }, []);
+  };
 
-  const handleClick = useCallback((e) => {
+  const handleInteraction = useCallback((e) => {
     e.preventDefault();
     setIsImageDistorted(true);
 
@@ -142,45 +184,7 @@ console.log('EatsApp рендерится с данными:', UniverseData.getU
       setDamageIndicators(prev => prev.filter(indicator => indicator.id !== newIndicator.id));
     }, 1000);
 
-    handleClickFunction(energy, damageLevel, count, totalClicks, setCount, (newTotalClicks) => {
-      updateTotalClicks(newTotalClicks);
-      
-      const { telegramId, username } = UniverseData.getUserData();
-      if (telegramId) {
-        fetch('https://backend-gwc-1.onrender.com/api/users', {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            telegram_id: telegramId,
-            username: username,
-            totalClicks: newTotalClicks,
-            currentUniverse: UniverseData.getCurrentUniverse(),
-          }),
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            console.log('Данные успешно обновлены на сервере');
-          } else {
-            console.error('Ошибка при обновлении данных на сервере:', data.error);
-          }
-        })
-        .catch(error => {
-          console.error('Ошибка при отправке данных на сервер:', error);
-        });
-      } else {
-        console.error('Telegram ID недоступен');
-        UniverseData.logToServer('Попытка обновления данных без Telegram ID');
-      }
-
-      UniverseData.saveToServer();
-    }, (newEnergy) => {
-      setEnergy(newEnergy);
-      UniverseData.setUniverseData(currentUniverse, 'energy', newEnergy);
-      UniverseData.saveToServer();
-    }, setIsImageDistorted, activityTimeoutRef);
+    handleClick(energy, damageLevel, count, totalClicks, setCount, updateTotalClicks, setEnergy, setIsImageDistorted, activityTimeoutRef, setRegenRate);
 
     if (activityTimeoutRef.current) {
       clearTimeout(activityTimeoutRef.current);
@@ -189,48 +193,20 @@ console.log('EatsApp рендерится с данными:', UniverseData.getU
     activityTimeoutRef.current = setTimeout(() => {
       setIsImageDistorted(false);
     }, 200);
-  }, [damageLevel, energy, count, totalClicks, updateTotalClicks, currentUniverse]);
+  }, [damageLevel, energy, count, totalClicks]);
 
   useEffect(() => {
     const clicker = clickerRef.current;
     if (clicker) {
-      clicker.addEventListener('click', handleClick);
-      clicker.addEventListener('touchstart', handleClick, { passive: false });
+      clicker.addEventListener('click', handleInteraction);
+      clicker.addEventListener('touchstart', handleInteraction, { passive: false });
       
       return () => {
-        clicker.removeEventListener('click', handleClick);
-        clicker.removeEventListener('touchstart', handleClick);
+        clicker.removeEventListener('click', handleInteraction);
+        clicker.removeEventListener('touchstart', handleInteraction);
       };
     }
-  }, [handleClick]);
-
-  const handleDamageUpgrade = () => {
-    handleDamageUpgradeFunction(totalClicks, damageUpgradeCost, updateTotalClicks, (newLevel) => {
-      setDamageLevel(newLevel);
-      UniverseData.setUniverseData(currentUniverse, 'damageLevel', newLevel);
-      UniverseData.saveToServer();
-    });
-  };
-
-  const handleEnergyUpgrade = () => {
-    handleEnergyUpgradeFunction(totalClicks, energyUpgradeCost, updateTotalClicks, (newLevel, newEnergyMax) => {
-      setEnergyLevel(newLevel);
-      setEnergyMax(newEnergyMax);
-      UniverseData.setUniverseData(currentUniverse, 'energyLevel', newLevel);
-      UniverseData.setUniverseData(currentUniverse, 'energyMax', newEnergyMax);
-      UniverseData.saveToServer();
-    });
-  };
-
-  const handleRegenUpgrade = () => {
-    handleRegenUpgradeFunction(totalClicks, regenUpgradeCost, updateTotalClicks, (newLevel, newRegenRate) => {
-      setRegenLevel(newLevel);
-      setRegenRate(newRegenRate);
-      UniverseData.setUniverseData(currentUniverse, 'regenLevel', newLevel);
-      UniverseData.setUniverseData(currentUniverse, 'regenRate', newRegenRate);
-      UniverseData.saveToServer();
-    });
-  };
+  }, [handleInteraction]);
 
   const tabContent = (() => {
     switch (activeTab) {
@@ -244,9 +220,9 @@ console.log('EatsApp рендерится с данными:', UniverseData.getU
             damageLevel={damageLevel}
             energyLevel={energyLevel}
             regenLevel={regenLevel}
-            handleDamageUpgrade={handleDamageUpgrade}
-            handleEnergyUpgrade={handleEnergyUpgrade}
-            handleRegenUpgrade={handleRegenUpgrade}
+            handleDamageUpgrade={() => handleDamageUpgrade(totalClicks, damageUpgradeCost, updateTotalClicks, setDamageLevel, damageLevel)}
+            handleEnergyUpgrade={() => handleEnergyUpgrade(totalClicks, energyUpgradeCost, updateTotalClicks, setEnergyMax, setEnergyLevel, energyMax, energyLevel)}
+            handleRegenUpgrade={() => handleRegenUpgrade(totalClicks, regenUpgradeCost, updateTotalClicks, setRegenRate, setRegenLevel, regenRate, regenLevel)}
           />
         );
       case 'BOOST':
@@ -265,16 +241,6 @@ console.log('EatsApp рендерится с данными:', UniverseData.getU
   return (
     <div className={`App`}>
       <header className="App-header">
-        <div className='bg'>
-          <div className="abg-wr-4">
-            <ul className="abg-4">
-              <li></li>
-              <li></li>
-              <li></li>
-            </ul>
-          </div>
-        </div>
-        
         <SettingsButton isActive={activeTab !== null} /> 
         <div className="balance-container">
           <img src={clickerImage} alt="Balance Icon" className="balance-icon" />
@@ -283,17 +249,18 @@ console.log('EatsApp рендерится с данными:', UniverseData.getU
         <div className="energy-container">
           <p>Energy: {Math.floor(energy)}/{energyMax}</p>
         </div>
-        <div className="clicker-container" ref={clickerRef}>
+        <div className="clicker-container"
+             ref={clickerRef}>
           <img src={clickerImage} alt="Clicker" className={`clicker-image ${isImageDistorted ? 'distorted' : ''}`} />
           <div className="progress-circle" style={{ boxShadow: '0px 0px 10px 5px gray' }}>
             <CircularProgressbar
               value={remainingEnergyPercentage}
               maxValue={100}
               styles={buildStyles({
-                pathColor: 'rgba(188, 1, 1)',
+                pathColor: '#b20bff',
                 textColor: '#fff',
-                trailColor: 'greenyellow',
-                backgroundColor: '#3c98c7',
+                trailColor: '#07ffff',
+                backgroundColor: '#07ffff',
               })}
             />
           </div>

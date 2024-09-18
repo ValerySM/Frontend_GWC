@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import Score from './comp/Score';
-import './css/EWE.css'
+import './css/EWE.css';
 import FarmButton from './comp/FarmButton';
-import UniverseData from '../../EWI/src/UniverseData';
+
 function Ewe() {
   const [tokens, setTokens] = useState(() => {
     const savedTokens = localStorage.getItem('tokens');
@@ -28,6 +28,8 @@ function Ewe() {
     const savedElapsedFarmingTime = localStorage.getItem('elapsedFarmingTime');
     return savedElapsedFarmingTime ? parseFloat(savedElapsedFarmingTime) : 0;
   });
+
+  const [animationClass, setAnimationClass] = useState('');
 
   const maxTokens = 32;
   const farmingDuration = 3 * 60 * 60 * 1000; // 3 hours in milliseconds
@@ -70,6 +72,8 @@ function Ewe() {
     } else {
       startFarming();
     }
+    // Trigger animation
+    setAnimationClass('animate');
   };
 
   const startFarming = () => {
@@ -112,6 +116,14 @@ function Ewe() {
           farmedTokens={farmedTokens}
           onClick={handleButtonClick}
         />
+      </div>
+      <div className={`animation_contain ${animationClass}`}>
+        <div className='anim_blocks'></div>
+        <div className='anim_blocks'></div>
+        <div className='anim_blocks'></div>
+        <div className='anim_blocks'></div>
+        <div className='anim_blocks'></div>
+        <div className='anim_blocks'></div>
       </div>
     </div>
   );
