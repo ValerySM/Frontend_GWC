@@ -9,17 +9,7 @@ import SettingsButton from './components/SettingsButton';
 import clickerImage from '../public/clicker-image.png';
 import SoonTab from './components/SoonTab';
 
-const BACKEND_URL = 'https://backend-gwc.onrender.com';
-
-function sendLog(message) {
-  fetch(`${BACKEND_URL}/log`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ message }),
-  }).catch(error => console.error('Error sending log:', error));
-}
+const BACKEND_URL = 'https://backend-gwc-1.onrender.com';
 
 const DamageIndicator = ({ x, y, damage }) => (
   <div className="damage-indicator" style={{ left: x, top: y }}>
@@ -28,13 +18,6 @@ const DamageIndicator = ({ x, y, damage }) => (
 );
 
 function EatsApp({ userData }) {
-  sendLog(`EatsApp received userData: ${JSON.stringify(userData)}`);
-
-  if (!userData) {
-    sendLog('EatsApp received null or undefined userData');
-    return <div>Error: Invalid user data</div>;
-  }
-
   const [totalClicks, setTotalClicks] = useState(userData.totalClicks);
   const [count, setCount] = useState(0);
   const [activeTab, setActiveTab] = useState(null);
@@ -59,8 +42,7 @@ function EatsApp({ userData }) {
 
   const sendUpdatesToServer = useCallback(async (updates) => {
     try {
-      sendLog(`Sending updates to server: ${JSON.stringify(updates)}`);
-      const response = await fetch(`${BACKEND_URL}/update`, {
+      await fetch(`${BACKEND_URL}/update`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -70,12 +52,8 @@ function EatsApp({ userData }) {
           updates: updates
         }),
       });
-      if (!response.ok) {
-        throw new Error(`Server responded with ${response.status}`);
-      }
-      sendLog('Updates sent successfully');
     } catch (error) {
-      sendLog(`Error sending updates to server: ${error.message}`);
+      console.error('Error sending updates to server:', error);
     }
   }, [userData.user_id]);
 
@@ -237,16 +215,7 @@ function EatsApp({ userData }) {
     };
   }, [totalClicks, energy, energyMax, regenRate, damageLevel, energyLevel, regenLevel, sendUpdatesToServer]);
 
-  useEffect(() => {
-    sendLog('EatsApp mounted');
-    return () => {
-      sendLog('EatsApp unmounted');
-    };
-  }, []);
-
   const remainingEnergyPercentage = ((energyMax - energy) / energyMax) * 100;
-
-  sendLog('Rendering EatsApp');
 
   return (
     <div className="App">
@@ -311,7 +280,7 @@ function EatsApp({ userData }) {
               />
             )}
             {activeTab === 'BOOST' && <BoostTab />}
-            {activeTask === 'TASKS' && <TasksTab />}
+            {activeTab === 'TASKS' && <TasksTab />}
             {activeTab === 'SOON' && <SoonTab />}
           </div>
         )}
