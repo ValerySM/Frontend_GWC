@@ -9,7 +9,7 @@ import SettingsButton from './components/SettingsButton';
 import clickerImage from '../public/clicker-image.png';
 import SoonTab from './components/SoonTab';
 
-const BACKEND_URL = 'https://backend-gwc-1.onrender.com';
+const BACKEND_URL = 'https://backend-gwc.onrender.com';
 
 const DamageIndicator = ({ x, y, damage }) => (
   <div className="damage-indicator" style={{ left: x, top: y }}>

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import LoadingScreen from './LoadingScreen';
 import EatsApp from './EatsApp';
 
-const BACKEND_URL = 'https://backend-gwc-1.onrender.com';
+const BACKEND_URL = 'https://backend-gwc.onrender.com';
 
 function App() {
   const [loading, setLoading] = useState(true);
