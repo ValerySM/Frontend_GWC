@@ -16,8 +16,8 @@ function sendLog(message) {
 
 function App() {
   const [loading, setLoading] = useState(true);
-  const [userData, setUserData] = useState(null);
   const [error, setError] = useState(null);
+  const [userData, setUserData] = useState(null);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -26,22 +26,21 @@ function App() {
       if (window.Telegram && window.Telegram.WebApp) {
         window.Telegram.WebApp.ready();
         sendLog('Telegram WebApp is ready');
-      } else {
-        sendLog('Telegram WebApp is not available');
       }
 
-      const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
+      const urlParams = new URLSearchParams(window.location.search);
+      const userId = urlParams.get('user_id');
       
       if (!userId) {
         sendLog('No user ID provided');
-        setError('No user ID provided. Please make sure you're opening this app from the Telegram bot.');
+        setError('No user ID provided');
         setLoading(false);
         return;
       }
 
       try {
-        sendLog(`Sending request to ${BACKEND_URL}/auth`);
-        const response = await fetch(`${BACKEND_URL}/auth`, {
+        sendLog(`Sending request to ${BACKEND_URL}/start`);
+        const response = await fetch(`${BACKEND_URL}/start`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -66,7 +65,7 @@ function App() {
         }
       } catch (error) {
         sendLog(`Error fetching user data: ${error.message}`);
-        setError('Failed to load user data. Please try again later.');
+        setError(`Error fetching user data: ${error.message}`);
         setLoading(false);
       }
     };
@@ -79,11 +78,11 @@ function App() {
   }
 
   if (error) {
-    return <div style={{color: 'white', textAlign: 'center', padding: '20px'}}>{error}</div>;
+    return <div>Error: {error}</div>;
   }
 
   if (!userData) {
-    return <div style={{color: 'white', textAlign: 'center', padding: '20px'}}>Error: Unable to load user data</div>;
+    return <div>No user data available</div>;
   }
 
   sendLog('Rendering EatsApp');
