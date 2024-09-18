@@ -30,7 +30,7 @@ const DamageIndicator = ({ x, y, damage }) => (
 function EatsApp({ userData }) {
   sendLog(`EatsApp received userData: ${JSON.stringify(userData)}`);
 
-  const [totalClicks, setTotalClicks] = useState(userData.totalClicks);
+  const [totalClicks, setTotalClicks] = useState(userData?.totalClicks || 0);
   const [count, setCount] = useState(0);
   const [activeTab, setActiveTab] = useState(null);
   const [isImageDistorted, setIsImageDistorted] = useState(false);
@@ -38,12 +38,12 @@ function EatsApp({ userData }) {
   const [showButtons, setShowButtons] = useState(true);
   const [damageIndicators, setDamageIndicators] = useState([]);
 
-  const [energy, setEnergy] = useState(userData.energy);
-  const [energyMax, setEnergyMax] = useState(userData.energyMax);
-  const [regenRate, setRegenRate] = useState(userData.regenRate);
-  const [damageLevel, setDamageLevel] = useState(userData.damageLevel);
-  const [energyLevel, setEnergyLevel] = useState(userData.energyLevel);
-  const [regenLevel, setRegenLevel] = useState(userData.regenLevel);
+  const [energy, setEnergy] = useState(userData?.energy || 0);
+  const [energyMax, setEnergyMax] = useState(userData?.energyMax || 1000);
+  const [regenRate, setRegenRate] = useState(userData?.regenRate || 1);
+  const [damageLevel, setDamageLevel] = useState(userData?.damageLevel || 1);
+  const [energyLevel, setEnergyLevel] = useState(userData?.energyLevel || 1);
+  const [regenLevel, setRegenLevel] = useState(userData?.regenLevel || 1);
 
   const damageUpgradeCost = 1000 * Math.pow(2, damageLevel - 1);
   const energyUpgradeCost = 1000 * Math.pow(2, energyLevel - 1);
@@ -241,6 +241,11 @@ function EatsApp({ userData }) {
   const remainingEnergyPercentage = ((energyMax - energy) / energyMax) * 100;
 
   sendLog('Rendering EatsApp');
+
+  if (!userData) {
+    sendLog('EatsApp received null or undefined userData');
+    return <div>Error: Invalid user data</div>;
+  }
 
   return (
     <div className="App">

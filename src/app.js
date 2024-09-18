@@ -40,8 +40,8 @@ function App() {
       }
 
       try {
-        sendLog(`Sending request to ${BACKEND_URL}/start`);
-        const response = await fetch(`${BACKEND_URL}/start`, {
+        sendLog(`Sending request to ${BACKEND_URL}/auth`);
+        const response = await fetch(`${BACKEND_URL}/auth`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
