@@ -16,8 +16,8 @@ function sendLog(message) {
 
 function App() {
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [userData, setUserData] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -26,14 +26,15 @@ function App() {
       if (window.Telegram && window.Telegram.WebApp) {
         window.Telegram.WebApp.ready();
         sendLog('Telegram WebApp is ready');
+      } else {
+        sendLog('Telegram WebApp is not available');
       }
 
-      const urlParams = new URLSearchParams(window.location.search);
-      const userId = urlParams.get('user_id');
+      const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
       
       if (!userId) {
         sendLog('No user ID provided');
-        setError('No user ID provided');
+        setError('No user ID provided. Please make sure you're opening this app from the Telegram bot.');
         setLoading(false);
         return;
       }
@@ -65,7 +66,7 @@ function App() {
         }
       } catch (error) {
         sendLog(`Error fetching user data: ${error.message}`);
-        setError(`Error fetching user data: ${error.message}`);
+        setError('Failed to load user data. Please try again later.');
         setLoading(false);
       }
     };
@@ -78,11 +79,11 @@ function App() {
   }
 
   if (error) {
-    return <div>Error: {error}</div>;
+    return <div style={{color: 'white', textAlign: 'center', padding: '20px'}}>{error}</div>;
   }
 
   if (!userData) {
-    return <div>No user data available</div>;
+    return <div style={{color: 'white', textAlign: 'center', padding: '20px'}}>Error: Unable to load user data</div>;
   }
 
   sendLog('Rendering EatsApp');
