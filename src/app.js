@@ -26,16 +26,24 @@ function App() {
       
       axios.post(`${BACKEND_URL}/auth`, { user_id: userIdFromTg })
         .then(response => {
-          console.log('Response from backend:', response.data);
+          console.log('Full response from backend:', response);
+          console.log('Response data from backend:', response.data);
           if (!response.data || !response.data.telegram_id) {
             throw new Error('Invalid data received from server');
           }
-          setUserData(response.data); // Устанавливаем данные пользователя
-          setIsLoading(false); // Убираем статус загрузки
+          // Проверим наличие всех необходимых полей
+          const requiredFields = ['telegram_id', 'totalClicks', 'energy', 'energyMax', 'damageLevel', 'energyLevel', 'regenLevel'];
+          const missingFields = requiredFields.filter(field => response.data[field] === undefined);
+          if (missingFields.length > 0) {
+            console.error('Missing fields in user data:', missingFields);
+            throw new Error(`Missing fields: ${missingFields.join(', ')}`);
+          }
+          setUserData(response.data);
+          setIsLoading(false);
         })
         .catch(err => {
           console.error('Error initializing user:', err);
-          setError('Failed to initialize user data. Please try again.');
+          setError(`Failed to initialize user data: ${err.message}`);
           setIsLoading(false);
         });
     } else {
@@ -44,17 +52,14 @@ function App() {
       setIsLoading(false);
     }
 
-    // Установка цветов интерфейса
     document.body.style.backgroundColor = tg.backgroundColor;
     document.body.style.color = tg.textColor;
   }, []);
 
-  // Проверка на загрузку данных
   if (isLoading) {
     return <div>Loading...</div>;
   }
 
-  // Проверка на ошибки
   if (error) {
     return <div>Error: {error}</div>;
   }
