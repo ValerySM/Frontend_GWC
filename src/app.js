@@ -1,93 +1,78 @@
 import React, { useState, useEffect } from 'react';
-import LoadingScreen from './LoadingScreen';
-import EatsApp from './EatsApp';
-
-const BACKEND_URL = 'https://backend-gwc.onrender.com';
-
-function sendLog(message) {
-  fetch(`${BACKEND_URL}/log`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ message }),
-  }).catch(error => console.error('Error sending log:', error));
-}
+import '../css/app.css'; 
+import UniverseSwitcher from './components/UniverseSwitcher';
+import EatsApp from './Universes/EWI/EatsApp';
+import EWE from './Universes/EWE/EWE';
+import EcoGame from './Universes/ECI/EcoGame';
+import UniverseData from './UniverseData';
 
 function App() {
-  const [loading, setLoading] = useState(true);
-  const [userData, setUserData] = useState(null);
+  const [currentUniverse, setCurrentUniverse] = useState('EatsApp');
+  const [userId, setUserId] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      sendLog('Fetching user data');
-      
-      if (window.Telegram && window.Telegram.WebApp) {
-        window.Telegram.WebApp.ready();
-        sendLog('Telegram WebApp is ready');
-      } else {
-        sendLog('Telegram WebApp is not available');
-      }
-
-      const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
-      
-      if (!userId) {
-        sendLog('No user ID provided');
-        setError('No user ID provided. Please make sure you're opening this app from the Telegram bot.');
-        setLoading(false);
-        return;
-      }
-
-      try {
-        sendLog(`Sending request to ${BACKEND_URL}/auth`);
-        const response = await fetch(`${BACKEND_URL}/auth`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ user_id: userId }),
+    const urlParams = new URLSearchParams(window.location.search);
+    const userIdFromUrl = urlParams.get('user_id');
+    
+    if (userIdFromUrl) {
+      setUserId(userIdFromUrl);
+      UniverseData.initializeUser(userIdFromUrl)
+        .then(() => {
+          setIsLoading(false);
+        })
+        .catch(err => {
+          console.error('Error initializing user:', err);
+          setError('Failed to initialize user data. Please try again.');
+          setIsLoading(false);
         });
+    } else {
+      setError('User ID not found in URL.');
+      setIsLoading(false);
+    }
 
-        sendLog(`Response status: ${response.status}`);
-
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-
-        const data = await response.json();
-        sendLog(`Received user data: ${JSON.stringify(data)}`);
-        setUserData(data);
-        setLoading(false);
-
-        if (window.Telegram && window.Telegram.WebApp) {
-          window.Telegram.WebApp.expand();
-          sendLog('Expanded Telegram WebApp');
-        }
-      } catch (error) {
-        sendLog(`Error fetching user data: ${error.message}`);
-        setError('Failed to load user data. Please try again later.');
-        setLoading(false);
-      }
-    };
-
-    fetchUserData();
+    if (window.TelegramWebApps) {
+      window.TelegramWebApps.ready();
+      window.TelegramWebApps.onEvent('backButtonClicked', () => {
+        console.log('Back button clicked');
+      });
+      console.log(window.TelegramWebApps.initData);
+    }
   }, []);
 
-  if (loading) {
-    return <LoadingScreen />;
+  const renderGame = () => {
+    switch (currentUniverse) {
+      case 'EatsApp':
+        return <EatsApp userId={userId} />;
+      case 'First':
+        return <EWE userId={userId} />;
+      case 'EcoGame':
+        return <EcoGame userId={userId} />;
+      default:
+        return null;
+    }
+  };
+
+  if (isLoading) {
+    return <div>Loading...</div>;
   }
 
   if (error) {
-    return <div style={{color: 'white', textAlign: 'center', padding: '20px'}}>{error}</div>;
+    return <div>Error: {error}</div>;
   }
 
-  if (!userData) {
-    return <div style={{color: 'white', textAlign: 'center', padding: '20px'}}>Error: Unable to load user data</div>;
-  }
-
-  sendLog('Rendering EatsApp');
-  return <EatsApp userData={userData} />;
+  return (
+    <div className="App">
+      <header className="App-header">
+        <UniverseSwitcher 
+          currentUniverse={currentUniverse} 
+          setCurrentUniverse={setCurrentUniverse} 
+        />
+        {renderGame()}
+      </header>
+    </div>
+  );
 }
 
 export default App;

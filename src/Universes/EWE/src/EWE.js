@@ -29,15 +29,16 @@ function Ewe() {
     return savedElapsedFarmingTime ? parseFloat(savedElapsedFarmingTime) : 0;
   });
 
-  const [animationClass, setAnimationClass] = useState('');
+  const [animationClass, setAnimationClass] = useState('fade-in');
+  const [texts] = useState(['Hello there', 'How are you?', 'Finally']);
+  const [currentTextIndex, setCurrentTextIndex] = useState(0);
 
   const maxTokens = 32;
-  const farmingDuration = 3 * 60 * 60 * 1000; // 3 hours in milliseconds
 
   useEffect(() => {
     let farmingInterval;
     if (isFarming) {
-      const interval = 1000; // Update every second
+      const interval = 1000;
 
       farmingInterval = setInterval(() => {
         const now = new Date();
@@ -65,15 +66,11 @@ function Ewe() {
   }, [tokens, farmedTokens, isFarming, startTime, elapsedFarmingTime]);
 
   const handleButtonClick = () => {
-    if (isFarming) {
-      // Do nothing if farming is in progress
-    } else if (farmedTokens >= maxTokens) {
+    if (!isFarming && farmedTokens >= maxTokens) {
       collectTokens();
     } else {
       startFarming();
     }
-    // Trigger animation
-    setAnimationClass('animate');
   };
 
   const startFarming = () => {
@@ -95,6 +92,22 @@ function Ewe() {
     }
   };
 
+  const handleNextText = () => {
+    setAnimationClass('fade-out');
+    setTimeout(() => {
+      setCurrentTextIndex((prevIndex) => (prevIndex + 1) % texts.length);
+      setAnimationClass('fade-in');
+    }, 1000); // Длительность анимации
+  };
+
+  const handlePrevText = () => {
+    setAnimationClass('fade-out');
+    setTimeout(() => {
+      setCurrentTextIndex((prevIndex) => (prevIndex - 1 + texts.length) % texts.length);
+      setAnimationClass('fade-in');
+    }, 1000); // Длительность анимации
+  };
+
   const progressPercentage = (farmedTokens / maxTokens) * 100;
 
   return (
@@ -111,19 +124,18 @@ function Ewe() {
             <span className="progress-text">{progressPercentage.toFixed(1)}%</span>
           </div>
         </div>
+        <div className={`animation_contain`}>
+          <button onClick={handlePrevText} className='btntxt'>←</button>
+          <div className={`text-display ${animationClass}`}>
+            {texts[currentTextIndex]} {}
+          </div>
+          <button onClick={handleNextText} className='btntxt'>→</button>
+        </div>
         <FarmButton
           isFarming={isFarming}
           farmedTokens={farmedTokens}
           onClick={handleButtonClick}
         />
-      </div>
-      <div className={`animation_contain ${animationClass}`}>
-        <div className='anim_blocks'></div>
-        <div className='anim_blocks'></div>
-        <div className='anim_blocks'></div>
-        <div className='anim_blocks'></div>
-        <div className='anim_blocks'></div>
-        <div className='anim_blocks'></div>
       </div>
     </div>
   );
