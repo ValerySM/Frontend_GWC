@@ -6,6 +6,8 @@ import EWE from './Universes/EWE/EWE';
 import EcoGame from './Universes/ECI/EcoGame';
 import UniverseData from './UniverseData';
 
+const BACKEND_URL = 'https://backend-gwc.onrender.com'; // Убедитесь, что это правильный URL вашего бэкенда
+
 function App() {
   const [currentUniverse, setCurrentUniverse] = useState('EatsApp');
   const [userId, setUserId] = useState(null);
@@ -13,32 +15,45 @@ function App() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const userIdFromUrl = urlParams.get('user_id');
-    
-    if (userIdFromUrl) {
-      setUserId(userIdFromUrl);
-      UniverseData.initializeUser(userIdFromUrl)
-        .then(() => {
-          setIsLoading(false);
-        })
-        .catch(err => {
-          console.error('Error initializing user:', err);
-          setError('Failed to initialize user data. Please try again.');
-          setIsLoading(false);
-        });
+    const tg = window.Telegram.WebApp;
+    tg.ready();
+
+    const initData = tg.initDataUnsafe;
+    if (initData && initData.user) {
+      const userIdFromTg = initData.user.id.toString();
+      setUserId(userIdFromTg);
+      
+      // Аутентификация пользователя на бэкенде
+      fetch(`${BACKEND_URL}/auth`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ user_id: userIdFromTg }),
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log('User data from backend:', data);
+        UniverseData.setUserData(data); // Предположим, что у нас есть такой метод в UniverseData
+        setIsLoading(false);
+      })
+      .catch(err => {
+        console.error('Error initializing user:', err);
+        setError('Failed to initialize user data. Please try again.');
+        setIsLoading(false);
+      });
     } else {
-      setError('User ID not found in URL.');
+      setError('User data not found in Telegram WebApp.');
       setIsLoading(false);
     }
 
-    if (window.TelegramWebApps) {
-      window.TelegramWebApps.ready();
-      window.TelegramWebApps.onEvent('backButtonClicked', () => {
-        console.log('Back button clicked');
-      });
-      console.log(window.TelegramWebApps.initData);
-    }
+    document.body.style.backgroundColor = tg.backgroundColor;
+    document.body.style.color = tg.textColor;
   }, []);
 
   const renderGame = () => {

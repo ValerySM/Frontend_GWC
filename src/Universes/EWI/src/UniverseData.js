@@ -1,45 +1,47 @@
 const BACKEND_URL = 'https://backend-gwc.onrender.com';
 
 const UniverseData = {
-  userId: null,
-  
-  async initializeUser(userId) {
-    this.userId = userId;
-    const response = await fetch(`${BACKEND_URL}/auth`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ user_id: userId }),
-    });
-    if (!response.ok) throw new Error('Failed to initialize user');
-    return response.json();
+  userData: null,
+
+  setUserData(data) {
+    this.userData = data;
   },
 
   async getUserData() {
-    if (!this.userId) throw new Error('User not initialized');
-    const response = await fetch(`${BACKEND_URL}/auth`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ user_id: this.userId }),
-    });
-    if (!response.ok) throw new Error('Failed to get user data');
-    return response.json();
+    if (!this.userData) {
+      throw new Error('User data not initialized');
+    }
+    return this.userData;
   },
 
   async updateUserData(updates) {
-    if (!this.userId) throw new Error('User not initialized');
-    const response = await fetch(`${BACKEND_URL}/update`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ user_id: this.userId, updates }),
-    });
-    if (!response.ok) throw new Error('Failed to update user data');
-    return response.json();
+    if (!this.userData || !this.userData.telegram_id) {
+      throw new Error('User not initialized');
+    }
+    
+    try {
+      const response = await fetch(`${BACKEND_URL}/update`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_id: this.userData.telegram_id,
+          updates: updates
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update user data');
+      }
+
+      const updatedData = await response.json();
+      this.userData = updatedData;
+      return updatedData;
+    } catch (error) {
+      console.error('Error updating user data:', error);
+      throw error;
+    }
   },
 
   async incrementTotalClicks(amount) {
