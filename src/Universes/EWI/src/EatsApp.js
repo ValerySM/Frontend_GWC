@@ -19,6 +19,13 @@ const DamageIndicator = ({ x, y, damage }) => (
 );
 
 function EatsApp({ userData }) {
+  console.log('EatsApp received userData:', userData);
+
+  if (!userData || !userData.telegram_id || userData.totalClicks === undefined) {
+    console.error('Invalid user data:', userData);
+    return <div>Ошибка: Недостаточно данных пользователя</div>;
+  }
+
   const [gameState, setGameState] = useState(userData);
   const [activeTab, setActiveTab] = useState(null);
   const [isImageDistorted, setIsImageDistorted] = useState(false);
