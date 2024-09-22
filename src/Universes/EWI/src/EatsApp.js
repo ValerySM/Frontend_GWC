@@ -21,12 +21,7 @@ const DamageIndicator = ({ x, y, damage }) => (
 function EatsApp({ userData }) {
   console.log('EatsApp received userData:', userData);
 
-  if (!userData || !userData.telegram_id || userData.totalClicks === undefined) {
-    console.error('Invalid user data:', userData);
-    return <div>Ошибка: Недостаточно данных пользователя</div>;
-  }
-
-  const [gameState, setGameState] = useState(userData);
+  const [gameState, setGameState] = useState(userData || {});
   const [activeTab, setActiveTab] = useState(null);
   const [isImageDistorted, setIsImageDistorted] = useState(false);
   const [isTabOpenState, setIsTabOpenState] = useState(false);
@@ -38,10 +33,14 @@ function EatsApp({ userData }) {
   const clickerRef = useRef(null);
 
   useEffect(() => {
-    setGameState(userData);
+    if (userData) {
+      setGameState(userData);
+    }
   }, [userData]);
 
   const handleInteraction = useCallback(async (e) => {
+    if (!userData || !userData.telegram_id) return;
+
     e.preventDefault();
     setIsImageDistorted(true);
 
@@ -87,7 +86,7 @@ function EatsApp({ userData }) {
     activityTimeoutRef.current = setTimeout(() => {
       setIsImageDistorted(false);
     }, 200);
-  }, [gameState, userData.telegram_id]);
+  }, [gameState, userData]);
 
   useEffect(() => {
     const clicker = clickerRef.current;
@@ -115,6 +114,8 @@ function EatsApp({ userData }) {
   };
 
   const handleUpgrade = async (type) => {
+    if (!userData || !userData.telegram_id) return;
+
     try {
       let cost;
       switch (type) {
@@ -146,6 +147,11 @@ function EatsApp({ userData }) {
       setError('Не удалось выполнить улучшение. Пожалуйста, попробуйте позже.');
     }
   };
+
+  if (!userData || !userData.telegram_id || userData.totalClicks === undefined) {
+    console.error('Invalid user data:', userData);
+    return <div>Ошибка: Недостаточно данных пользователя</div>;
+  }
 
   if (error) {
     return <div>Ошибка: {error}</div>;
