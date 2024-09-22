@@ -16,7 +16,7 @@ const DamageIndicator = ({ x, y, damage }) => (
   </div>
 );
 
-function EatsApp({ userId }) {
+function EatsApp({ setIsTabOpen }) {
   const [gameState, setGameState] = useState({
     totalClicks: 0,
     energy: 1000,
@@ -26,6 +26,7 @@ function EatsApp({ userId }) {
     energyLevel: 1,
     regenLevel: 1,
   });
+  const [count, setCount] = useState(0);
   const [activeTab, setActiveTab] = useState(null);
   const [isImageDistorted, setIsImageDistorted] = useState(false);
   const [isTabOpenState, setIsTabOpenState] = useState(false);
@@ -69,9 +70,26 @@ function EatsApp({ userId }) {
     return () => clearInterval(interval);
   }, [gameState.energy, gameState.energyMax, gameState.regenRate]);
 
-  const handleClick = useCallback(async (e) => {
+  const handleInteraction = useCallback(async (e) => {
     e.preventDefault();
     setIsImageDistorted(true);
+
+    const rect = clickerRef.current.getBoundingClientRect();
+    const x = e.clientX || (e.touches && e.touches[0].clientX);
+    const y = e.clientY || (e.touches && e.touches[0].clientY);
+
+    const newIndicator = {
+      id: Date.now() + Math.random(),
+      x: x - rect.left,
+      y: y - rect.top,
+      damage: gameState.damageLevel
+    };
+
+    setDamageIndicators(prev => [...prev, newIndicator]);
+
+    setTimeout(() => {
+      setDamageIndicators(prev => prev.filter(indicator => indicator.id !== newIndicator.id));
+    }, 1000);
 
     try {
       const updatedData = await UniverseData.incrementTotalClicks(gameState.damageLevel);
@@ -83,24 +101,6 @@ function EatsApp({ userId }) {
         ...updatedData,
         ...energyUpdateData,
       }));
-
-      const rect = clickerRef.current.getBoundingClientRect();
-      const x = e.clientX || (e.touches && e.touches[0].clientX);
-      const y = e.clientY || (e.touches && e.touches[0].clientY);
-
-      const newIndicator = {
-        id: Date.now() + Math.random(),
-        x: x - rect.left,
-        y: y - rect.top,
-        damage: gameState.damageLevel
-      };
-
-      setDamageIndicators(prev => [...prev, newIndicator]);
-
-      setTimeout(() => {
-        setDamageIndicators(prev => prev.filter(indicator => indicator.id !== newIndicator.id));
-      }, 1000);
-
     } catch (error) {
       console.error('Ошибка при обработке клика:', error);
       setError('Произошла ошибка. Пожалуйста, попробуйте еще раз.');
@@ -115,15 +115,30 @@ function EatsApp({ userId }) {
     }, 200);
   }, [gameState.damageLevel, gameState.energy]);
 
+  useEffect(() => {
+    const clicker = clickerRef.current;
+    if (clicker) {
+      clicker.addEventListener('click', handleInteraction);
+      clicker.addEventListener('touchstart', handleInteraction, { passive: false });
+      
+      return () => {
+        clicker.removeEventListener('click', handleInteraction);
+        clicker.removeEventListener('touchstart', handleInteraction);
+      };
+    }
+  }, [handleInteraction]);
+
   const handleTabOpen = (tab) => {
     setActiveTab(tab);
     setIsTabOpenState(true);
+    setIsTabOpen(true);
     setShowButtons(false);
   };
 
   const handleBackButtonClick = () => {
     setActiveTab(null);
     setIsTabOpenState(false);
+    setIsTabOpen(false);
     setShowButtons(true);
   };
 
@@ -204,9 +219,7 @@ function EatsApp({ userId }) {
           <p>Energy: {Math.floor(gameState.energy)}/{gameState.energyMax}</p>
         </div>
         <div className="clicker-container"
-             ref={clickerRef}
-             onClick={handleClick}
-             onTouchStart={handleClick}>
+             ref={clickerRef}>
           <img src={clickerImage} alt="Clicker" className={`clicker-image ${isImageDistorted ? 'distorted' : ''}`} />
           <div className="progress-circle" style={{ boxShadow: '0px 0px 10px 5px gray' }}>
             <CircularProgressbar
