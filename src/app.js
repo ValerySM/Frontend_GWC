@@ -18,7 +18,7 @@ function App() {
     console.log('Telegram WebApp initialized');
 
     const initData = tg.initDataUnsafe;
-    console.log('Init data:', initData);
+    console.log('Init data from Telegram:', initData);
 
     if (initData && initData.user) {
       const userIdFromTg = initData.user.id.toString();
@@ -26,13 +26,12 @@ function App() {
       
       axios.post(`${BACKEND_URL}/auth`, { user_id: userIdFromTg })
         .then(response => {
-          console.log('Response from backend:', response);
-          console.log('User data from backend:', response.data);
+          console.log('Response from backend:', response.data);
           if (!response.data || !response.data.telegram_id) {
             throw new Error('Invalid data received from server');
           }
-          setUserData(response.data);
-          setIsLoading(false);
+          setUserData(response.data); // Устанавливаем данные пользователя
+          setIsLoading(false); // Убираем статус загрузки
         })
         .catch(err => {
           console.error('Error initializing user:', err);
@@ -45,14 +44,17 @@ function App() {
       setIsLoading(false);
     }
 
+    // Установка цветов интерфейса
     document.body.style.backgroundColor = tg.backgroundColor;
     document.body.style.color = tg.textColor;
   }, []);
 
+  // Проверка на загрузку данных
   if (isLoading) {
     return <div>Loading...</div>;
   }
 
+  // Проверка на ошибки
   if (error) {
     return <div>Error: {error}</div>;
   }

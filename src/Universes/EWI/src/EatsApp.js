@@ -19,6 +19,7 @@ const DamageIndicator = ({ x, y, damage }) => (
 );
 
 function EatsApp({ userData }) {
+  // Лог для проверки данных, которые получаем из App.js
   console.log('EatsApp received userData:', userData);
 
   const [gameState, setGameState] = useState(userData || {});
@@ -34,12 +35,16 @@ function EatsApp({ userData }) {
 
   useEffect(() => {
     if (userData) {
+      console.log('Updating gameState with userData:', userData); // Лог для обновления состояния
       setGameState(userData);
     }
   }, [userData]);
 
   const handleInteraction = useCallback(async (e) => {
-    if (!userData || !userData.telegram_id) return;
+    if (!userData || !userData.telegram_id) {
+      console.error('No user data or telegram_id found!');
+      return;
+    }
 
     e.preventDefault();
     setIsImageDistorted(true);
@@ -73,6 +78,7 @@ function EatsApp({ userData }) {
         }
       });
 
+      console.log('Game state updated:', response.data);
       setGameState(response.data);
     } catch (error) {
       console.error('Error updating game state:', error);
@@ -114,7 +120,10 @@ function EatsApp({ userData }) {
   };
 
   const handleUpgrade = async (type) => {
-    if (!userData || !userData.telegram_id) return;
+    if (!userData || !userData.telegram_id) {
+      console.error('No user data or telegram_id found for upgrade!');
+      return;
+    }
 
     try {
       let cost;
@@ -129,7 +138,7 @@ function EatsApp({ userData }) {
           cost = 50000 * Math.pow(2, gameState.regenLevel - 1);
           break;
         default:
-          throw new Error('Неизвестный тип улучшения');
+          throw new Error('Unknown upgrade type');
       }
 
       if (gameState.totalClicks >= cost) {
@@ -140,14 +149,16 @@ function EatsApp({ userData }) {
             totalClicks: gameState.totalClicks - cost
           }
         });
+        console.log(`${type} upgraded:`, response.data);
         setGameState(response.data);
       }
     } catch (error) {
-      console.error(`Ошибка при улучшении ${type}:`, error);
-      setError('Не удалось выполнить улучшение. Пожалуйста, попробуйте позже.');
+      console.error(`Error upgrading ${type}:`, error);
+      setError('Failed to upgrade. Please try again later.');
     }
   };
 
+  // Если данных нет, выводим сообщение об ошибке
   if (!userData || !userData.telegram_id || userData.totalClicks === undefined) {
     console.error('Invalid user data:', userData);
     return <div>Ошибка: Недостаточно данных пользователя</div>;
@@ -166,77 +177,44 @@ function EatsApp({ userData }) {
             damageLevel={gameState.damageLevel}
             energyLevel={gameState.energyLevel}
             regenLevel={gameState.regenLevel}
-            handleDamageUpgrade={() => handleUpgrade('damage')}
-            handleEnergyUpgrade={() => handleUpgrade('energy')}
-            handleRegenUpgrade={() => handleUpgrade('regen')}
+            handleUpgrade={handleUpgrade}
+            handleBackButtonClick={handleBackButtonClick}
           />
         );
       case 'BOOST':
         return <BoostTab />;
       case 'TASKS':
         return <TasksTab />;
-      case 'SOON':
+      case 'SETTINGS':
         return <SoonTab />;
       default:
         return null;
     }
   })();
 
-  const remainingEnergyPercentage = ((gameState.energyMax - gameState.energy) / gameState.energyMax) * 100;
-
   return (
-    <div className={`App`}>
-      <header className="App-header">
-        <SettingsButton isActive={activeTab !== null} /> 
-        <div className="balance-container">
-          <img src={clickerImage} alt="Balance Icon" className="balance-icon" />
-          <p>{gameState.totalClicks}</p>
+    <div className="game-container">
+      <div className="main-tab">{tabContent}</div>
+      <div className="clicker-container">
+        <img
+          className={`clicker-image ${isImageDistorted ? 'distorted' : ''}`}
+          ref={clickerRef}
+          src={clickerImage}
+          alt="Clicker"
+        />
+        {damageIndicators.map((indicator) => (
+          <DamageIndicator key={indicator.id} {...indicator} />
+        ))}
+      </div>
+
+      <div className={`game-footer ${showButtons ? 'visible' : ''}`}>
+        <div className="footer-buttons">
+          <button onClick={() => handleTabOpen('UPGRADE')}>Upgrade</button>
+          <button onClick={() => handleTabOpen('BOOST')}>Boost</button>
+          <button onClick={() => handleTabOpen('TASKS')}>Tasks</button>
+          <SettingsButton handleTabOpen={handleTabOpen} />
         </div>
-        <div className="energy-container">
-          <p>Energy: {Math.floor(gameState.energy)}/{gameState.energyMax}</p>
-        </div>
-        <div className="clicker-container"
-             ref={clickerRef}>
-          <img src={clickerImage} alt="Clicker" className={`clicker-image ${isImageDistorted ? 'distorted' : ''}`} />
-          <div className="progress-circle" style={{ boxShadow: '0px 0px 10px 5px gray' }}>
-            <CircularProgressbar
-              value={remainingEnergyPercentage}
-              maxValue={100}
-              styles={buildStyles({
-                pathColor: '#b20bff',
-                textColor: '#fff',
-                trailColor: '#07ffff',
-                backgroundColor: '#07ffff',
-              })}
-            />
-          </div>
-          {damageIndicators.map(indicator => (
-            <DamageIndicator key={indicator.id} x={indicator.x} y={indicator.y} damage={indicator.damage} />
-          ))}
-        </div>
-        {showButtons && (
-          <div className="tabs">
-            <button className={activeTab === 'UPGRADE' ? 'active' : ''} onClick={() => handleTabOpen('UPGRADE')}>
-              UPGRADE
-            </button>
-            <button className={activeTab === 'BOOST' ? 'active' : ''} onClick={() => handleTabOpen('BOOST')}>
-              GAMES
-            </button>
-            <button className={activeTab === 'TASKS' ? 'active' : ''} onClick={() => handleTabOpen('TASKS')}>
-              TASKS
-            </button>
-            <button className={activeTab === 'SOON' ? 'active' : ''} onClick={() => handleTabOpen('SOON')}>
-              REF
-            </button>
-          </div>
-        )}
-        {isTabOpenState && (
-          <div className={`tab-content ${isTabOpenState ? 'open' : ''}`}>
-            <button className="back-button" onClick={handleBackButtonClick}>Back</button>
-            {tabContent}
-          </div>
-        )}
-      </header>
+      </div>
     </div>
   );
 }
