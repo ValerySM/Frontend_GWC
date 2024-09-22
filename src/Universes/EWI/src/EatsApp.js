@@ -16,7 +16,7 @@ const DamageIndicator = ({ x, y, damage }) => (
   </div>
 );
 
-function EatsApp() {
+function EatsApp({ isDataLoaded }) {
   const [gameState, setGameState] = useState({
     totalClicks: 0,
     energy: 1000,
@@ -39,19 +39,23 @@ function EatsApp() {
 
   useEffect(() => {
     async function initializeData() {
-      try {
-        const userData = await UniverseData.getUserData();
-        setGameState(userData);
-        setIsLoading(false);
-      } catch (error) {
-        console.error('Ошибка при инициализации данных:', error);
-        setError('Не удалось загрузить данные. Пожалуйста, попробуйте позже.');
-        setIsLoading(false);
+      if (isDataLoaded) {
+        try {
+          console.log('Initializing EatsApp data');
+          const userData = await UniverseData.getUserData();
+          console.log('Received user data in EatsApp:', userData);
+          setGameState(userData);
+          setIsLoading(false);
+        } catch (error) {
+          console.error('Ошибка при инициализации данных:', error);
+          setError('Не удалось загрузить данные. Пожалуйста, попробуйте позже.');
+          setIsLoading(false);
+        }
       }
     }
 
     initializeData();
-  }, []);
+  }, [isDataLoaded]);
 
   useEffect(() => {
     const interval = setInterval(async () => {

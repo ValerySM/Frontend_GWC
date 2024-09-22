@@ -4,10 +4,12 @@ const UniverseData = {
   userData: null,
 
   setUserData(data) {
+    console.log('Setting user data:', data);
     this.userData = data;
   },
 
   async getUserData() {
+    console.log('Getting user data:', this.userData);
     if (!this.userData) {
       throw new Error('User data not initialized');
     }

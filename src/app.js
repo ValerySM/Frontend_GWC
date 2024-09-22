@@ -12,6 +12,7 @@ function App() {
   const [currentUniverse, setCurrentUniverse] = useState('EatsApp');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
 
   useEffect(() => {
     const tg = window.Telegram.WebApp;
@@ -38,6 +39,7 @@ function App() {
       .then(data => {
         console.log('User data from backend:', data);
         UniverseData.setUserData(data);
+        setIsDataLoaded(true);
         setIsLoading(false);
       })
       .catch(err => {
@@ -57,11 +59,11 @@ function App() {
   const renderGame = () => {
     switch (currentUniverse) {
       case 'EatsApp':
-        return <EatsApp />;
+        return <EatsApp isDataLoaded={isDataLoaded} />;
       case 'First':
-        return <EWE />;
+        return <EWE isDataLoaded={isDataLoaded} />;
       case 'EcoGame':
-        return <EcoGame />;
+        return <EcoGame isDataLoaded={isDataLoaded} />;
       default:
         return null;
     }
@@ -82,7 +84,7 @@ function App() {
           currentUniverse={currentUniverse} 
           setCurrentUniverse={setCurrentUniverse} 
         />
-        {renderGame()}
+        {isDataLoaded && renderGame()}
       </header>
     </div>
   );
