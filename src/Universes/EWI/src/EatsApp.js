@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import axios from 'axios';
 import './EatsApp.css';
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
@@ -8,7 +9,8 @@ import TasksTab from './components/TasksTab';
 import SettingsButton from './components/SettingsButton';
 import clickerImage from '../public/clicker-image.png';
 import SoonTab from './components/SoonTab';
-import UniverseData from './UniverseData';
+
+const BACKEND_URL = 'https://backend-gwc.onrender.com';
 
 const DamageIndicator = ({ x, y, damage }) => (
   <div className="damage-indicator" style={{ left: x, top: y }}>
@@ -16,62 +18,21 @@ const DamageIndicator = ({ x, y, damage }) => (
   </div>
 );
 
-function EatsApp({ isDataLoaded }) {
-  const [gameState, setGameState] = useState({
-    totalClicks: 0,
-    energy: 1000,
-    energyMax: 1000,
-    regenRate: 1,
-    damageLevel: 1,
-    energyLevel: 1,
-    regenLevel: 1,
-  });
+function EatsApp({ userData }) {
+  const [gameState, setGameState] = useState(userData);
   const [activeTab, setActiveTab] = useState(null);
   const [isImageDistorted, setIsImageDistorted] = useState(false);
   const [isTabOpenState, setIsTabOpenState] = useState(false);
   const [showButtons, setShowButtons] = useState(true);
   const [damageIndicators, setDamageIndicators] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const activityTimeoutRef = useRef(null);
   const clickerRef = useRef(null);
 
   useEffect(() => {
-    async function initializeData() {
-      if (isDataLoaded) {
-        try {
-          console.log('Initializing EatsApp data');
-          const userData = await UniverseData.getUserData();
-          console.log('Received user data in EatsApp:', userData);
-          setGameState(userData);
-          setIsLoading(false);
-        } catch (error) {
-          console.error('Ошибка при инициализации данных:', error);
-          setError('Не удалось загрузить данные. Пожалуйста, попробуйте позже.');
-          setIsLoading(false);
-        }
-      }
-    }
-
-    initializeData();
-  }, [isDataLoaded]);
-
-  useEffect(() => {
-    const interval = setInterval(async () => {
-      if (gameState.energy < gameState.energyMax) {
-        const newEnergy = Math.min(gameState.energy + gameState.regenRate, gameState.energyMax);
-        try {
-          const updatedData = await UniverseData.setEnergy(newEnergy);
-          setGameState(prev => ({ ...prev, ...updatedData }));
-        } catch (error) {
-          console.error('Ошибка при обновлении энергии:', error);
-        }
-      }
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [gameState.energy, gameState.energyMax, gameState.regenRate]);
+    setGameState(userData);
+  }, [userData]);
 
   const handleInteraction = useCallback(async (e) => {
     e.preventDefault();
@@ -95,18 +56,21 @@ function EatsApp({ isDataLoaded }) {
     }, 1000);
 
     try {
-      const updatedData = await UniverseData.incrementTotalClicks(gameState.damageLevel);
+      const newTotalClicks = gameState.totalClicks + gameState.damageLevel;
       const newEnergy = Math.max(gameState.energy - 10, 0);
-      const energyUpdateData = await UniverseData.setEnergy(newEnergy);
 
-      setGameState(prev => ({
-        ...prev,
-        ...updatedData,
-        ...energyUpdateData,
-      }));
+      const response = await axios.post(`${BACKEND_URL}/update`, {
+        user_id: userData.telegram_id,
+        updates: {
+          totalClicks: newTotalClicks,
+          energy: newEnergy
+        }
+      });
+
+      setGameState(response.data);
     } catch (error) {
-      console.error('Ошибка при обработке клика:', error);
-      setError('Произошла ошибка. Пожалуйста, попробуйте еще раз.');
+      console.error('Error updating game state:', error);
+      setError('Failed to update game state. Please try again.');
     }
 
     if (activityTimeoutRef.current) {
@@ -116,7 +80,7 @@ function EatsApp({ isDataLoaded }) {
     activityTimeoutRef.current = setTimeout(() => {
       setIsImageDistorted(false);
     }, 200);
-  }, [gameState.damageLevel, gameState.energy]);
+  }, [gameState, userData.telegram_id]);
 
   useEffect(() => {
     const clicker = clickerRef.current;
@@ -161,21 +125,20 @@ function EatsApp({ isDataLoaded }) {
       }
 
       if (gameState.totalClicks >= cost) {
-        const updatedData = await UniverseData.upgradeAttribute(type, cost);
-        setGameState(prev => ({
-          ...prev,
-          ...updatedData,
-        }));
+        const response = await axios.post(`${BACKEND_URL}/update`, {
+          user_id: userData.telegram_id,
+          updates: {
+            [`${type}Level`]: gameState[`${type}Level`] + 1,
+            totalClicks: gameState.totalClicks - cost
+          }
+        });
+        setGameState(response.data);
       }
     } catch (error) {
       console.error(`Ошибка при улучшении ${type}:`, error);
       setError('Не удалось выполнить улучшение. Пожалуйста, попробуйте позже.');
     }
   };
-
-  if (isLoading) {
-    return <div>Загрузка данных...</div>;
-  }
 
   if (error) {
     return <div>Ошибка: {error}</div>;
