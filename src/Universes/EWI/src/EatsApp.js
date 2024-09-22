@@ -16,7 +16,7 @@ const DamageIndicator = ({ x, y, damage }) => (
   </div>
 );
 
-function EatsApp({ setIsTabOpen }) {
+function EatsApp() {
   const [gameState, setGameState] = useState({
     totalClicks: 0,
     energy: 1000,
@@ -26,7 +26,6 @@ function EatsApp({ setIsTabOpen }) {
     energyLevel: 1,
     regenLevel: 1,
   });
-  const [count, setCount] = useState(0);
   const [activeTab, setActiveTab] = useState(null);
   const [isImageDistorted, setIsImageDistorted] = useState(false);
   const [isTabOpenState, setIsTabOpenState] = useState(false);
@@ -131,14 +130,12 @@ function EatsApp({ setIsTabOpen }) {
   const handleTabOpen = (tab) => {
     setActiveTab(tab);
     setIsTabOpenState(true);
-    setIsTabOpen(true);
     setShowButtons(false);
   };
 
   const handleBackButtonClick = () => {
     setActiveTab(null);
     setIsTabOpenState(false);
-    setIsTabOpen(false);
     setShowButtons(true);
   };
 

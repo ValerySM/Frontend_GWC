@@ -6,24 +6,22 @@ import EWE from './Universes/EWE/EWE';
 import EcoGame from './Universes/ECI/EcoGame';
 import UniverseData from './UniverseData';
 
-const BACKEND_URL = 'https://backend-gwc.onrender.com'; // Убедитесь, что это правильный URL вашего бэкенда
+const BACKEND_URL = 'https://backend-gwc.onrender.com';
 
 function App() {
   const [currentUniverse, setCurrentUniverse] = useState('EatsApp');
-  const [userId, setUserId] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     const tg = window.Telegram.WebApp;
     tg.ready();
+    tg.expand();
 
     const initData = tg.initDataUnsafe;
     if (initData && initData.user) {
       const userIdFromTg = initData.user.id.toString();
-      setUserId(userIdFromTg);
       
-      // Аутентификация пользователя на бэкенде
       fetch(`${BACKEND_URL}/auth`, {
         method: 'POST',
         headers: {
@@ -39,7 +37,7 @@ function App() {
       })
       .then(data => {
         console.log('User data from backend:', data);
-        UniverseData.setUserData(data); // Предположим, что у нас есть такой метод в UniverseData
+        UniverseData.setUserData(data);
         setIsLoading(false);
       })
       .catch(err => {
@@ -59,11 +57,11 @@ function App() {
   const renderGame = () => {
     switch (currentUniverse) {
       case 'EatsApp':
-        return <EatsApp userId={userId} />;
+        return <EatsApp />;
       case 'First':
-        return <EWE userId={userId} />;
+        return <EWE />;
       case 'EcoGame':
-        return <EcoGame userId={userId} />;
+        return <EcoGame />;
       default:
         return null;
     }
