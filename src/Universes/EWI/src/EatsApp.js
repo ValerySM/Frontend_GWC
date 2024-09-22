@@ -24,11 +24,6 @@ function EatsApp({ userData }) {
   const requiredFields = ['telegram_id', 'totalClicks', 'energy', 'energyMax', 'damageLevel', 'energyLevel', 'regenLevel'];
   const missingFields = requiredFields.filter(field => !userData || userData[field] === undefined);
 
-  if (missingFields.length > 0) {
-    console.error('Missing fields in user data:', missingFields);
-    return <div>Ошибка: Недостаточно данных пользователя. Отсутствуют поля: {missingFields.join(', ')}</div>;
-  }
-
   const [gameState, setGameState] = useState(userData);
   const [activeTab, setActiveTab] = useState(null);
   const [isImageDistorted, setIsImageDistorted] = useState(false);
