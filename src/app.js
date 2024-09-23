@@ -14,32 +14,32 @@ function App() {
     const initializeUser = async () => {
       try {
         const tg = window.Telegram.WebApp;
-        tg.ready();
+        tg.ready(); 
         tg.expand();
 
-        console.log('Telegram WebApp initialized');
+        console.log('Telegram WebApp инициализирован');
 
         const initData = tg.initDataUnsafe;
-        console.log('Init data from Telegram:', initData);
+        console.log('Данные из Telegram:', initData);
 
         if (initData && initData.user) {
           const userIdFromTg = initData.user.id.toString();
-          console.log('User ID from Telegram:', userIdFromTg);
-          
+          console.log('ID пользователя из Telegram:', userIdFromTg);
+
           const response = await axios.post(`${BACKEND_URL}/auth`, { user_id: userIdFromTg });
-          console.log('Response from backend:', response.data);
-          
+          console.log('Ответ от бэкенда:', response.data);
+
           if (!response.data || !response.data.telegram_id) {
-            throw new Error('Invalid data received from server');
+            throw new Error('Неверные данные от сервера');
           }
-          
-          setUserData(response.data);
+
+          setUserData(response.data); 
         } else {
-          throw new Error('User data not found in Telegram WebApp');
+          throw new Error('Данные пользователя не найдены в Telegram WebApp');
         }
       } catch (err) {
-        console.error('Error initializing user:', err);
-        setError(err.message || 'An error occurred while initializing user data');
+        console.error('Ошибка инициализации пользователя:', err);
+        setError(err.message || 'Произошла ошибка при инициализации данных пользователя');
       } finally {
         setIsLoading(false);
       }
@@ -49,18 +49,18 @@ function App() {
   }, []);
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <div>Загрузка...</div>;
   }
 
   if (error) {
-    return <div>Error: {error}</div>;
+    return <div>Ошибка: {error}</div>;
   }
 
   if (!userData) {
-    return <div>No user data available. Please try reloading the app.</div>;
+    return <div>Нет данных пользователя. Попробуйте перезагрузить приложение.</div>;
   }
 
-  console.log('User data before passing to EatsApp:', userData);
+  console.log('Данные пользователя перед передачей в EatsApp:', userData);
 
   return (
     <div className="App">
