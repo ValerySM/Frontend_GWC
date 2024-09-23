@@ -19,10 +19,9 @@ const DamageIndicator = ({ x, y, damage }) => (
 );
 
 function EatsApp({ userData }) {
-  // Лог для проверки данных, которые получаем из App.js
   console.log('EatsApp received userData:', userData);
 
-  const [gameState, setGameState] = useState(userData || {});
+  const [gameState, setGameState] = useState(null);
   const [activeTab, setActiveTab] = useState(null);
   const [isImageDistorted, setIsImageDistorted] = useState(false);
   const [isTabOpenState, setIsTabOpenState] = useState(false);
@@ -35,10 +34,24 @@ function EatsApp({ userData }) {
 
   useEffect(() => {
     if (userData) {
-      console.log('Updating gameState with userData:', userData); // Лог для обновления состояния
+      console.log('Initializing gameState with userData:', userData);
       setGameState(userData);
     }
   }, [userData]);
+
+  const updateUserData = async (updates) => {
+    try {
+      const response = await axios.post(`${BACKEND_URL}/update`, {
+        user_id: userData.telegram_id,
+        updates: updates
+      });
+      console.log('Game state updated:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error updating game state:', error);
+      throw error;
+    }
+  };
 
   const handleInteraction = useCallback(async (e) => {
     if (!userData || !userData.telegram_id) {
@@ -70,16 +83,12 @@ function EatsApp({ userData }) {
       const newTotalClicks = gameState.totalClicks + gameState.damageLevel;
       const newEnergy = Math.max(gameState.energy - 10, 0);
 
-      const response = await axios.post(`${BACKEND_URL}/update`, {
-        user_id: userData.telegram_id,
-        updates: {
-          totalClicks: newTotalClicks,
-          energy: newEnergy
-        }
+      const updatedData = await updateUserData({
+        totalClicks: newTotalClicks,
+        energy: newEnergy
       });
 
-      console.log('Game state updated:', response.data);
-      setGameState(response.data);
+      setGameState(updatedData);
     } catch (error) {
       console.error('Error updating game state:', error);
       setError('Failed to update game state. Please try again.');
@@ -142,15 +151,11 @@ function EatsApp({ userData }) {
       }
 
       if (gameState.totalClicks >= cost) {
-        const response = await axios.post(`${BACKEND_URL}/update`, {
-          user_id: userData.telegram_id,
-          updates: {
-            [`${type}Level`]: gameState[`${type}Level`] + 1,
-            totalClicks: gameState.totalClicks - cost
-          }
+        const updatedData = await updateUserData({
+          [`${type}Level`]: gameState[`${type}Level`] + 1,
+          totalClicks: gameState.totalClicks - cost
         });
-        console.log(`${type} upgraded:`, response.data);
-        setGameState(response.data);
+        setGameState(updatedData);
       }
     } catch (error) {
       console.error(`Error upgrading ${type}:`, error);
@@ -158,14 +163,12 @@ function EatsApp({ userData }) {
     }
   };
 
-  // Если данных нет, выводим сообщение об ошибке
-  if (!userData || !userData.telegram_id || userData.totalClicks === undefined) {
-    console.error('Invalid user data:', userData);
-    return <div>Ошибка: Недостаточно данных пользователя</div>;
+  if (error) {
+    return <div>Error: {error}</div>;
   }
 
-  if (error) {
-    return <div>Ошибка: {error}</div>;
+  if (!gameState) {
+    return <div>Loading game state...</div>;
   }
 
   const tabContent = (() => {
