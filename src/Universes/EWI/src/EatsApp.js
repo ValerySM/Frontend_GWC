@@ -280,18 +280,18 @@ function EatsApp({ setIsTabOpen }) {
             </button>
             <button className={activeTab === 'SOON' ? 'active' : ''} onClick={() => handleTabOpen('SOON')}>
               REF
-            </button>
-          </div>
-        )}
-        {isTabOpenState && (
-          <div className={`tab-content ${isTabOpenState ? 'open' : ''}`}>
-            <button className="back-button" onClick={handleBackButtonClick}>Back</button>
-            {tabContent}
-          </div>
-        )}
-      </header>
-    </div>
-  );
+			</button>
+         </div>
+       )}
+       {isTabOpenState && (
+         <div className={`tab-content ${isTabOpenState ? 'open' : ''}`}>
+           <button className="back-button" onClick={handleBackButtonClick}>Back</button>
+           {tabContent}
+         </div>
+       )}
+     </header>
+   </div>
+ );
 }
 
 export default EatsApp;
