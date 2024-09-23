@@ -21,15 +21,7 @@ const DamageIndicator = ({ x, y, damage }) => (
 function EatsApp({ userData }) {
   console.log('EatsApp received userData:', userData);
 
-  const requiredFields = ['telegram_id', 'totalClicks', 'energy', 'energyMax', 'damageLevel', 'energyLevel', 'regenLevel'];
-  const missingFields = requiredFields.filter(field => !userData || userData[field] === undefined);
-
-  if (missingFields.length > 0) {
-    console.error('Missing fields in user data:', missingFields);
-    return <div>Ошибка: Недостаточно данных пользователя. Отсутствуют поля: {missingFields.join(', ')}</div>;
-  }
-
-  const [gameState, setGameState] = useState(userData);
+  const [gameState, setGameState] = useState(userData || {});
   const [activeTab, setActiveTab] = useState(null);
   const [isImageDistorted, setIsImageDistorted] = useState(false);
   const [isTabOpenState, setIsTabOpenState] = useState(false);
@@ -41,10 +33,14 @@ function EatsApp({ userData }) {
   const clickerRef = useRef(null);
 
   useEffect(() => {
-    setGameState(userData);
+    if (userData) {
+      setGameState(userData);
+    }
   }, [userData]);
 
   const handleInteraction = useCallback(async (e) => {
+    if (!userData || !userData.telegram_id) return;
+
     e.preventDefault();
     setIsImageDistorted(true);
 
@@ -90,7 +86,7 @@ function EatsApp({ userData }) {
     activityTimeoutRef.current = setTimeout(() => {
       setIsImageDistorted(false);
     }, 200);
-  }, [gameState, userData.telegram_id]);
+  }, [gameState, userData]);
 
   useEffect(() => {
     const clicker = clickerRef.current;
@@ -118,6 +114,8 @@ function EatsApp({ userData }) {
   };
 
   const handleUpgrade = async (type) => {
+    if (!userData || !userData.telegram_id) return;
+
     try {
       let cost;
       switch (type) {
@@ -149,6 +147,14 @@ function EatsApp({ userData }) {
       setError('Не удалось выполнить улучшение. Пожалуйста, попробуйте позже.');
     }
   };
+
+  const requiredFields = ['telegram_id', 'totalClicks', 'energy', 'energyMax', 'damageLevel', 'energyLevel', 'regenLevel'];
+  const missingFields = requiredFields.filter(field => !userData || userData[field] === undefined);
+
+  if (missingFields.length > 0) {
+    console.error('Missing fields in user data:', missingFields);
+    return <div>Ошибка: Недостаточно данных пользователя. Отсутствуют поля: {missingFields.join(', ')}</div>;
+  }
 
   if (error) {
     return <div>Ошибка: {error}</div>;
