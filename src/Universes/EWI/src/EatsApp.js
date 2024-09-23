@@ -9,6 +9,13 @@ import SettingsButton from './components/SettingsButton';
 import clickerImage from '../public/clicker-image.png'
 import SoonTab from './components/SoonTab'
 
+import {
+  handleClick,
+  handleDamageUpgrade,
+  handleEnergyUpgrade,
+  handleRegenUpgrade
+} from './scripts/functions';
+
 const DamageIndicator = ({ x, y, damage }) => (
   <div className="damage-indicator" style={{ left: x, top: y }}>
     {damage}
@@ -280,7 +287,7 @@ function EatsApp({ setIsTabOpen }) {
           <div className={`tab-content ${isTabOpenState ? 'open' : ''}`}>
             <button className="back-button" onClick={handleBackButtonClick}>Back</button>
             {tabContent}
-			</div>
+          </div>
         )}
       </header>
     </div>

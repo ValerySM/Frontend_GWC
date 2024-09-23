@@ -1,70 +1,46 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import '../css/app.css'; 
+import UniverseSwitcher from './components/UniverseSwitcher';
 import EatsApp from './Universes/EWI/EatsApp';
-
-const BACKEND_URL = 'https://backend-gwc.onrender.com';
+import EWE from './Universes/EWE/EWE';
+import EcoGame from './Universes/ECI/EcoGame';
 
 function App() {
-  const [userData, setUserData] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [isTelegramWebApp, setIsTelegramWebApp] = useState(false);
+  const [currentUniverse, setCurrentUniverse] = useState('EatsApp');
 
   useEffect(() => {
-    const initializeUser = async () => {
-      try {
-        const tg = window.Telegram?.WebApp;
+    if (window.TelegramWebApps) {
+      window.TelegramWebApps.ready();
+      
+      // Пример использования Telegram Web App API
+      window.TelegramWebApps.onEvent('backButtonClicked', () => {
+        console.log('Back button clicked');
+      });
 
-        // Проверяем, работает ли приложение внутри Telegram
-        if (tg) {
-          setIsTelegramWebApp(true);  // Telegram WebApp активен
-          tg.ready();
-          tg.expand();
-
-          const initData = tg.initDataUnsafe;
-          console.log('Telegram init data:', initData);
-
-          if (initData && initData.user) {
-            const response = await axios.post(`${BACKEND_URL}/auth`, { user_id: initData.user.id.toString() });
-            setUserData(response.data);
-            setIsLoading(false);
-          } else {
-            throw new Error('Не удалось получить данные пользователя из Telegram');
-          }
-        } else {
-          throw new Error('Приложение запущено вне Telegram');
-        }
-      } catch (error) {
-        console.error('Ошибка инициализации:', error);
-        setError(error.message || 'Произошла ошибка');
-        setIsLoading(false);
-      }
-    };
-
-    initializeUser();
+      // Пример получения данных из Telegram Web App
+      console.log(window.TelegramWebApps.initData);
+    }
   }, []);
 
-  if (!isTelegramWebApp) {
-    return <div>Приложение работает только внутри Telegram WebApp.</div>;
-  }
-
-  if (isLoading) {
-    return <div>Загрузка...</div>;
-  }
-
-  if (error) {
-    return <div>Ошибка: {error}</div>;
-  }
-
-  if (!userData) {
-    return <div>Нет данных пользователя. Попробуйте перезагрузить приложение.</div>;
-  }
-
-  console.log('Данные пользователя для передачи в EatsApp:', userData);
+  const renderGame = () => {
+    switch (currentUniverse) {
+      case 'EatsApp':
+        return <EatsApp />;
+      case 'First':
+        return <EWE />;
+      case 'EcoGame':
+        return <EcoGame />;
+      default:
+        return null;
+    }
+  };
 
   return (
     <div className="App">
-      <EatsApp userData={userData} />
+      <header className="App-header">
+        <UniverseSwitcher currentUniverse={currentUniverse} setCurrentUniverse={setCurrentUniverse} />
+        {renderGame()}
+      </header>
     </div>
   );
 }
