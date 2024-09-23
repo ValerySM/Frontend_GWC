@@ -18,7 +18,7 @@ function App() {
     console.log('Telegram WebApp initialized');
 
     const initData = tg.initDataUnsafe;
-    console.log('Init data from Telegram:', initData);
+    console.log('Init data:', initData);
 
     if (initData && initData.user) {
       const userIdFromTg = initData.user.id.toString();
@@ -26,24 +26,17 @@ function App() {
       
       axios.post(`${BACKEND_URL}/auth`, { user_id: userIdFromTg })
         .then(response => {
-          console.log('Full response from backend:', response);
-          console.log('Response data from backend:', response.data);
+          console.log('Response from backend:', response);
+          console.log('User data from backend:', response.data);
           if (!response.data || !response.data.telegram_id) {
             throw new Error('Invalid data received from server');
-          }
-          // Проверим наличие всех необходимых полей
-          const requiredFields = ['telegram_id', 'totalClicks', 'energy', 'energyMax', 'damageLevel', 'energyLevel', 'regenLevel'];
-          const missingFields = requiredFields.filter(field => response.data[field] === undefined);
-          if (missingFields.length > 0) {
-            console.error('Missing fields in user data:', missingFields);
-            throw new Error(`Missing fields: ${missingFields.join(', ')}`);
           }
           setUserData(response.data);
           setIsLoading(false);
         })
         .catch(err => {
           console.error('Error initializing user:', err);
-          setError(`Failed to initialize user data: ${err.message}`);
+          setError('Failed to initialize user data. Please try again.');
           setIsLoading(false);
         });
     } else {
