@@ -1,78 +1,82 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 import './EatsApp.css';
-import clickerImage from '../public/clicker-image.png';
 
 const BACKEND_URL = 'https://backend-gwc.onrender.com';
 
-function EatsApp({ userData }) {
+function EatsApp({ setIsTabOpen }) {
   const [gameState, setGameState] = useState(null);
   const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const clickerRef = useRef(null);
 
+  // Получение данных с бэкенда
   useEffect(() => {
-    if (userData) {
-      setGameState(userData);
-    }
-  }, [userData]);
+    const fetchGameData = async () => {
+      try {
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        const initData = tg.initDataUnsafe;
 
-  const updateUserData = async (updates) => {
-    try {
-      const response = await axios.post(`${BACKEND_URL}/update`, {
-        user_id: userData.telegram_id,
-        updates: updates
-      });
-      console.log('Состояние игры обновлено:', response.data);
-      return response.data;
-    } catch (error) {
-      console.error('Ошибка обновления состояния игры:', error);
-      setError('Не удалось обновить состояние игры. Пожалуйста, попробуйте снова.');
-      throw error;
-    }
-  };
+        if (initData && initData.user) {
+          console.log('Получение данных с сервера для пользователя:', initData.user.id);
 
-  const handleInteraction = useCallback(async (e) => {
+          // Запрос на получение данных с бэкенда
+          const response = await axios.post(`${BACKEND_URL}/auth`, { user_id: initData.user.id.toString() });
+          console.log('Данные с бэкенда:', response.data);
+
+          // Устанавливаем состояние игры
+          setGameState(response.data);
+          setIsLoading(false);  // Завершаем состояние загрузки
+        } else {
+          throw new Error("Не удалось получить данные пользователя из Telegram");
+        }
+      } catch (error) {
+        console.error("Ошибка получения данных:", error);
+        setError("Не удалось загрузить данные игры");
+        setIsLoading(false);
+      }
+    };
+
+    fetchGameData();
+  }, []);
+
+  // Обработчик кликов
+  const handleInteraction = useCallback(() => {
     if (!gameState) return;
+    console.log('Взаимодействие с игрой:', gameState);
 
-    e.preventDefault();
-    const rect = clickerRef.current.getBoundingClientRect();
-    const x = e.clientX || (e.touches && e.touches[0].clientX);
-    const y = e.clientY || (e.touches && e.touches[0].clientY);
+    // Пример обновления данных
+    setGameState(prevState => ({
+      ...prevState,
+      totalClicks: prevState.totalClicks + prevState.damageLevel,
+      energy: Math.max(prevState.energy - 10, 0)
+    }));
 
-    try {
-      const newTotalClicks = gameState.totalClicks + gameState.damageLevel;
-      const newEnergy = Math.max(gameState.energy - 10, 0);
+    // Здесь нужно обновить данные на сервере
+  }, [gameState]);
 
-      const updatedData = await updateUserData({
-        totalClicks: newTotalClicks,
-        energy: newEnergy
-      });
-
-      setGameState(updatedData);
-    } catch (error) {
-      console.error('Ошибка обновления состояния игры:', error);
-      setError('Не удалось обновить состояние игры. Попробуйте снова.');
-    }
-  }, [gameState, userData]);
+  // Проверка данных во время рендеринга
+  if (isLoading) {
+    return <div>Загрузка состояния игры...</div>;
+  }
 
   if (error) {
     return <div>Ошибка: {error}</div>;
   }
 
   if (!gameState) {
-    return <div>Загрузка состояния игры...</div>;
+    return <div>Нет данных игры для отображения</div>;
   }
+
+  console.log('Состояние игры:', gameState);
 
   return (
     <div className="game-container">
-      <div className="clicker-container">
-        <img
-          className="clicker-image"
-          ref={clickerRef}
-          src={clickerImage}
-          alt="Clicker"
-          onClick={handleInteraction}
-        />
+      <div className="clicker-container" ref={clickerRef} onClick={handleInteraction}>
+        <p>Клики: {gameState.totalClicks}</p>
+        <p>Энергия: {gameState.energy} / {gameState.energyMax}</p>
+        <p>Уровень урона: {gameState.damageLevel}</p>
       </div>
     </div>
   );
