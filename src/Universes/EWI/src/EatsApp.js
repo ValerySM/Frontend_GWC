@@ -37,6 +37,7 @@ function EatsApp({ setIsTabOpen }) {
   const [damageLevel, setDamageLevel] = useState(1);
   const [energyLevel, setEnergyLevel] = useState(1);
   const [regenLevel, setRegenLevel] = useState(1);
+  const [updateBuffer, setUpdateBuffer] = useState({});
 
   const damageUpgradeCost = 1000 * Math.pow(2, damageLevel - 1);
   const energyUpgradeCost = 1000 * Math.pow(2, energyLevel - 1);
@@ -99,10 +100,40 @@ function EatsApp({ setIsTabOpen }) {
     }
   };
 
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      sendUpdatesToServer();
+    }, 5000);
+
+    window.Telegram.WebApp.onEvent('mainButtonClicked', sendUpdatesToServer);
+    window.Telegram.WebApp.onEvent('backButtonClicked', sendUpdatesToServer);
+    window.Telegram.WebApp.onEvent('viewportChanged', sendUpdatesToServer);
+
+    return () => {
+      clearInterval(intervalId);
+      sendUpdatesToServer();
+    };
+  }, []);
+
+  const addToUpdateBuffer = (updates) => {
+    setUpdateBuffer(prevBuffer => ({ ...prevBuffer, ...updates }));
+  };
+
+  const sendUpdatesToServer = async () => {
+    if (Object.keys(updateBuffer).length > 0) {
+      try {
+        await updateUserData(updateBuffer);
+        setUpdateBuffer({});
+      } catch (error) {
+        console.error('Error sending updates to server:', error);
+      }
+    }
+  };
+
   const updateTotalClicks = (additionalClicks) => {
     const newTotal = totalClicks + additionalClicks;
     setTotalClicks(newTotal);
-    updateUserData({ totalClicks: newTotal });
+    addToUpdateBuffer({ totalClicks: newTotal });
   };
 
   const handleTabOpen = (tab) => {
@@ -169,7 +200,7 @@ function EatsApp({ setIsTabOpen }) {
       setEnergy(prevEnergy => {
         if (prevEnergy < energyMax) {
           const newEnergy = Math.min(prevEnergy + regenRate, energyMax);
-          updateUserData({ energy: newEnergy });
+          addToUpdateBuffer({ energy: newEnergy });
           return newEnergy;
         }
         return prevEnergy;
@@ -178,7 +209,7 @@ function EatsApp({ setIsTabOpen }) {
 
     return () => {
       clearInterval(interval);
-      updateUserData({ energy });
+      addToUpdateBuffer({ energy });
     };
   }, [energy, energyMax, regenRate]);
 
@@ -199,7 +230,7 @@ function EatsApp({ setIsTabOpen }) {
                 updateTotalClicks(-damageUpgradeCost);
                 const newDamageLevel = damageLevel + 1;
                 setDamageLevel(newDamageLevel);
-                updateUserData({ damageLevel: newDamageLevel });
+                addToUpdateBuffer({ damageLevel: newDamageLevel });
               }
             }}
             handleEnergyUpgrade={() => {
@@ -209,7 +240,7 @@ function EatsApp({ setIsTabOpen }) {
                 const newEnergyLevel = energyLevel + 1;
                 setEnergyMax(newEnergyMax);
                 setEnergyLevel(newEnergyLevel);
-                updateUserData({ energyMax: newEnergyMax, energyLevel: newEnergyLevel });
+                addToUpdateBuffer({ energyMax: newEnergyMax, energyLevel: newEnergyLevel });
               }
             }}
             handleRegenUpgrade={() => {
@@ -219,7 +250,7 @@ function EatsApp({ setIsTabOpen }) {
                 const newRegenLevel = regenLevel + 1;
                 setRegenRate(newRegenRate);
                 setRegenLevel(newRegenLevel);
-                updateUserData({ regenRate: newRegenRate, regenLevel: newRegenLevel });
+                addToUpdateBuffer({ regenRate: newRegenRate, regenLevel: newRegenLevel });
               }
             }}
           />
