@@ -16,6 +16,39 @@ const DamageIndicator = ({ x, y, damage }) => (
   </div>
 );
 
+function handleClick(
+  energy,
+  damageLevel,
+  count,
+  totalClicks,
+  setCount,
+  updateTotalClicks,
+  setEnergy,
+  setIsImageDistorted,
+  activityTimeoutRef,
+  setRegenRate
+) {
+  setCount((prevCount) => prevCount + 1);
+  updateTotalClicks(1);
+
+  setEnergy((prevEnergy) => {
+    if (prevEnergy > 0) {
+      return prevEnergy - 1;
+    }
+    return prevEnergy;
+  });
+
+  setIsImageDistorted(true);
+
+  if (activityTimeoutRef.current) {
+    clearTimeout(activityTimeoutRef.current);
+  }
+
+  activityTimeoutRef.current = setTimeout(() => {
+    setIsImageDistorted(false);
+  }, 200);
+}
+
 function EatsApp({ setIsTabOpen }) {
   const [userId, setUserId] = useState(null);
   const [totalClicks, setTotalClicks] = useState(0);
