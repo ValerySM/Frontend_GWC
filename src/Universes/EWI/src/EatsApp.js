@@ -99,30 +99,6 @@ function EatsApp({ setIsTabOpen }) {
     }
   };
 
-  useEffect(() => {
-    fetchUserData();
-  }, [userId]);
-
-  const updateUserData = async (updates) => {
-    if (!userId) return;
-
-    try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/update`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ user_id: userId, updates }),
-      });
-
-      if (!response.ok) {
-        console.error('Failed to update user data');
-      }
-    } catch (error) {
-      console.error('Error updating user data:', error);
-    }
-  };
-
   const updateTotalClicks = (additionalClicks) => {
     const newTotal = totalClicks + additionalClicks;
     setTotalClicks(newTotal);
