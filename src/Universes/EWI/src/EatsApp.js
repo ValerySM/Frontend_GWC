@@ -147,10 +147,12 @@ function EatsApp({ setIsTabOpen }) {
       });
 
       if (!response.ok) {
-        console.error('Failed to update user data');
+        const errorData = await response.json();
+        throw new Error(`Failed to update user data: ${errorData.error}`);
       }
     } catch (error) {
       console.error('Error updating user data:', error);
+      throw error;
     }
   };
 
