@@ -15,8 +15,7 @@ const DamageIndicator = ({ x, y, damage }) => (
   </div>
 );
 
-function EatsApp({ setIsTabOpen }) {
-  const [userId, setUserId] = useState(null);
+function EatsApp({ userId }) {
   const [gameState, setGameState] = useState({
     totalClicks: 0,
     energy: 1000,
@@ -38,19 +37,14 @@ function EatsApp({ setIsTabOpen }) {
   const saveTimeoutRef = useRef(null);
   const clickCountRef = useRef(0);
 
-  useEffect(() => {
-    // В реальном приложении здесь должна быть логика получения userId от Telegram
-    setUserId("example_user_id");
-    fetchUserData();
-  }, []);
-
-  const fetchUserData = async () => {
+  const fetchUserData = useCallback(async () => {
     if (!userId) return;
 
     try {
       const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/user/${userId}`);
       if (response.ok) {
         const userData = await response.json();
+        console.log("Fetched user data:", userData); // Debugging log
         setGameState(prevState => ({
           ...prevState,
           totalClicks: userData.totalClicks || 0,
@@ -67,9 +61,13 @@ function EatsApp({ setIsTabOpen }) {
     } catch (error) {
       console.error('Error fetching user data:', error);
     }
-  };
+  }, [userId]);
 
-  const updateUserData = async (updates) => {
+  useEffect(() => {
+    fetchUserData();
+  }, [fetchUserData]);
+
+  const updateUserData = useCallback(async (updates) => {
     if (!userId) return;
 
     try {
@@ -87,7 +85,7 @@ function EatsApp({ setIsTabOpen }) {
     } catch (error) {
       console.error('Error updating user data:', error);
     }
-  };
+  }, [userId]);
 
   const scheduleSave = useCallback(() => {
     if (saveTimeoutRef.current) {
@@ -100,8 +98,8 @@ function EatsApp({ setIsTabOpen }) {
         updateUserData(updates);
         unsavedChangesRef.current = {};
       }
-    }, 30000); // Сохранение каждые 30 секунд, если есть изменения
-  }, []);
+    }, 30000); // Save every 30 seconds if there are unsaved changes
+  }, [updateUserData]);
 
   const updateGameState = useCallback((updates) => {
     setGameState(prevState => {
@@ -114,12 +112,12 @@ function EatsApp({ setIsTabOpen }) {
     });
 
     clickCountRef.current += 1;
-    if (clickCountRef.current >= 50) { // Сохранение после каждых 50 кликов
+    if (clickCountRef.current >= 50) { // Save after every 50 clicks
       updateUserData(unsavedChangesRef.current);
       unsavedChangesRef.current = {};
       clickCountRef.current = 0;
     }
-  }, [scheduleSave]);
+  }, [scheduleSave, updateUserData]);
 
   const handleInteraction = useCallback((e) => {
     e.preventDefault();
@@ -179,22 +177,20 @@ function EatsApp({ setIsTabOpen }) {
 
     return () => {
       clearInterval(interval);
-      // Финальное сохранение при размонтировании компонента
+      // Final save when component unmounts
       updateUserData(unsavedChangesRef.current);
     };
-  }, [updateGameState]);
+  }, [updateGameState, updateUserData]);
 
   const handleTabOpen = (tab) => {
     setActiveTab(tab);
     setIsTabOpenState(true);
-    setIsTabOpen(true);
     setShowButtons(false);
   };
 
   const handleBackButtonClick = () => {
     setActiveTab(null);
     setIsTabOpenState(false);
-    setIsTabOpen(false);
     setShowButtons(true);
   };
 
