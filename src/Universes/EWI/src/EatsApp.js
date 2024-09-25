@@ -22,7 +22,8 @@ const DamageIndicator = ({ x, y, damage }) => (
   </div>
 );
 
-function EatsApp({ userId, setIsTabOpen }) {
+function EatsApp({ setIsTabOpen }) {
+  const [userId, setUserId] = useState(null);
   const [totalClicks, setTotalClicks] = useState(0);
   const [count, setCount] = useState(0);
   const [activeTab, setActiveTab] = useState(null);
@@ -44,40 +45,11 @@ function EatsApp({ userId, setIsTabOpen }) {
   const activityTimeoutRef = useRef(null);
   const clickerRef = useRef(null);
 
-  const [unsavedChanges, setUnsavedChanges] = useState({});
-  const updateTimeout = useRef(null);
-
-  const updateUserData = useCallback(
-    (updates) => {
-      setUnsavedChanges((prevUpdates) => ({ ...prevUpdates, ...updates }));
-
-      if (updateTimeout.current) {
-        clearTimeout(updateTimeout.current);
-      }
-
-      updateTimeout.current = setTimeout(async () => {
-        try {
-          await fetch(`${process.env.REACT_APP_BACKEND_URL}/update`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ user_id: userId, updates: unsavedChanges }),
-          });
-          setUnsavedChanges({});
-        } catch (error) {
-          console.error('Ошибка обновления данных пользователя:', error);
-        }
-      }, 30000);
-    },
-    [userId]
-  );
-
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const userIdFromUrl = urlParams.get('user_id');
     if (userIdFromUrl) {
-      // Нет необходимости вызывать setUserId здесь, так как он не определен в этом компоненте
+      setUserId(userIdFromUrl);
     }
   }, []);
 
@@ -96,10 +68,10 @@ function EatsApp({ userId, setIsTabOpen }) {
         setEnergyLevel(userData.energyLevel || 1);
         setRegenLevel(userData.regenLevel || 1);
       } else {
-        console.error('Не удалось загрузить данные пользователя');
+        console.error('Failed to fetch user data');
       }
     } catch (error) {
-      console.error('Ошибка при загрузке данных пользователя:', error);
+      console.error('Error fetching user data:', error);
     }
   };
 
@@ -107,24 +79,25 @@ function EatsApp({ userId, setIsTabOpen }) {
     fetchUserData();
   }, [userId]);
 
-  useEffect(() => {
-    if (window.TelegramWebApps) {
-      window.TelegramWebApps.ready();
+  const updateUserData = async (updates) => {
+    if (!userId) return;
 
-      window.TelegramWebApps.onEvent('backButtonClicked', () => {
-        // Сохранить данные пользователя перед закрытием приложения
-        updateUserData({
-          totalClicks,
-          energy,
-          energyMax,
-          regenRate,
-          damageLevel,
-          energyLevel,
-          regenLevel,
-        });
+    try {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/update`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ user_id: userId, updates }),
       });
+
+      if (!response.ok) {
+        console.error('Failed to update user data');
+      }
+    } catch (error) {
+      console.error('Error updating user data:', error);
     }
-  }, []);
+  };
 
   const updateTotalClicks = (additionalClicks) => {
     const newTotal = totalClicks + additionalClicks;
@@ -273,7 +246,7 @@ function EatsApp({ userId, setIsTabOpen }) {
           <p>{totalClicks}</p>
         </div>
         <div className="energy-container">
-          <p>Энергия: {Math.floor(energy)}/{energyMax}</p>
+          <p>Energy: {Math.floor(energy)}/{energyMax}</p>
         </div>
         <div className="clicker-container"
              ref={clickerRef}>
@@ -297,22 +270,22 @@ function EatsApp({ userId, setIsTabOpen }) {
         {showButtons && (
           <div className="tabs">
             <button className={activeTab === 'UPGRADE' ? 'active' : ''} onClick={() => handleTabOpen('UPGRADE')}>
-              УЛУЧШЕНИЯ
+              UPGRADE
             </button>
             <button className={activeTab === 'BOOST' ? 'active' : ''} onClick={() => handleTabOpen('BOOST')}>
-              ИГРЫ
+              GAMES
             </button>
             <button className={activeTab === 'TASKS' ? 'active' : ''} onClick={() => handleTabOpen('TASKS')}>
-              ЗАДАНИЯ
+              TASKS
             </button>
             <button className={activeTab === 'SOON' ? 'active' : ''} onClick={() => handleTabOpen('SOON')}>
               REF
-            </button>
+			</button>
          </div>
        )}
        {isTabOpenState && (
          <div className={`tab-content ${isTabOpenState ? 'open' : ''}`}>
-           <button className="back-button" onClick={handleBackButtonClick}>Назад</button>
+           <button className="back-button" onClick={handleBackButtonClick}>Back</button>
            {tabContent}
          </div>
        )}
