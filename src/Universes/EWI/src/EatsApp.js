@@ -45,6 +45,35 @@ function EatsApp({ setIsTabOpen }) {
   const activityTimeoutRef = useRef(null);
   const clickerRef = useRef(null);
 
+  const [unsavedChanges, setUnsavedChanges] = useState({});
+  const updateTimeout = useRef(null);
+
+  const updateUserData = useCallback(
+    (updates) => {
+      setUnsavedChanges((prevUpdates) => ({ ...prevUpdates, ...updates }));
+
+      if (updateTimeout.current) {
+        clearTimeout(updateTimeout.current);
+      }
+
+      updateTimeout.current = setTimeout(async () => {
+        try {
+          await fetch(`${process.env.REACT_APP_BACKEND_URL}/update`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ user_id, updates: unsavedChanges }),
+          });
+          setUnsavedChanges({});
+        } catch (error) {
+          console.error('Error updating user data:', error);
+        }
+      }, 30000); // Сохранять данные каждые 30 секунд
+    },
+    [user_id]
+  );
+
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const userIdFromUrl = urlParams.get('user_id');
@@ -79,25 +108,24 @@ function EatsApp({ setIsTabOpen }) {
     fetchUserData();
   }, [userId]);
 
-  const updateUserData = async (updates) => {
-    if (!userId) return;
+  useEffect(() => {
+    if (window.TelegramWebApps) {
+      window.TelegramWebApps.ready();
 
-    try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/update`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ user_id: userId, updates }),
+      window.TelegramWebApps.onEvent('backButtonClicked', () => {
+        // Сохранить данные пользователя перед закрытием приложения
+        updateUserData({
+          totalClicks,
+          energy,
+          energyMax,
+          regenRate,
+          damageLevel,
+          energyLevel,
+          regenLevel,
+        });
       });
-
-      if (!response.ok) {
-        console.error('Failed to update user data');
-      }
-    } catch (error) {
-      console.error('Error updating user data:', error);
     }
-  };
+  }, []);
 
   const updateTotalClicks = (additionalClicks) => {
     const newTotal = totalClicks + additionalClicks;
@@ -280,7 +308,7 @@ function EatsApp({ setIsTabOpen }) {
             </button>
             <button className={activeTab === 'SOON' ? 'active' : ''} onClick={() => handleTabOpen('SOON')}>
               REF
-			</button>
+            </button>
          </div>
        )}
        {isTabOpenState && (
