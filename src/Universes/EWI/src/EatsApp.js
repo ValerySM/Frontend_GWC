@@ -22,8 +22,7 @@ const DamageIndicator = ({ x, y, damage }) => (
   </div>
 );
 
-function EatsApp({ setIsTabOpen }) {
-  const [userId, setUserId] = useState(null);
+function EatsApp({ userId, setIsTabOpen }) {
   const [totalClicks, setTotalClicks] = useState(0);
   const [count, setCount] = useState(0);
   const [activeTab, setActiveTab] = useState(null);
@@ -63,15 +62,15 @@ function EatsApp({ setIsTabOpen }) {
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ user_id, updates: unsavedChanges }),
+            body: JSON.stringify({ user_id: userId, updates: unsavedChanges }),
           });
           setUnsavedChanges({});
         } catch (error) {
           console.error('Error updating user data:', error);
         }
-      }, 30000); // Сохранять данные каждые 30 секунд
+      }, 30000);
     },
-    [user_id]
+    [userId]
   );
 
   useEffect(() => {
@@ -113,7 +112,7 @@ function EatsApp({ setIsTabOpen }) {
       window.TelegramWebApps.ready();
 
       window.TelegramWebApps.onEvent('backButtonClicked', () => {
-        // Сохранить данные пользователя перед закрытием приложения
+        // Save user data before closing the app
         updateUserData({
           totalClicks,
           energy,
