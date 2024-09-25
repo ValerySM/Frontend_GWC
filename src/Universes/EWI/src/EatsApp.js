@@ -66,7 +66,7 @@ function EatsApp({ userId, setIsTabOpen }) {
           });
           setUnsavedChanges({});
         } catch (error) {
-          console.error('Error updating user data:', error);
+          console.error('Ошибка обновления данных пользователя:', error);
         }
       }, 30000);
     },
@@ -77,7 +77,7 @@ function EatsApp({ userId, setIsTabOpen }) {
     const urlParams = new URLSearchParams(window.location.search);
     const userIdFromUrl = urlParams.get('user_id');
     if (userIdFromUrl) {
-      setUserId(userIdFromUrl);
+      // Нет необходимости вызывать setUserId здесь, так как он не определен в этом компоненте
     }
   }, []);
 
@@ -96,10 +96,10 @@ function EatsApp({ userId, setIsTabOpen }) {
         setEnergyLevel(userData.energyLevel || 1);
         setRegenLevel(userData.regenLevel || 1);
       } else {
-        console.error('Failed to fetch user data');
+        console.error('Не удалось загрузить данные пользователя');
       }
     } catch (error) {
-      console.error('Error fetching user data:', error);
+      console.error('Ошибка при загрузке данных пользователя:', error);
     }
   };
 
@@ -112,7 +112,7 @@ function EatsApp({ userId, setIsTabOpen }) {
       window.TelegramWebApps.ready();
 
       window.TelegramWebApps.onEvent('backButtonClicked', () => {
-        // Save user data before closing the app
+        // Сохранить данные пользователя перед закрытием приложения
         updateUserData({
           totalClicks,
           energy,
@@ -273,7 +273,7 @@ function EatsApp({ userId, setIsTabOpen }) {
           <p>{totalClicks}</p>
         </div>
         <div className="energy-container">
-          <p>Energy: {Math.floor(energy)}/{energyMax}</p>
+          <p>Энергия: {Math.floor(energy)}/{energyMax}</p>
         </div>
         <div className="clicker-container"
              ref={clickerRef}>
@@ -297,13 +297,13 @@ function EatsApp({ userId, setIsTabOpen }) {
         {showButtons && (
           <div className="tabs">
             <button className={activeTab === 'UPGRADE' ? 'active' : ''} onClick={() => handleTabOpen('UPGRADE')}>
-              UPGRADE
+              УЛУЧШЕНИЯ
             </button>
             <button className={activeTab === 'BOOST' ? 'active' : ''} onClick={() => handleTabOpen('BOOST')}>
-              GAMES
+              ИГРЫ
             </button>
             <button className={activeTab === 'TASKS' ? 'active' : ''} onClick={() => handleTabOpen('TASKS')}>
-              TASKS
+              ЗАДАНИЯ
             </button>
             <button className={activeTab === 'SOON' ? 'active' : ''} onClick={() => handleTabOpen('SOON')}>
               REF
@@ -312,7 +312,7 @@ function EatsApp({ userId, setIsTabOpen }) {
        )}
        {isTabOpenState && (
          <div className={`tab-content ${isTabOpenState ? 'open' : ''}`}>
-           <button className="back-button" onClick={handleBackButtonClick}>Back</button>
+           <button className="back-button" onClick={handleBackButtonClick}>Назад</button>
            {tabContent}
          </div>
        )}
