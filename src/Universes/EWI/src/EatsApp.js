@@ -6,15 +6,8 @@ import UpgradeTab from './components/UpgradeTab';
 import BoostTab from './components/BoostTab';
 import TasksTab from './components/TasksTab';
 import SettingsButton from './components/SettingsButton';
-import clickerImage from '../public/clicker-image.png'
-import SoonTab from './components/SoonTab'
-
-import {
-  handleClick,
-  handleDamageUpgrade,
-  handleEnergyUpgrade,
-  handleRegenUpgrade
-} from './scripts/functions';
+import clickerImage from '../public/clicker-image.png';
+import SoonTab from './components/SoonTab';
 
 const DamageIndicator = ({ x, y, damage }) => (
   <div className="damage-indicator" style={{ left: x, top: y }}>
@@ -24,35 +17,31 @@ const DamageIndicator = ({ x, y, damage }) => (
 
 function EatsApp({ setIsTabOpen }) {
   const [userId, setUserId] = useState(null);
-  const [totalClicks, setTotalClicks] = useState(0);
-  const [count, setCount] = useState(0);
+  const [gameState, setGameState] = useState({
+    totalClicks: 0,
+    energy: 1000,
+    energyMax: 1000,
+    regenRate: 1,
+    damageLevel: 1,
+    energyLevel: 1,
+    regenLevel: 1,
+  });
   const [activeTab, setActiveTab] = useState(null);
   const [isImageDistorted, setIsImageDistorted] = useState(false);
   const [isTabOpenState, setIsTabOpenState] = useState(false);
   const [showButtons, setShowButtons] = useState(true);
   const [damageIndicators, setDamageIndicators] = useState([]);
-  const [energy, setEnergy] = useState(1000);
-  const [energyMax, setEnergyMax] = useState(1000);
-  const [regenRate, setRegenRate] = useState(1);
-  const [damageLevel, setDamageLevel] = useState(1);
-  const [energyLevel, setEnergyLevel] = useState(1);
-  const [regenLevel, setRegenLevel] = useState(1);
-
-  const damageUpgradeCost = 1000 * Math.pow(2, damageLevel - 1);
-  const energyUpgradeCost = 1000 * Math.pow(2, energyLevel - 1);
-  const regenUpgradeCost = 50000 * Math.pow(2, regenLevel - 1);
 
   const activityTimeoutRef = useRef(null);
   const clickerRef = useRef(null);
   const unsavedChangesRef = useRef({});
   const saveTimeoutRef = useRef(null);
+  const clickCountRef = useRef(0);
 
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const userIdFromUrl = urlParams.get('user_id');
-    if (userIdFromUrl) {
-      setUserId(userIdFromUrl);
-    }
+    // В реальном приложении здесь должна быть логика получения userId от Telegram
+    setUserId("example_user_id");
+    fetchUserData();
   }, []);
 
   const fetchUserData = async () => {
@@ -62,13 +51,16 @@ function EatsApp({ setIsTabOpen }) {
       const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/user/${userId}`);
       if (response.ok) {
         const userData = await response.json();
-        setTotalClicks(userData.totalClicks || 0);
-        setEnergy(userData.energy || 1000);
-        setEnergyMax(userData.energyMax || 1000);
-        setRegenRate(userData.regenRate || 1);
-        setDamageLevel(userData.damageLevel || 1);
-        setEnergyLevel(userData.energyLevel || 1);
-        setRegenLevel(userData.regenLevel || 1);
+        setGameState(prevState => ({
+          ...prevState,
+          totalClicks: userData.totalClicks || 0,
+          energy: userData.energy || 1000,
+          energyMax: userData.energyMax || 1000,
+          regenRate: userData.regenRate || 1,
+          damageLevel: userData.damageLevel || 1,
+          energyLevel: userData.energyLevel || 1,
+          regenLevel: userData.regenLevel || 1,
+        }));
       } else {
         console.error('Failed to fetch user data');
       }
@@ -76,10 +68,6 @@ function EatsApp({ setIsTabOpen }) {
       console.error('Error fetching user data:', error);
     }
   };
-
-  useEffect(() => {
-    fetchUserData();
-  }, [userId]);
 
   const updateUserData = async (updates) => {
     if (!userId) return;
@@ -112,31 +100,26 @@ function EatsApp({ setIsTabOpen }) {
         updateUserData(updates);
         unsavedChangesRef.current = {};
       }
-    }, 5000); // Save every 5 seconds if there are unsaved changes
+    }, 30000); // Сохранение каждые 30 секунд, если есть изменения
   }, []);
 
-  const updateTotalClicks = useCallback((additionalClicks) => {
-    setTotalClicks(prevTotalClicks => {
-      const newTotal = prevTotalClicks + additionalClicks;
-      unsavedChangesRef.current.totalClicks = newTotal;
+  const updateGameState = useCallback((updates) => {
+    setGameState(prevState => {
+      const newState = { ...prevState, ...updates };
+      Object.keys(updates).forEach(key => {
+        unsavedChangesRef.current[key] = newState[key];
+      });
       scheduleSave();
-      return newTotal;
+      return newState;
     });
+
+    clickCountRef.current += 1;
+    if (clickCountRef.current >= 50) { // Сохранение после каждых 50 кликов
+      updateUserData(unsavedChangesRef.current);
+      unsavedChangesRef.current = {};
+      clickCountRef.current = 0;
+    }
   }, [scheduleSave]);
-
-  const handleTabOpen = (tab) => {
-    setActiveTab(tab);
-    setIsTabOpenState(true);
-    setIsTabOpen(true);
-    setShowButtons(false);
-  };
-
-  const handleBackButtonClick = () => {
-    setActiveTab(null);
-    setIsTabOpenState(false);
-    setIsTabOpen(false);
-    setShowButtons(true);
-  };
 
   const handleInteraction = useCallback((e) => {
     e.preventDefault();
@@ -150,7 +133,7 @@ function EatsApp({ setIsTabOpen }) {
       id: Date.now() + Math.random(),
       x: x - rect.left,
       y: y - rect.top,
-      damage: damageLevel
+      damage: gameState.damageLevel
     };
 
     setDamageIndicators(prev => [...prev, newIndicator]);
@@ -159,7 +142,11 @@ function EatsApp({ setIsTabOpen }) {
       setDamageIndicators(prev => prev.filter(indicator => indicator.id !== newIndicator.id));
     }, 1000);
 
-    handleClick(energy, damageLevel, count, totalClicks, setCount, updateTotalClicks, setEnergy, setIsImageDistorted, activityTimeoutRef, setRegenRate);
+    const clickValue = gameState.damageLevel;
+    updateGameState({
+      totalClicks: gameState.totalClicks + clickValue,
+      energy: Math.max(0, gameState.energy - 10)
+    });
 
     if (activityTimeoutRef.current) {
       clearTimeout(activityTimeoutRef.current);
@@ -168,7 +155,7 @@ function EatsApp({ setIsTabOpen }) {
     activityTimeoutRef.current = setTimeout(() => {
       setIsImageDistorted(false);
     }, 200);
-  }, [damageLevel, energy, count, totalClicks, updateTotalClicks]);
+  }, [gameState, updateGameState]);
 
   useEffect(() => {
     const clicker = clickerRef.current;
@@ -185,90 +172,78 @@ function EatsApp({ setIsTabOpen }) {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setEnergy(prevEnergy => {
-        if (prevEnergy < energyMax) {
-          const newEnergy = Math.min(prevEnergy + regenRate, energyMax);
-          unsavedChangesRef.current.energy = newEnergy;
-          scheduleSave();
-          return newEnergy;
-        }
-        return prevEnergy;
-      });
+      updateGameState(prevState => ({
+        energy: Math.min(prevState.energy + prevState.regenRate, prevState.energyMax)
+      }));
     }, 1000);
 
     return () => {
       clearInterval(interval);
-      // Final save when component unmounts
+      // Финальное сохранение при размонтировании компонента
       updateUserData(unsavedChangesRef.current);
     };
-  }, [energyMax, regenRate, scheduleSave]);
+  }, [updateGameState]);
 
-  // Add event listener for beforeunload
-  useEffect(() => {
-    const handleBeforeUnload = (event) => {
-      if (Object.keys(unsavedChangesRef.current).length > 0) {
-        updateUserData(unsavedChangesRef.current);
-        event.preventDefault();
-        event.returnValue = '';
-      }
-    };
+  const handleTabOpen = (tab) => {
+    setActiveTab(tab);
+    setIsTabOpenState(true);
+    setIsTabOpen(true);
+    setShowButtons(false);
+  };
 
-    window.addEventListener('beforeunload', handleBeforeUnload);
+  const handleBackButtonClick = () => {
+    setActiveTab(null);
+    setIsTabOpenState(false);
+    setIsTabOpen(false);
+    setShowButtons(true);
+  };
 
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
-  }, []);
+  const damageUpgradeCost = 1000 * Math.pow(2, gameState.damageLevel - 1);
+  const energyUpgradeCost = 1000 * Math.pow(2, gameState.energyLevel - 1);
+  const regenUpgradeCost = 50000 * Math.pow(2, gameState.regenLevel - 1);
 
   const tabContent = (() => {
     switch (activeTab) {
       case 'UPGRADE':
         return (
           <UpgradeTab
-            totalClicks={totalClicks}
+            totalClicks={gameState.totalClicks}
             damageUpgradeCost={damageUpgradeCost}
             energyUpgradeCost={energyUpgradeCost}
             regenUpgradeCost={regenUpgradeCost}
-            damageLevel={damageLevel}
-            energyLevel={energyLevel}
-            regenLevel={regenLevel}
+            damageLevel={gameState.damageLevel}
+            energyLevel={gameState.energyLevel}
+            regenLevel={gameState.regenLevel}
             handleDamageUpgrade={() => {
-              if (totalClicks >= damageUpgradeCost) {
-                updateTotalClicks(-damageUpgradeCost);
-                const newDamageLevel = damageLevel + 1;
-                setDamageLevel(newDamageLevel);
-                unsavedChangesRef.current.damageLevel = newDamageLevel;
-                scheduleSave();
+              if (gameState.totalClicks >= damageUpgradeCost) {
+                updateGameState({
+                  totalClicks: gameState.totalClicks - damageUpgradeCost,
+                  damageLevel: gameState.damageLevel + 1
+                });
               }
             }}
             handleEnergyUpgrade={() => {
-              if (totalClicks >= energyUpgradeCost) {
-                updateTotalClicks(-energyUpgradeCost);
-                const newEnergyMax = energyMax + 100;
-                const newEnergyLevel = energyLevel + 1;
-                setEnergyMax(newEnergyMax);
-                setEnergyLevel(newEnergyLevel);
-                unsavedChangesRef.current.energyMax = newEnergyMax;
-                unsavedChangesRef.current.energyLevel = newEnergyLevel;
-                scheduleSave();
+              if (gameState.totalClicks >= energyUpgradeCost) {
+                updateGameState({
+                  totalClicks: gameState.totalClicks - energyUpgradeCost,
+                  energyMax: gameState.energyMax + 100,
+                  energyLevel: gameState.energyLevel + 1
+                });
               }
             }}
             handleRegenUpgrade={() => {
-              if (totalClicks >= regenUpgradeCost) {
-                updateTotalClicks(-regenUpgradeCost);
-                const newRegenRate = regenRate + 1;
-                const newRegenLevel = regenLevel + 1;
-                setRegenRate(newRegenRate);
-                setRegenLevel(newRegenLevel);
-                unsavedChangesRef.current.regenRate = newRegenRate;
-                unsavedChangesRef.current.regenLevel = newRegenLevel;
-                scheduleSave();
+              if (gameState.totalClicks >= regenUpgradeCost) {
+                updateGameState({
+                  totalClicks: gameState.totalClicks - regenUpgradeCost,
+                  regenRate: gameState.regenRate + 1,
+                  regenLevel: gameState.regenLevel + 1
+                });
               }
             }}
           />
         );
       case 'BOOST':
-        return <BoostTab updateTotalClicks={updateTotalClicks} />;
+        return <BoostTab updateGameState={updateGameState} />;
       case 'TASKS':
         return <TasksTab />;
       case 'SOON':
@@ -278,22 +253,25 @@ function EatsApp({ setIsTabOpen }) {
     }
   })();
 
-  const remainingEnergyPercentage = ((energyMax - energy) / energyMax) * 100;
+  const remainingEnergyPercentage = ((gameState.energyMax - gameState.energy) / gameState.energyMax) * 100;
 
   return (
-    <div className={`App`}>
+    <div className="App">
       <header className="App-header">
         <SettingsButton isActive={activeTab !== null} /> 
         <div className="balance-container">
           <img src={clickerImage} alt="Balance Icon" className="balance-icon" />
-          <p>{totalClicks}</p>
+          <p>{gameState.totalClicks}</p>
         </div>
         <div className="energy-container">
-          <p>Energy: {Math.floor(energy)}/{energyMax}</p>
+          <p>Energy: {Math.floor(gameState.energy)}/{gameState.energyMax}</p>
         </div>
-        <div className="clicker-container"
-             ref={clickerRef}>
-          <img src={clickerImage} alt="Clicker" className={`clicker-image ${isImageDistorted ? 'distorted' : ''}`} />
+        <div className="clicker-container" ref={clickerRef}>
+          <img 
+            src={clickerImage} 
+            alt="Clicker" 
+            className={`clicker-image ${isImageDistorted ? 'distorted' : ''}`} 
+          />
           <div className="progress-circle" style={{ boxShadow: '0px 0px 10px 5px gray' }}>
             <CircularProgressbar
               value={remainingEnergyPercentage}
@@ -307,21 +285,38 @@ function EatsApp({ setIsTabOpen }) {
             />
           </div>
           {damageIndicators.map(indicator => (
-            <DamageIndicator key={indicator.id} x={indicator.x} y={indicator.y} damage={indicator.damage} />
+            <DamageIndicator 
+              key={indicator.id} 
+              x={indicator.x} 
+              y={indicator.y} 
+              damage={indicator.damage} 
+            />
           ))}
         </div>
         {showButtons && (
           <div className="tabs">
-            <button className={activeTab === 'UPGRADE' ? 'active' : ''} onClick={() => handleTabOpen('UPGRADE')}>
+            <button 
+              className={activeTab === 'UPGRADE' ? 'active' : ''} 
+              onClick={() => handleTabOpen('UPGRADE')}
+            >
               UPGRADE
             </button>
-            <button className={activeTab === 'BOOST' ? 'active' : ''} onClick={() => handleTabOpen('BOOST')}>
+            <button 
+              className={activeTab === 'BOOST' ? 'active' : ''} 
+              onClick={() => handleTabOpen('BOOST')}
+            >
               GAMES
             </button>
-            <button className={activeTab === 'TASKS' ? 'active' : ''} onClick={() => handleTabOpen('TASKS')}>
+            <button 
+              className={activeTab === 'TASKS' ? 'active' : ''} 
+              onClick={() => handleTabOpen('TASKS')}
+            >
               TASKS
             </button>
-            <button className={activeTab === 'SOON' ? 'active' : ''} onClick={() => handleTabOpen('SOON')}>
+            <button 
+              className={activeTab === 'SOON' ? 'active' : ''} 
+              onClick={() => handleTabOpen('SOON')}
+            >
               REF
             </button>
           </div>
