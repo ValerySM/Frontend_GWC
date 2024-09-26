@@ -10,6 +10,13 @@ import clickerImage from '../public/clicker-image.png'
 import SoonTab from './components/SoonTab'
 import { debounce } from 'lodash';
 
+import {
+  handleClick,
+  handleDamageUpgrade,
+  handleEnergyUpgrade,
+  handleRegenUpgrade
+} from './scripts/functions';
+
 const DamageIndicator = ({ x, y, damage }) => (
   <div className="damage-indicator" style={{ left: x, top: y }}>
     {damage}
@@ -132,23 +139,6 @@ function EatsApp({ setIsTabOpen }) {
     setShowButtons(true);
   };
 
-  const handleClick = useCallback((energy, damageLevel, count, totalClicks, setCount, addPendingClicks, setEnergy, setIsImageDistorted, activityTimeoutRef, setRegenRate) => {
-    if (energy >= damageLevel) {
-      setEnergy(prevEnergy => prevEnergy - damageLevel);
-      addPendingClicks(damageLevel);
-      setCount(prevCount => prevCount + damageLevel);
-      setIsImageDistorted(true);
-      
-      if (activityTimeoutRef.current) {
-        clearTimeout(activityTimeoutRef.current);
-      }
-      
-      activityTimeoutRef.current = setTimeout(() => {
-        setIsImageDistorted(false);
-      }, 200);
-    }
-  }, []);
-
   const handleInteraction = useCallback((e) => {
     e.preventDefault();
     setIsImageDistorted(true);
@@ -179,7 +169,7 @@ function EatsApp({ setIsTabOpen }) {
     activityTimeoutRef.current = setTimeout(() => {
       setIsImageDistorted(false);
     }, 200);
-  }, [damageLevel, energy, count, totalClicks, addPendingClicks, handleClick]);
+  }, [damageLevel, energy, count, totalClicks, addPendingClicks]);
 
   useEffect(() => {
     const clicker = clickerRef.current;
@@ -224,34 +214,9 @@ function EatsApp({ setIsTabOpen }) {
             damageLevel={damageLevel}
             energyLevel={energyLevel}
             regenLevel={regenLevel}
-            handleDamageUpgrade={() => {
-              if (totalClicks + pendingClicks >= damageUpgradeCost) {
-                updateTotalClicks(-damageUpgradeCost);
-                const newDamageLevel = damageLevel + 1;
-                setDamageLevel(newDamageLevel);
-                debouncedUpdateUserData({ damageLevel: newDamageLevel });
-              }
-            }}
-            handleEnergyUpgrade={() => {
-              if (totalClicks + pendingClicks >= energyUpgradeCost) {
-                updateTotalClicks(-energyUpgradeCost);
-                const newEnergyMax = energyMax + 100;
-                const newEnergyLevel = energyLevel + 1;
-                setEnergyMax(newEnergyMax);
-                setEnergyLevel(newEnergyLevel);
-                debouncedUpdateUserData({ energyMax: newEnergyMax, energyLevel: newEnergyLevel });
-              }
-            }}
-            handleRegenUpgrade={() => {
-              if (totalClicks + pendingClicks >= regenUpgradeCost) {
-                updateTotalClicks(-regenUpgradeCost);
-                const newRegenRate = regenRate + 1;
-                const newRegenLevel = regenLevel + 1;
-                setRegenRate(newRegenRate);
-                setRegenLevel(newRegenLevel);
-                debouncedUpdateUserData({ regenRate: newRegenRate, regenLevel: newRegenLevel });
-              }
-            }}
+            handleDamageUpgrade={() => handleDamageUpgrade(totalClicks + pendingClicks, damageUpgradeCost, updateTotalClicks, setDamageLevel, debouncedUpdateUserData)}
+            handleEnergyUpgrade={() => handleEnergyUpgrade(totalClicks + pendingClicks, energyUpgradeCost, updateTotalClicks, setEnergyMax, setEnergyLevel, debouncedUpdateUserData)}
+            handleRegenUpgrade={() => handleRegenUpgrade(totalClicks + pendingClicks, regenUpgradeCost, updateTotalClicks, setRegenRate, setRegenLevel, debouncedUpdateUserData)}
           />
         );
       case 'BOOST':
