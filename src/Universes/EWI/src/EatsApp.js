@@ -8,13 +8,7 @@ import TasksTab from './components/TasksTab';
 import SettingsButton from './components/SettingsButton';
 import clickerImage from '../public/clicker-image.png'
 import SoonTab from './components/SoonTab'
-
-import {
-  handleClick,
-  handleDamageUpgrade,
-  handleEnergyUpgrade,
-  handleRegenUpgrade
-} from './scripts/functions';
+import { debounce } from 'lodash';
 
 const DamageIndicator = ({ x, y, damage }) => (
   <div className="damage-indicator" style={{ left: x, top: y }}>
@@ -25,6 +19,7 @@ const DamageIndicator = ({ x, y, damage }) => (
 function EatsApp({ setIsTabOpen }) {
   const [userId, setUserId] = useState(null);
   const [totalClicks, setTotalClicks] = useState(0);
+  const [pendingClicks, setPendingClicks] = useState(0);
   const [count, setCount] = useState(0);
   const [activeTab, setActiveTab] = useState(null);
   const [isImageDistorted, setIsImageDistorted] = useState(false);
@@ -99,11 +94,29 @@ function EatsApp({ setIsTabOpen }) {
     }
   };
 
-  const updateTotalClicks = (additionalClicks) => {
-    const newTotal = totalClicks + additionalClicks;
-    setTotalClicks(newTotal);
-    updateUserData({ totalClicks: newTotal });
-  };
+  const debouncedUpdateUserData = useCallback(
+    debounce((updates) => updateUserData(updates), 5000),
+    [userId]
+  );
+
+  const updateTotalClicks = useCallback((additionalClicks) => {
+    setTotalClicks((prevTotal) => {
+      const newTotal = prevTotal + additionalClicks;
+      debouncedUpdateUserData({ totalClicks: newTotal });
+      return newTotal;
+    });
+    setPendingClicks(0);
+  }, [debouncedUpdateUserData]);
+
+  const addPendingClicks = useCallback((clicks) => {
+    setPendingClicks((prev) => prev + clicks);
+  }, []);
+
+  useEffect(() => {
+    if (pendingClicks > 0) {
+      updateTotalClicks(pendingClicks);
+    }
+  }, [pendingClicks, updateTotalClicks]);
 
   const handleTabOpen = (tab) => {
     setActiveTab(tab);
@@ -140,7 +153,7 @@ function EatsApp({ setIsTabOpen }) {
       setDamageIndicators(prev => prev.filter(indicator => indicator.id !== newIndicator.id));
     }, 1000);
 
-    handleClick(energy, damageLevel, count, totalClicks, setCount, updateTotalClicks, setEnergy, setIsImageDistorted, activityTimeoutRef, setRegenRate);
+    handleClick(energy, damageLevel, count, totalClicks, setCount, addPendingClicks, setEnergy, setIsImageDistorted, activityTimeoutRef, setRegenRate);
 
     if (activityTimeoutRef.current) {
       clearTimeout(activityTimeoutRef.current);
@@ -149,7 +162,7 @@ function EatsApp({ setIsTabOpen }) {
     activityTimeoutRef.current = setTimeout(() => {
       setIsImageDistorted(false);
     }, 200);
-  }, [damageLevel, energy, count, totalClicks]);
+  }, [damageLevel, energy, count, totalClicks, addPendingClicks]);
 
   useEffect(() => {
     const clicker = clickerRef.current;
@@ -169,7 +182,7 @@ function EatsApp({ setIsTabOpen }) {
       setEnergy(prevEnergy => {
         if (prevEnergy < energyMax) {
           const newEnergy = Math.min(prevEnergy + regenRate, energyMax);
-          updateUserData({ energy: newEnergy });
+          debouncedUpdateUserData({ energy: newEnergy });
           return newEnergy;
         }
         return prevEnergy;
@@ -178,16 +191,16 @@ function EatsApp({ setIsTabOpen }) {
 
     return () => {
       clearInterval(interval);
-      updateUserData({ energy });
+      debouncedUpdateUserData({ energy });
     };
-  }, [energy, energyMax, regenRate]);
+  }, [energy, energyMax, regenRate, debouncedUpdateUserData]);
 
   const tabContent = (() => {
     switch (activeTab) {
       case 'UPGRADE':
         return (
           <UpgradeTab
-            totalClicks={totalClicks}
+            totalClicks={totalClicks + pendingClicks}
             damageUpgradeCost={damageUpgradeCost}
             energyUpgradeCost={energyUpgradeCost}
             regenUpgradeCost={regenUpgradeCost}
@@ -195,31 +208,31 @@ function EatsApp({ setIsTabOpen }) {
             energyLevel={energyLevel}
             regenLevel={regenLevel}
             handleDamageUpgrade={() => {
-              if (totalClicks >= damageUpgradeCost) {
+              if (totalClicks + pendingClicks >= damageUpgradeCost) {
                 updateTotalClicks(-damageUpgradeCost);
                 const newDamageLevel = damageLevel + 1;
                 setDamageLevel(newDamageLevel);
-                updateUserData({ damageLevel: newDamageLevel });
+                debouncedUpdateUserData({ damageLevel: newDamageLevel });
               }
             }}
             handleEnergyUpgrade={() => {
-              if (totalClicks >= energyUpgradeCost) {
+              if (totalClicks + pendingClicks >= energyUpgradeCost) {
                 updateTotalClicks(-energyUpgradeCost);
                 const newEnergyMax = energyMax + 100;
                 const newEnergyLevel = energyLevel + 1;
                 setEnergyMax(newEnergyMax);
                 setEnergyLevel(newEnergyLevel);
-                updateUserData({ energyMax: newEnergyMax, energyLevel: newEnergyLevel });
+                debouncedUpdateUserData({ energyMax: newEnergyMax, energyLevel: newEnergyLevel });
               }
             }}
             handleRegenUpgrade={() => {
-              if (totalClicks >= regenUpgradeCost) {
+              if (totalClicks + pendingClicks >= regenUpgradeCost) {
                 updateTotalClicks(-regenUpgradeCost);
                 const newRegenRate = regenRate + 1;
                 const newRegenLevel = regenLevel + 1;
                 setRegenRate(newRegenRate);
                 setRegenLevel(newRegenLevel);
-                updateUserData({ regenRate: newRegenRate, regenLevel: newRegenLevel });
+                debouncedUpdateUserData({ regenRate: newRegenRate, regenLevel: newRegenLevel });
               }
             }}
           />
@@ -243,7 +256,7 @@ function EatsApp({ setIsTabOpen }) {
         <SettingsButton isActive={activeTab !== null} /> 
         <div className="balance-container">
           <img src={clickerImage} alt="Balance Icon" className="balance-icon" />
-          <p>{totalClicks}</p>
+          <p>{totalClicks + pendingClicks}</p>
         </div>
         <div className="energy-container">
           <p>Energy: {Math.floor(energy)}/{energyMax}</p>
@@ -280,18 +293,18 @@ function EatsApp({ setIsTabOpen }) {
             </button>
             <button className={activeTab === 'SOON' ? 'active' : ''} onClick={() => handleTabOpen('SOON')}>
               REF
-			</button>
-         </div>
-       )}
-       {isTabOpenState && (
-         <div className={`tab-content ${isTabOpenState ? 'open' : ''}`}>
-           <button className="back-button" onClick={handleBackButtonClick}>Back</button>
-           {tabContent}
-         </div>
-       )}
-     </header>
-   </div>
- );
+            </button>
+          </div>
+        )}
+        {isTabOpenState && (
+          <div className={`tab-content ${isTabOpenState ? 'open' : ''}`}>
+            <button className="back-button" onClick={handleBackButtonClick}>Back</button>
+            {tabContent}
+          </div>
+        )}
+      </header>
+    </div>
+  );
 }
 
 export default EatsApp;
