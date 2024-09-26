@@ -132,6 +132,23 @@ function EatsApp({ setIsTabOpen }) {
     setShowButtons(true);
   };
 
+  const handleClick = useCallback((energy, damageLevel, count, totalClicks, setCount, addPendingClicks, setEnergy, setIsImageDistorted, activityTimeoutRef, setRegenRate) => {
+    if (energy >= damageLevel) {
+      setEnergy(prevEnergy => prevEnergy - damageLevel);
+      addPendingClicks(damageLevel);
+      setCount(prevCount => prevCount + damageLevel);
+      setIsImageDistorted(true);
+      
+      if (activityTimeoutRef.current) {
+        clearTimeout(activityTimeoutRef.current);
+      }
+      
+      activityTimeoutRef.current = setTimeout(() => {
+        setIsImageDistorted(false);
+      }, 200);
+    }
+  }, []);
+
   const handleInteraction = useCallback((e) => {
     e.preventDefault();
     setIsImageDistorted(true);
@@ -162,7 +179,7 @@ function EatsApp({ setIsTabOpen }) {
     activityTimeoutRef.current = setTimeout(() => {
       setIsImageDistorted(false);
     }, 200);
-  }, [damageLevel, energy, count, totalClicks, addPendingClicks]);
+  }, [damageLevel, energy, count, totalClicks, addPendingClicks, handleClick]);
 
   useEffect(() => {
     const clicker = clickerRef.current;
