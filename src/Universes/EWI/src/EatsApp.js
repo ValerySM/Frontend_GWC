@@ -24,23 +24,23 @@ const DamageIndicator = ({ x, y, damage }) => (
 
 function EatsApp({ setIsTabOpen }) {
   const [userId, setUserId] = useState(null);
-  const [totalClicks, setTotalClicks] = useState(null);
+  const [totalClicks, setTotalClicks] = useState(0);
   const [count, setCount] = useState(0);
   const [activeTab, setActiveTab] = useState(null);
   const [isImageDistorted, setIsImageDistorted] = useState(false);
   const [isTabOpenState, setIsTabOpenState] = useState(false);
   const [showButtons, setShowButtons] = useState(true);
   const [damageIndicators, setDamageIndicators] = useState([]);
-  const [energy, setEnergy] = useState(null);
-  const [energyMax, setEnergyMax] = useState(null);
-  const [regenRate, setRegenRate] = useState(null);
-  const [damageLevel, setDamageLevel] = useState(null);
-  const [energyLevel, setEnergyLevel] = useState(null);
-  const [regenLevel, setRegenLevel] = useState(null);
+  const [energy, setEnergy] = useState(1000);
+  const [energyMax, setEnergyMax] = useState(1000);
+  const [regenRate, setRegenRate] = useState(1);
+  const [damageLevel, setDamageLevel] = useState(1);
+  const [energyLevel, setEnergyLevel] = useState(1);
+  const [regenLevel, setRegenLevel] = useState(1);
 
-  const damageUpgradeCost = damageLevel ? 1000 * Math.pow(2, damageLevel - 1) : 0;
-  const energyUpgradeCost = energyLevel ? 1000 * Math.pow(2, energyLevel - 1) : 0;
-  const regenUpgradeCost = regenLevel ? 50000 * Math.pow(2, regenLevel - 1) : 0;
+  const damageUpgradeCost = 1000 * Math.pow(2, damageLevel - 1);
+  const energyUpgradeCost = 1000 * Math.pow(2, energyLevel - 1);
+  const regenUpgradeCost = 50000 * Math.pow(2, regenLevel - 1);
 
   const activityTimeoutRef = useRef(null);
   const clickerRef = useRef(null);
@@ -60,13 +60,13 @@ function EatsApp({ setIsTabOpen }) {
       const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/user/${userId}`);
       if (response.ok) {
         const userData = await response.json();
-        setTotalClicks(userData.totalClicks);
-        setEnergy(userData.energy);
-        setEnergyMax(userData.energyMax);
-        setRegenRate(userData.regenRate);
-        setDamageLevel(userData.damageLevel);
-        setEnergyLevel(userData.energyLevel);
-        setRegenLevel(userData.regenLevel);
+        setTotalClicks(userData.totalClicks || 0);
+        setEnergy(userData.energy || 1000);
+        setEnergyMax(userData.energyMax || 1000);
+        setRegenRate(userData.regenRate || 1);
+        setDamageLevel(userData.damageLevel || 1);
+        setEnergyLevel(userData.energyLevel || 1);
+        setRegenLevel(userData.regenLevel || 1);
       } else {
         console.error('Failed to fetch user data');
       }
@@ -120,8 +120,6 @@ function EatsApp({ setIsTabOpen }) {
   };
 
   const handleInteraction = useCallback((e) => {
-    if (!energy || energy <= 0) return;
-
     e.preventDefault();
     setIsImageDistorted(true);
 
@@ -167,8 +165,6 @@ function EatsApp({ setIsTabOpen }) {
   }, [handleInteraction]);
 
   useEffect(() => {
-    if (!energy || !energyMax || !regenRate) return;
-
     const interval = setInterval(() => {
       setEnergy(prevEnergy => {
         if (prevEnergy < energyMax) {
@@ -238,11 +234,6 @@ function EatsApp({ setIsTabOpen }) {
         return null;
     }
   })();
-
-  if (totalClicks === null || energy === null || energyMax === null || regenRate === null ||
-      damageLevel === null || energyLevel === null || regenLevel === null) {
-    return <div>Loading...</div>;
-  }
 
   const remainingEnergyPercentage = ((energyMax - energy) / energyMax) * 100;
 
