@@ -46,20 +46,36 @@ function EatsApp({ setIsTabOpen }) {
   const clickerRef = useRef(null);
 
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const userIdFromUrl = urlParams.get('user_id');
+    let userIdFromUrl;
+    if (window.Telegram && window.Telegram.WebApp) {
+      const initDataUnsafe = window.Telegram.WebApp.initDataUnsafe;
+      userIdFromUrl = initDataUnsafe.user?.id.toString();
+      console.log("User ID from Telegram WebApp:", userIdFromUrl);
+    } else {
+      const urlParams = new URLSearchParams(window.location.search);
+      userIdFromUrl = urlParams.get('user_id');
+      console.log("User ID from URL params:", userIdFromUrl);
+    }
     if (userIdFromUrl) {
       setUserId(userIdFromUrl);
+    } else {
+      console.error("Failed to get user ID");
     }
   }, []);
 
-  const fetchUserData = async () => {
-    if (!userId) return;
+  const fetchUserData = useCallback(async () => {
+    if (!userId) {
+      console.log("No userId available, skipping fetch");
+      return;
+    }
 
+    console.log(`Fetching data for user ${userId}`);
     try {
       const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/user/${userId}`);
+      console.log(`Fetch response status: ${response.status}`);
       if (response.ok) {
         const userData = await response.json();
+        console.log("Received user data:", userData);
         setTotalClicks(userData.totalClicks || 0);
         setEnergy(userData.energy || 1000);
         setEnergyMax(userData.energyMax || 1000);
@@ -73,11 +89,11 @@ function EatsApp({ setIsTabOpen }) {
     } catch (error) {
       console.error('Error fetching user data:', error);
     }
-  };
+  }, [userId]);
 
   useEffect(() => {
     fetchUserData();
-  }, [userId]);
+  }, [fetchUserData]);
 
   const updateUserData = async (updates) => {
     if (!userId) return;
@@ -280,18 +296,18 @@ function EatsApp({ setIsTabOpen }) {
             </button>
             <button className={activeTab === 'SOON' ? 'active' : ''} onClick={() => handleTabOpen('SOON')}>
               REF
-			</button>
-         </div>
-       )}
-       {isTabOpenState && (
-         <div className={`tab-content ${isTabOpenState ? 'open' : ''}`}>
-           <button className="back-button" onClick={handleBackButtonClick}>Back</button>
-           {tabContent}
-         </div>
-       )}
-     </header>
-   </div>
- );
+            </button>
+          </div>
+        )}
+        {isTabOpenState && (
+          <div className={`tab-content ${isTabOpenState ? 'open' : ''}`}>
+            <button className="back-button" onClick={handleBackButtonClick}>Back</button>
+            {tabContent}
+          </div>
+        )}
+      </header>
+    </div>
+  );
 }
 
 export default EatsApp;
