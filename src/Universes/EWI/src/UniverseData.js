@@ -1,4 +1,4 @@
-const BACKEND_URL = http://192.168.1.201:5000/' ;
+const BACKEND_URL = 'https://backend-gwc.onrender.com';
 
 const UniverseData = {
   userData: null,
