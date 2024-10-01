@@ -46,82 +46,20 @@ function EatsApp({ setIsTabOpen }) {
   const clickerRef = useRef(null);
 
   useEffect(() => {
-    console.log("Component mounted");
-    console.log("User Agent:", navigator.userAgent);
-    console.log("Platform:", navigator.platform);
-    console.log("Window size:", window.innerWidth, "x", window.innerHeight);
-    console.log("Telegram WebApp available:", !!window.Telegram?.WebApp);
-    if (window.Telegram?.WebApp) {
-      console.log("Telegram WebApp version:", window.Telegram.WebApp.version);
-      console.log("Telegram WebApp platform:", window.Telegram.WebApp.platform);
-    }
-
-    let userData = null;
-
-    // Try to get data from URL parameters
     const urlParams = new URLSearchParams(window.location.search);
-    const encodedData = urlParams.get('data');
-    console.log("Encoded data from URL:", encodedData);
-
-    if (encodedData) {
-      try {
-        userData = JSON.parse(decodeURIComponent(encodedData));
-        console.log("Decoded user data from URL:", userData);
-      } catch (error) {
-        console.error("Error parsing URL data:", error);
-      }
-    } else {
-      console.log("No data found in URL parameters");
-    }
-
-    // If no data from URL, try to get from Telegram WebApp
-    if (!userData && window.Telegram && window.Telegram.WebApp) {
-      console.log("Attempting to get data from Telegram WebApp");
-      window.Telegram.WebApp.ready();
-      const initData = window.Telegram.WebApp.initDataUnsafe;
-      console.log("Init data from Telegram WebApp:", initData);
-      if (initData && initData.user) {
-        userData = {
-          telegram_id: initData.user.id.toString(),
-          // Add other fields if available in initData
-        };
-        console.log("Parsed user data from Telegram WebApp:", userData);
-      }
-    }
-
-    if (userData) {
-      console.log("Final user data:", userData);
-      setUserId(userData.telegram_id);
-      setTotalClicks(userData.totalClicks || 0);
-      setEnergy(userData.energy || 1000);
-      setEnergyMax(userData.energyMax || 1000);
-      setRegenRate(userData.regenRate || 1);
-      setDamageLevel(userData.damageLevel || 1);
-      setEnergyLevel(userData.energyLevel || 1);
-      setRegenLevel(userData.regenLevel || 1);
-    } else {
-      console.error("Failed to get user data from any source");
+    const userIdFromUrl = urlParams.get('user_id');
+    if (userIdFromUrl) {
+      setUserId(userIdFromUrl);
     }
   }, []);
 
-  const fetchUserData = useCallback(async () => {
-    if (!userId) {
-      console.log("No userId available, skipping fetch");
-      return;
-    }
+  const fetchUserData = async () => {
+    if (!userId) return;
 
-    console.log(`Fetching data for user ${userId}`);
     try {
-      const url = `${process.env.REACT_APP_BACKEND_URL}/user/${userId}`;
-      console.log("Fetch URL:", url);
-      const response = await fetch(url);
-      console.log(`Fetch response status: ${response.status}`);
-      console.log("Response headers:", response.headers);
-      const responseText = await response.text();
-      console.log("Response text:", responseText);
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/user/${userId}`);
       if (response.ok) {
-        const userData = JSON.parse(responseText);
-        console.log("Received user data:", userData);
+        const userData = await response.json();
         setTotalClicks(userData.totalClicks || 0);
         setEnergy(userData.energy || 1000);
         setEnergyMax(userData.energyMax || 1000);
@@ -135,13 +73,11 @@ function EatsApp({ setIsTabOpen }) {
     } catch (error) {
       console.error('Error fetching user data:', error);
     }
-  }, [userId]);
+  };
 
   useEffect(() => {
-    if (userId) {
-      fetchUserData();
-    }
-  }, [userId, fetchUserData]);
+    fetchUserData();
+  }, [userId]);
 
   const updateUserData = async (updates) => {
     if (!userId) return;
@@ -344,18 +280,18 @@ function EatsApp({ setIsTabOpen }) {
             </button>
             <button className={activeTab === 'SOON' ? 'active' : ''} onClick={() => handleTabOpen('SOON')}>
               REF
-            </button>
-          </div>
-        )}
-        {isTabOpenState && (
-          <div className={`tab-content ${isTabOpenState ? 'open' : ''}`}>
-            <button className="back-button" onClick={handleBackButtonClick}>Back</button>
-            {tabContent}
-          </div>
-        )}
-      </header>
-    </div>
-  );
+			</button>
+         </div>
+       )}
+       {isTabOpenState && (
+         <div className={`tab-content ${isTabOpenState ? 'open' : ''}`}>
+           <button className="back-button" onClick={handleBackButtonClick}>Back</button>
+           {tabContent}
+         </div>
+       )}
+     </header>
+   </div>
+ );
 }
 
 export default EatsApp;
