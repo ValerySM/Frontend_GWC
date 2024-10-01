@@ -37,7 +37,6 @@ function EatsApp({ setIsTabOpen }) {
   const [damageLevel, setDamageLevel] = useState(1);
   const [energyLevel, setEnergyLevel] = useState(1);
   const [regenLevel, setRegenLevel] = useState(1);
-  const [isLoading, setIsLoading] = useState(true);
 
   const damageUpgradeCost = 1000 * Math.pow(2, damageLevel - 1);
   const energyUpgradeCost = 1000 * Math.pow(2, energyLevel - 1);
@@ -57,8 +56,6 @@ function EatsApp({ setIsTabOpen }) {
   const fetchUserData = async () => {
     if (!userId) return;
 
-    setIsLoading(true);
-
     try {
       const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/user/${userId}`);
       if (response.ok) {
@@ -76,8 +73,6 @@ function EatsApp({ setIsTabOpen }) {
     } catch (error) {
       console.error('Error fetching user data:', error);
     }
-
-    setIsLoading(false);
   };
 
   useEffect(() => {
@@ -241,10 +236,6 @@ function EatsApp({ setIsTabOpen }) {
   })();
 
   const remainingEnergyPercentage = ((energyMax - energy) / energyMax) * 100;
-
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
 
   return (
     <div className={`App`}>
