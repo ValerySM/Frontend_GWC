@@ -46,20 +46,55 @@ function EatsApp({ setIsTabOpen }) {
   const clickerRef = useRef(null);
 
   useEffect(() => {
-    let userIdFromUrl;
-    if (window.Telegram && window.Telegram.WebApp) {
-      const initDataUnsafe = window.Telegram.WebApp.initDataUnsafe;
-      userIdFromUrl = initDataUnsafe.user?.id.toString();
-      console.log("User ID from Telegram WebApp:", userIdFromUrl);
-    } else {
-      const urlParams = new URLSearchParams(window.location.search);
-      userIdFromUrl = urlParams.get('user_id');
-      console.log("User ID from URL params:", userIdFromUrl);
+    console.log("User Agent:", navigator.userAgent);
+    console.log("Platform:", navigator.platform);
+    console.log("Window size:", window.innerWidth, "x", window.innerHeight);
+    console.log("Telegram WebApp available:", !!window.Telegram?.WebApp);
+    if (window.Telegram?.WebApp) {
+      console.log("Telegram WebApp version:", window.Telegram.WebApp.version);
+      console.log("Telegram WebApp platform:", window.Telegram.WebApp.platform);
     }
-    if (userIdFromUrl) {
-      setUserId(userIdFromUrl);
+
+    let userData = null;
+
+    // Try to get data from Telegram WebApp
+    if (window.Telegram && window.Telegram.WebApp) {
+      console.log("WebApp detected");
+      window.Telegram.WebApp.ready();
+      const initData = window.Telegram.WebApp.initData;
+      console.log("Init data:", initData);
+      try {
+        userData = JSON.parse(decodeURIComponent(initData));
+      } catch (error) {
+        console.error("Error parsing WebApp init data:", error);
+      }
+    }
+
+    // If no data from WebApp, try to get from URL
+    if (!userData) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const encodedData = urlParams.get('data');
+      if (encodedData) {
+        try {
+          userData = JSON.parse(decodeURIComponent(encodedData));
+        } catch (error) {
+          console.error("Error parsing URL data:", error);
+        }
+      }
+    }
+
+    if (userData) {
+      console.log("User data:", userData);
+      setUserId(userData.telegram_id);
+      setTotalClicks(userData.totalClicks || 0);
+      setEnergy(userData.energy || 1000);
+      setEnergyMax(userData.energyMax || 1000);
+      setRegenRate(userData.regenRate || 1);
+      setDamageLevel(userData.damageLevel || 1);
+      setEnergyLevel(userData.energyLevel || 1);
+      setRegenLevel(userData.regenLevel || 1);
     } else {
-      console.error("Failed to get user ID");
+      console.error("Failed to get user data");
     }
   }, []);
 
@@ -71,10 +106,15 @@ function EatsApp({ setIsTabOpen }) {
 
     console.log(`Fetching data for user ${userId}`);
     try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/user/${userId}`);
+      const url = `${process.env.REACT_APP_BACKEND_URL}/user/${userId}`;
+      console.log("Fetch URL:", url);
+      const response = await fetch(url);
       console.log(`Fetch response status: ${response.status}`);
+      console.log("Response headers:", response.headers);
+      const responseText = await response.text();
+      console.log("Response text:", responseText);
       if (response.ok) {
-        const userData = await response.json();
+        const userData = JSON.parse(responseText);
         console.log("Received user data:", userData);
         setTotalClicks(userData.totalClicks || 0);
         setEnergy(userData.energy || 1000);
