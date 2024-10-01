@@ -99,6 +99,12 @@ function EatsApp({ setIsTabOpen }) {
     }
   };
 
+  const updateTotalClicks = (additionalClicks) => {
+    const newTotal = totalClicks + additionalClicks;
+    setTotalClicks(newTotal);
+    updateUserData({ totalClicks: newTotal });
+  };
+
   const handleTabOpen = (tab) => {
     setActiveTab(tab);
     setIsTabOpenState(true);
@@ -134,17 +140,7 @@ function EatsApp({ setIsTabOpen }) {
       setDamageIndicators(prev => prev.filter(indicator => indicator.id !== newIndicator.id));
     }, 1000);
 
-    const newTotalClicks = totalClicks + damageLevel;
-    const newEnergy = Math.max(0, energy - 10);
-    
-    setTotalClicks(newTotalClicks);
-    setEnergy(newEnergy);
-    setCount(count + 1);
-    
-    updateUserData({ 
-      totalClicks: newTotalClicks, 
-      energy: newEnergy 
-    });
+    handleClick(energy, damageLevel, count, totalClicks, setCount, updateTotalClicks, setEnergy, setIsImageDistorted, activityTimeoutRef, setRegenRate);
 
     if (activityTimeoutRef.current) {
       clearTimeout(activityTimeoutRef.current);
@@ -153,7 +149,7 @@ function EatsApp({ setIsTabOpen }) {
     activityTimeoutRef.current = setTimeout(() => {
       setIsImageDistorted(false);
     }, 200);
-  }, [damageLevel, energy, count, totalClicks, userId]);
+  }, [damageLevel, energy, count, totalClicks]);
 
   useEffect(() => {
     const clicker = clickerRef.current;
@@ -182,8 +178,9 @@ function EatsApp({ setIsTabOpen }) {
 
     return () => {
       clearInterval(interval);
+      updateUserData({ energy });
     };
-  }, [energyMax, regenRate, userId]);
+  }, [energy, energyMax, regenRate]);
 
   const tabContent = (() => {
     switch (activeTab) {
@@ -199,39 +196,36 @@ function EatsApp({ setIsTabOpen }) {
             regenLevel={regenLevel}
             handleDamageUpgrade={() => {
               if (totalClicks >= damageUpgradeCost) {
-                const newTotalClicks = totalClicks - damageUpgradeCost;
+                updateTotalClicks(-damageUpgradeCost);
                 const newDamageLevel = damageLevel + 1;
-                setTotalClicks(newTotalClicks);
                 setDamageLevel(newDamageLevel);
-                updateUserData({ totalClicks: newTotalClicks, damageLevel: newDamageLevel });
+                updateUserData({ damageLevel: newDamageLevel });
               }
             }}
             handleEnergyUpgrade={() => {
               if (totalClicks >= energyUpgradeCost) {
-                const newTotalClicks = totalClicks - energyUpgradeCost;
+                updateTotalClicks(-energyUpgradeCost);
                 const newEnergyMax = energyMax + 100;
                 const newEnergyLevel = energyLevel + 1;
-                setTotalClicks(newTotalClicks);
                 setEnergyMax(newEnergyMax);
                 setEnergyLevel(newEnergyLevel);
-                updateUserData({ totalClicks: newTotalClicks, energyMax: newEnergyMax, energyLevel: newEnergyLevel });
+                updateUserData({ energyMax: newEnergyMax, energyLevel: newEnergyLevel });
               }
             }}
             handleRegenUpgrade={() => {
               if (totalClicks >= regenUpgradeCost) {
-                const newTotalClicks = totalClicks - regenUpgradeCost;
+                updateTotalClicks(-regenUpgradeCost);
                 const newRegenRate = regenRate + 1;
                 const newRegenLevel = regenLevel + 1;
-                setTotalClicks(newTotalClicks);
                 setRegenRate(newRegenRate);
                 setRegenLevel(newRegenLevel);
-                updateUserData({ totalClicks: newTotalClicks, regenRate: newRegenRate, regenLevel: newRegenLevel });
+                updateUserData({ regenRate: newRegenRate, regenLevel: newRegenLevel });
               }
             }}
           />
         );
       case 'BOOST':
-        return <BoostTab updateTotalClicks={updateUserData} />;
+        return <BoostTab updateTotalClicks={updateTotalClicks} />;
       case 'TASKS':
         return <TasksTab />;
       case 'SOON':
@@ -286,18 +280,18 @@ function EatsApp({ setIsTabOpen }) {
             </button>
             <button className={activeTab === 'SOON' ? 'active' : ''} onClick={() => handleTabOpen('SOON')}>
               REF
-            </button>
-          </div>
-        )}
-        {isTabOpenState && (
-          <div className={`tab-content ${isTabOpenState ? 'open' : ''}`}>
-            <button className="back-button" onClick={handleBackButtonClick}>Back</button>
-            {tabContent}
-          </div>
-        )}
-      </header>
-    </div>
-  );
+			</button>
+         </div>
+       )}
+       {isTabOpenState && (
+         <div className={`tab-content ${isTabOpenState ? 'open' : ''}`}>
+           <button className="back-button" onClick={handleBackButtonClick}>Back</button>
+           {tabContent}
+         </div>
+       )}
+     </header>
+   </div>
+ );
 }
 
 export default EatsApp;
