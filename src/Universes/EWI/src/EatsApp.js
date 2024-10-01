@@ -46,6 +46,7 @@ function EatsApp({ setIsTabOpen }) {
   const clickerRef = useRef(null);
 
   useEffect(() => {
+    console.log("Component mounted");
     console.log("User Agent:", navigator.userAgent);
     console.log("Platform:", navigator.platform);
     console.log("Window size:", window.innerWidth, "x", window.innerHeight);
@@ -57,34 +58,39 @@ function EatsApp({ setIsTabOpen }) {
 
     let userData = null;
 
-    // Try to get data from Telegram WebApp
-    if (window.Telegram && window.Telegram.WebApp) {
-      console.log("WebApp detected");
-      window.Telegram.WebApp.ready();
-      const initData = window.Telegram.WebApp.initData;
-      console.log("Init data:", initData);
+    // Try to get data from URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const encodedData = urlParams.get('data');
+    console.log("Encoded data from URL:", encodedData);
+
+    if (encodedData) {
       try {
-        userData = JSON.parse(decodeURIComponent(initData));
+        userData = JSON.parse(decodeURIComponent(encodedData));
+        console.log("Decoded user data from URL:", userData);
       } catch (error) {
-        console.error("Error parsing WebApp init data:", error);
+        console.error("Error parsing URL data:", error);
       }
+    } else {
+      console.log("No data found in URL parameters");
     }
 
-    // If no data from WebApp, try to get from URL
-    if (!userData) {
-      const urlParams = new URLSearchParams(window.location.search);
-      const encodedData = urlParams.get('data');
-      if (encodedData) {
-        try {
-          userData = JSON.parse(decodeURIComponent(encodedData));
-        } catch (error) {
-          console.error("Error parsing URL data:", error);
-        }
+    // If no data from URL, try to get from Telegram WebApp
+    if (!userData && window.Telegram && window.Telegram.WebApp) {
+      console.log("Attempting to get data from Telegram WebApp");
+      window.Telegram.WebApp.ready();
+      const initData = window.Telegram.WebApp.initDataUnsafe;
+      console.log("Init data from Telegram WebApp:", initData);
+      if (initData && initData.user) {
+        userData = {
+          telegram_id: initData.user.id.toString(),
+          // Add other fields if available in initData
+        };
+        console.log("Parsed user data from Telegram WebApp:", userData);
       }
     }
 
     if (userData) {
-      console.log("User data:", userData);
+      console.log("Final user data:", userData);
       setUserId(userData.telegram_id);
       setTotalClicks(userData.totalClicks || 0);
       setEnergy(userData.energy || 1000);
@@ -94,7 +100,7 @@ function EatsApp({ setIsTabOpen }) {
       setEnergyLevel(userData.energyLevel || 1);
       setRegenLevel(userData.regenLevel || 1);
     } else {
-      console.error("Failed to get user data");
+      console.error("Failed to get user data from any source");
     }
   }, []);
 
@@ -132,8 +138,10 @@ function EatsApp({ setIsTabOpen }) {
   }, [userId]);
 
   useEffect(() => {
-    fetchUserData();
-  }, [fetchUserData]);
+    if (userId) {
+      fetchUserData();
+    }
+  }, [userId, fetchUserData]);
 
   const updateUserData = async (updates) => {
     if (!userId) return;
