@@ -1,4 +1,4 @@
-const BACKEND_URL = 'https://backend-gwc.onrender.com';
+const BACKEND_URL = 'https://157c-77-127-99-248.ngrok-free.app' ;
 
 const UniverseData = {
   userData: null,
