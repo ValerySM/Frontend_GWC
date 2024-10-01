@@ -6,15 +6,14 @@ import UpgradeTab from './components/UpgradeTab';
 import BoostTab from './components/BoostTab';
 import TasksTab from './components/TasksTab';
 import SettingsButton from './components/SettingsButton';
-import clickerImage from '../public/clicker-image.png';
-import SoonTab from './components/SoonTab';
+import clickerImage from '../public/clicker-image.png'
+import SoonTab from './components/SoonTab'
+
 import {
   handleClick,
   handleDamageUpgrade,
   handleEnergyUpgrade,
-  handleRegenUpgrade,
-  handleMouseDown,
-  handleMouseUp
+  handleRegenUpgrade
 } from './scripts/functions';
 
 const DamageIndicator = ({ x, y, damage }) => (
@@ -38,14 +37,13 @@ function EatsApp({ setIsTabOpen }) {
   const [damageLevel, setDamageLevel] = useState(1);
   const [energyLevel, setEnergyLevel] = useState(1);
   const [regenLevel, setRegenLevel] = useState(1);
-  const [isClicking, setIsClicking] = useState(false);
-
-  const activityTimeoutRef = useRef(null);
-  const clickerRef = useRef(null);
 
   const damageUpgradeCost = 1000 * Math.pow(2, damageLevel - 1);
   const energyUpgradeCost = 1000 * Math.pow(2, energyLevel - 1);
   const regenUpgradeCost = 50000 * Math.pow(2, regenLevel - 1);
+
+  const activityTimeoutRef = useRef(null);
+  const clickerRef = useRef(null);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -55,7 +53,7 @@ function EatsApp({ setIsTabOpen }) {
     }
   }, []);
 
-  const fetchUserData = useCallback(async () => {
+  const fetchUserData = async () => {
     if (!userId) return;
 
     try {
@@ -75,13 +73,13 @@ function EatsApp({ setIsTabOpen }) {
     } catch (error) {
       console.error('Error fetching user data:', error);
     }
-  }, [userId]);
+  };
 
   useEffect(() => {
     fetchUserData();
-  }, [fetchUserData]);
+  }, [userId]);
 
-  const updateUserData = useCallback(async (updates) => {
+  const updateUserData = async (updates) => {
     if (!userId) return;
 
     try {
@@ -99,19 +97,31 @@ function EatsApp({ setIsTabOpen }) {
     } catch (error) {
       console.error('Error updating user data:', error);
     }
-  }, [userId]);
+  };
 
-  const updateTotalClicks = useCallback((additionalClicks) => {
-    setTotalClicks(prevTotal => {
-      const newTotal = prevTotal + additionalClicks;
-      updateUserData({ totalClicks: newTotal });
-      return newTotal;
-    });
-  }, [updateUserData]);
+  const updateTotalClicks = (additionalClicks) => {
+    const newTotal = totalClicks + additionalClicks;
+    setTotalClicks(newTotal);
+    updateUserData({ totalClicks: newTotal });
+  };
+
+  const handleTabOpen = (tab) => {
+    setActiveTab(tab);
+    setIsTabOpenState(true);
+    setIsTabOpen(true);
+    setShowButtons(false);
+  };
+
+  const handleBackButtonClick = () => {
+    setActiveTab(null);
+    setIsTabOpenState(false);
+    setIsTabOpen(false);
+    setShowButtons(true);
+  };
 
   const handleInteraction = useCallback((e) => {
     e.preventDefault();
-    handleClick(energy, damageLevel, setCount, updateTotalClicks, setEnergy, setIsImageDistorted, activityTimeoutRef, setRegenRate);
+    setIsImageDistorted(true);
 
     const rect = clickerRef.current.getBoundingClientRect();
     const x = e.clientX || (e.touches && e.touches[0].clientX);
@@ -129,7 +139,17 @@ function EatsApp({ setIsTabOpen }) {
     setTimeout(() => {
       setDamageIndicators(prev => prev.filter(indicator => indicator.id !== newIndicator.id));
     }, 1000);
-  }, [energy, damageLevel, updateTotalClicks]);
+
+    handleClick(energy, damageLevel, count, totalClicks, setCount, updateTotalClicks, setEnergy, setIsImageDistorted, activityTimeoutRef, setRegenRate);
+
+    if (activityTimeoutRef.current) {
+      clearTimeout(activityTimeoutRef.current);
+    }
+    
+    activityTimeoutRef.current = setTimeout(() => {
+      setIsImageDistorted(false);
+    }, 200);
+  }, [damageLevel, energy, count, totalClicks]);
 
   useEffect(() => {
     const clicker = clickerRef.current;
@@ -160,21 +180,7 @@ function EatsApp({ setIsTabOpen }) {
       clearInterval(interval);
       updateUserData({ energy });
     };
-  }, [energy, energyMax, regenRate, updateUserData]);
-
-  const handleTabOpen = (tab) => {
-    setActiveTab(tab);
-    setIsTabOpenState(true);
-    setIsTabOpen(true);
-    setShowButtons(false);
-  };
-
-  const handleBackButtonClick = () => {
-    setActiveTab(null);
-    setIsTabOpenState(false);
-    setIsTabOpen(false);
-    setShowButtons(true);
-  };
+  }, [energy, energyMax, regenRate]);
 
   const tabContent = (() => {
     switch (activeTab) {
@@ -188,9 +194,34 @@ function EatsApp({ setIsTabOpen }) {
             damageLevel={damageLevel}
             energyLevel={energyLevel}
             regenLevel={regenLevel}
-            handleDamageUpgrade={() => handleDamageUpgrade(totalClicks, damageUpgradeCost, updateTotalClicks, setDamageLevel)}
-            handleEnergyUpgrade={() => handleEnergyUpgrade(totalClicks, energyUpgradeCost, updateTotalClicks, setEnergyMax, setEnergyLevel)}
-            handleRegenUpgrade={() => handleRegenUpgrade(totalClicks, regenUpgradeCost, updateTotalClicks, setRegenRate, setRegenLevel, regenLevel)}
+            handleDamageUpgrade={() => {
+              if (totalClicks >= damageUpgradeCost) {
+                updateTotalClicks(-damageUpgradeCost);
+                const newDamageLevel = damageLevel + 1;
+                setDamageLevel(newDamageLevel);
+                updateUserData({ damageLevel: newDamageLevel });
+              }
+            }}
+            handleEnergyUpgrade={() => {
+              if (totalClicks >= energyUpgradeCost) {
+                updateTotalClicks(-energyUpgradeCost);
+                const newEnergyMax = energyMax + 100;
+                const newEnergyLevel = energyLevel + 1;
+                setEnergyMax(newEnergyMax);
+                setEnergyLevel(newEnergyLevel);
+                updateUserData({ energyMax: newEnergyMax, energyLevel: newEnergyLevel });
+              }
+            }}
+            handleRegenUpgrade={() => {
+              if (totalClicks >= regenUpgradeCost) {
+                updateTotalClicks(-regenUpgradeCost);
+                const newRegenRate = regenRate + 1;
+                const newRegenLevel = regenLevel + 1;
+                setRegenRate(newRegenRate);
+                setRegenLevel(newRegenLevel);
+                updateUserData({ regenRate: newRegenRate, regenLevel: newRegenLevel });
+              }
+            }}
           />
         );
       case 'BOOST':
@@ -207,9 +238,9 @@ function EatsApp({ setIsTabOpen }) {
   const remainingEnergyPercentage = ((energyMax - energy) / energyMax) * 100;
 
   return (
-    <div className="App">
+    <div className={`App`}>
       <header className="App-header">
-        <SettingsButton isActive={activeTab !== null} />
+        <SettingsButton isActive={activeTab !== null} /> 
         <div className="balance-container">
           <img src={clickerImage} alt="Balance Icon" className="balance-icon" />
           <p>{totalClicks}</p>
@@ -218,11 +249,7 @@ function EatsApp({ setIsTabOpen }) {
           <p>Energy: {Math.floor(energy)}/{energyMax}</p>
         </div>
         <div className="clicker-container"
-             ref={clickerRef}
-             onMouseDown={() => handleMouseDown(setIsClicking)}
-             onMouseUp={() => handleMouseUp(setIsClicking, activityTimeoutRef, setIsImageDistorted, isClicking)}
-             onTouchStart={() => handleMouseDown(setIsClicking)}
-             onTouchEnd={() => handleMouseUp(setIsClicking, activityTimeoutRef, setIsImageDistorted, isClicking)}>
+             ref={clickerRef}>
           <img src={clickerImage} alt="Clicker" className={`clicker-image ${isImageDistorted ? 'distorted' : ''}`} />
           <div className="progress-circle" style={{ boxShadow: '0px 0px 10px 5px gray' }}>
             <CircularProgressbar
@@ -253,18 +280,18 @@ function EatsApp({ setIsTabOpen }) {
             </button>
             <button className={activeTab === 'SOON' ? 'active' : ''} onClick={() => handleTabOpen('SOON')}>
               REF
-            </button>
-          </div>
-        )}
-        {isTabOpenState && (
-          <div className={`tab-content ${isTabOpenState ? 'open' : ''}`}>
-            <button className="back-button" onClick={handleBackButtonClick}>Back</button>
-            {tabContent}
-          </div>
-        )}
-      </header>
-    </div>
-  );
+			</button>
+         </div>
+       )}
+       {isTabOpenState && (
+         <div className={`tab-content ${isTabOpenState ? 'open' : ''}`}>
+           <button className="back-button" onClick={handleBackButtonClick}>Back</button>
+           {tabContent}
+         </div>
+       )}
+     </header>
+   </div>
+ );
 }
 
 export default EatsApp;

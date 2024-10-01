@@ -1,4 +1,6 @@
-export const handleClick = (energy, damageLevel, setCount, updateTotalClicks, setEnergy, setIsImageDistorted, activityTimeoutRef, setRegenRate) => {
+import UniverseData from '../UniverseData';
+
+export const handleClick = (energy, damageLevel, count, totalClicks, setCount, updateTotalClicks, setEnergy, setIsImageDistorted, activityTimeoutRef, setRegenRate) => {
   if (energy > 0 && !isNaN(damageLevel)) {
     const damage = damageLevel;
     setCount(prevCount => prevCount + 1);
@@ -15,26 +17,54 @@ export const handleClick = (energy, damageLevel, setCount, updateTotalClicks, se
   }
 };
 
-export const handleDamageUpgrade = (totalClicks, damageUpgradeCost, updateTotalClicks, setDamageLevel) => {
+export const handleDamageUpgrade = (totalClicks, damageUpgradeCost, updateTotalClicks, setDamageLevel, damageLevel) => {
   if (totalClicks >= damageUpgradeCost) {
     updateTotalClicks(-damageUpgradeCost);
-    setDamageLevel(prevLevel => prevLevel + 1);
+    setDamageLevel(prevLevel => {
+      const newLevel = prevLevel + 1;
+      console.log(`Damage level upgraded: ${prevLevel} -> ${newLevel}`);
+      return newLevel;
+    });
+  } else {
+    console.log(`Not enough clicks for upgrade. Current: ${totalClicks}, Required: ${damageUpgradeCost}`);
   }
 };
 
-export const handleEnergyUpgrade = (totalClicks, energyUpgradeCost, updateTotalClicks, setEnergyMax, setEnergyLevel) => {
+export const handleEnergyUpgrade = (totalClicks, energyUpgradeCost, updateTotalClicks, setEnergyMax, setEnergyLevel, energyMax, energyLevel) => {
   if (totalClicks >= energyUpgradeCost) {
     updateTotalClicks(-energyUpgradeCost);
-    setEnergyMax(prevMax => prevMax + 500);
-    setEnergyLevel(prevLevel => prevLevel + 1);
+    setEnergyMax(prevMax => {
+      const newMax = prevMax + 500;
+      console.log(`Energy max upgraded: ${prevMax} -> ${newMax}`);
+      return newMax;
+    });
+    setEnergyLevel(prevLevel => {
+      const newLevel = prevLevel + 1;
+      console.log(`Energy level upgraded: ${prevLevel} -> ${newLevel}`);
+      return newLevel;
+    });
+  } else {
+    console.log(`Not enough clicks for upgrade. Current: ${totalClicks}, Required: ${energyUpgradeCost}`);
   }
 };
 
-export const handleRegenUpgrade = (totalClicks, regenUpgradeCost, updateTotalClicks, setRegenRate, setRegenLevel, regenLevel) => {
+export const handleRegenUpgrade = (totalClicks, regenUpgradeCost, updateTotalClicks, setRegenRate, setRegenLevel, regenRate, regenLevel) => {
   if (totalClicks >= regenUpgradeCost && regenLevel < 5) {
     updateTotalClicks(-regenUpgradeCost);
-    setRegenRate(prevRate => prevRate + 1);
-    setRegenLevel(prevLevel => prevLevel + 1);
+    setRegenRate(prevRate => {
+      const newRate = prevRate + 1;
+      console.log(`Regen rate upgraded: ${prevRate} -> ${newRate}`);
+      return newRate;
+    });
+    setRegenLevel(prevLevel => {
+      const newLevel = prevLevel + 1;
+      console.log(`Regen level upgraded: ${prevLevel} -> ${newLevel}`);
+      return newLevel;
+    });
+  } else if (regenLevel >= 5) {
+    console.log('Max regen level reached');
+  } else {
+    console.log(`Not enough clicks for upgrade. Current: ${totalClicks}, Required: ${regenUpgradeCost}`);
   }
 };
 
