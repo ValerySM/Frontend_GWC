@@ -245,7 +245,7 @@ function EatsApp({ setIsTabOpen }) {
       case 'TASKS':
         return <TasksTab />;
       case 'SOON':
-        return <SoonTab />;
+        return <SoonTab userData={userData} />;
       default:
         return null;
     }
