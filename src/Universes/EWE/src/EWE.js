@@ -86,16 +86,16 @@ function Ewe() {
 
       farmingInterval = setInterval(() => {
         const now = new Date();
-        const elapsed = Math.min((now - startTime) / 1000 + elapsedFarmingTime, farmingDuration);
+        const elapsed = Math.min((now - new Date(startTime)) / 1000 + elapsedFarmingTime, farmingDuration);
         const farmed = (elapsed / farmingDuration) * maxTokens;
 
         setFarmedTokens(farmed);
+        setElapsedFarmingTime(elapsed);
 
         if (elapsed >= farmingDuration) {
           clearInterval(farmingInterval);
           setIsFarming(false);
-          setElapsedFarmingTime(0);
-          updateServerData();
+          collectTokens();
         }
       }, interval);
     }
@@ -111,7 +111,7 @@ function Ewe() {
     }, 60000); // Обновление каждую минуту
 
     return () => clearInterval(updateInterval);
-  }, [tokens, farmedTokens, isFarming, startTime, elapsedFarmingTime]);
+  }, [isFarming, tokens, farmedTokens, startTime, elapsedFarmingTime]);
 
   useEffect(() => {
     const handleBeforeUnload = () => {
@@ -124,14 +124,6 @@ function Ewe() {
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
   }, [tokens, farmedTokens, isFarming, startTime, elapsedFarmingTime]);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      handleNextText();
-    }, 8000);
-
-    return () => clearInterval(interval);
-  }, [currentTextIndex]);
 
   const fetchUserData = async () => {
     if (!userId) return;
@@ -150,7 +142,7 @@ function Ewe() {
         setTokens(userData.eweData.tokens + offlineEarnings);
         setFarmedTokens(userData.eweData.farmedTokens);
         setIsFarming(userData.eweData.isFarming);
-        setStartTime(userData.eweData.startTime ? new Date(userData.eweData.startTime) : null);
+        setStartTime(userData.eweData.startTime);
         setElapsedFarmingTime(userData.eweData.elapsedFarmingTime);
       }
     } catch (error) {
@@ -174,7 +166,7 @@ function Ewe() {
               tokens: tokens,
               farmedTokens: farmedTokens,
               isFarming: isFarming,
-              startTime: startTime ? startTime.toISOString() : null,
+              startTime: startTime,
               elapsedFarmingTime: elapsedFarmingTime
             }
           }
@@ -209,7 +201,7 @@ function Ewe() {
   const startFarming = () => {
     if (!isFarming) {
       const now = new Date();
-      setStartTime(now);
+      setStartTime(now.toISOString());
       setIsFarming(true);
       setElapsedFarmingTime(0);
       setFarmedTokens(0);
@@ -224,6 +216,7 @@ function Ewe() {
         setFarmedTokens(0);
         setIsFarming(false);
         setElapsedFarmingTime(0);
+        setStartTime(null);
         updateServerData();
         return newTokens;
       });
