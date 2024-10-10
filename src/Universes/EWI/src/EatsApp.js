@@ -15,7 +15,7 @@ const DamageIndicator = ({ x, y, damage }) => (
   </div>
 );
 
-function EatsApp({ setIsTabOpen }) {
+function EatsApp({ userId, setIsTabOpen }) {
   const [userData, setUserData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -33,8 +33,6 @@ function EatsApp({ setIsTabOpen }) {
       setIsLoading(true);
       setError(null);
       try {
-        const userId = window.Telegram.WebApp.initDataUnsafe.user.id;
-        
         const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/init_user`, {
           method: 'POST',
           headers: {
@@ -58,8 +56,10 @@ function EatsApp({ setIsTabOpen }) {
       }
     };
 
-    initUser();
-  }, []);
+    if (userId) {
+      initUser();
+    }
+  }, [userId]);
 
   const updateUserData = async (updates) => {
     if (!userData) return;
@@ -70,7 +70,7 @@ function EatsApp({ setIsTabOpen }) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ user_id: userData.telegram_id, updates }),
+        body: JSON.stringify({ user_id: userId, updates }),
       });
 
       if (!response.ok) {

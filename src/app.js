@@ -7,6 +7,13 @@ import EcoGame from './Universes/ECI/EcoGame';
 
 function App() {
   const [currentUniverse, setCurrentUniverse] = useState('EatsApp');
+  const [userId, setUserId] = useState(null);
+
+  useEffect(() => {
+    if (window.Telegram && window.Telegram.WebApp) {
+      setUserId(window.Telegram.WebApp.initDataUnsafe.user.id);
+    }
+  }, []);
 
   useEffect(() => {
     if (window.TelegramWebApps) {
@@ -25,11 +32,11 @@ function App() {
   const renderGame = () => {
     switch (currentUniverse) {
       case 'EatsApp':
-        return <EatsApp />;
+        return <EatsApp userId={userId} />;
       case 'First':
-        return <EWE />;
+        return <EWE userId={userId} />;
       case 'EcoGame':
-        return <EcoGame />;
+        return <EcoGame userId={userId} />;
       default:
         return null;
     }
