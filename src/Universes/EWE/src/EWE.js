@@ -12,6 +12,7 @@ function Ewe() {
   const [animationClass, setAnimationClass] = useState('fade-in');
   const [currentTextIndex, setCurrentTextIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [userId, setUserId] = useState(null);
 
   const texts = [
     {
@@ -65,11 +66,18 @@ function Ewe() {
 
   const maxTokens = 0.128;
   const farmingDuration = 12 * 60 * 60;
-  const userId = '123'; // Замените на реальный способ получения userId
 
   useEffect(() => {
-    fetchUserData();
+    if (window.Telegram && window.Telegram.WebApp) {
+      setUserId(window.Telegram.WebApp.initDataUnsafe.user.id);
+    }
   }, []);
+
+  useEffect(() => {
+    if (userId) {
+      fetchUserData();
+    }
+  }, [userId]);
 
   useEffect(() => {
     let farmingInterval;
@@ -126,6 +134,8 @@ function Ewe() {
   }, [currentTextIndex]);
 
   const fetchUserData = async () => {
+    if (!userId) return;
+
     try {
       const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/get_user_data`, {
         method: 'POST',
@@ -140,7 +150,7 @@ function Ewe() {
         setTokens(userData.eweData.tokens + offlineEarnings);
         setFarmedTokens(userData.eweData.farmedTokens);
         setIsFarming(userData.eweData.isFarming);
-        setStartTime(new Date(userData.eweData.startTime));
+        setStartTime(userData.eweData.startTime ? new Date(userData.eweData.startTime) : null);
         setElapsedFarmingTime(userData.eweData.elapsedFarmingTime);
       }
     } catch (error) {
@@ -149,6 +159,8 @@ function Ewe() {
   };
 
   const updateServerData = async () => {
+    if (!userId) return;
+
     try {
       const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/update`, {
         method: 'POST',
