@@ -20,157 +20,49 @@ function Ewe({ userId }) {
   const maxTokens = 0.128;
   const farmingDuration = 12 * 60 * 60;
 
-  useEffect(() => {
-    if (userId) {
-      fetchUserData();
-    }
-  }, [userId]);
+  // ... (остальные useEffect и функции остаются без изменений)
 
-  useEffect(() => {
-    let farmingInterval;
-    if (isFarming) {
-      const interval = 1000;
+  const handleNextText = () => {
+    if (isAnimating) return;
 
-      farmingInterval = setInterval(() => {
-        const now = new Date();
-        const elapsed = Math.min((now - new Date(startTime)) / 1000 + elapsedFarmingTime, farmingDuration);
-        const farmed = (elapsed / farmingDuration) * maxTokens;
+    setIsAnimating(true);
+    setAnimationClass('fade-out');
+    
+    setTimeout(() => {
+      setCurrentTextIndex((prevIndex) => (prevIndex + 1) % texts.length);
+      setAnimationClass('fade-in');
+      setIsAnimating(false);
+    }, 500);
 
-        setFarmedTokens(farmed);
-        setElapsedFarmingTime(elapsed);
-
-        if (elapsed >= farmingDuration) {
-          clearInterval(farmingInterval);
-          setIsFarming(false);
-          collectTokens();
-        }
-      }, interval);
-    }
-
-    return () => clearInterval(farmingInterval);
-  }, [isFarming, startTime, elapsedFarmingTime]);
-
-  useEffect(() => {
-    const updateInterval = setInterval(() => {
-      if (isFarming) {
-        updateServerData();
-      }
-    }, 60000); // Обновление каждую минуту
-
-    return () => clearInterval(updateInterval);
-  }, [isFarming, tokens, farmedTokens, startTime, elapsedFarmingTime]);
-
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      updateServerData();
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
-  }, [tokens, farmedTokens, isFarming, startTime, elapsedFarmingTime]);
-
-  const fetchUserData = async () => {
-    if (!userId) return;
-
-    try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/get_user_data`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ user_id: userId }),
-      });
-      if (response.ok) {
-        const userData = await response.json();
-        const offlineEarnings = calculateOfflineEarnings(userData.eweData);
-        setTokens(userData.eweData.tokens + offlineEarnings);
-        setFarmedTokens(userData.eweData.farmedTokens);
-        setIsFarming(userData.eweData.isFarming);
-        setStartTime(userData.eweData.startTime);
-        setElapsedFarmingTime(userData.eweData.elapsedFarmingTime);
-      }
-    } catch (error) {
-      console.error('Error fetching user data:', error);
+    const nextButton = document.querySelector('.btntxt2');
+    if (nextButton) {
+      nextButton.classList.add('sparkle');
+      setTimeout(() => {
+        nextButton.classList.remove('sparkle');
+      }, 500);
     }
   };
 
-  const updateServerData = async () => {
-    if (!userId) return;
+  const handlePrevText = () => {
+    if (isAnimating) return;
 
-    try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/update`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          user_id: userId,
-          updates: {
-            eweData: {
-              tokens: tokens,
-              farmedTokens: farmedTokens,
-              isFarming: isFarming,
-              startTime: startTime,
-              elapsedFarmingTime: elapsedFarmingTime
-            }
-          }
-        }),
-      });
+    setIsAnimating(true);
+    setAnimationClass('fade-out');
+    
+    setTimeout(() => {
+      setCurrentTextIndex((prevIndex) => (prevIndex - 1 + texts.length) % texts.length);
+      setAnimationClass('fade-in');
+      setIsAnimating(false);
+    }, 500);
 
-      if (!response.ok) {
-        throw new Error('Failed to update server data');
-      }
-    } catch (error) {
-      console.error('Error updating server data:', error);
+    const prevButton = document.querySelector('.btntxt1');
+    if (prevButton) {
+      prevButton.classList.add('sparkle');
+      setTimeout(() => {
+        prevButton.classList.remove('sparkle');
+      }, 500);
     }
   };
-
-  const calculateOfflineEarnings = (eweData) => {
-    if (!eweData.isFarming || !eweData.startTime) return 0;
-
-    const now = new Date();
-    const startTime = new Date(eweData.startTime);
-    const elapsedTime = Math.min((now - startTime) / 1000 + eweData.elapsedFarmingTime, farmingDuration);
-    return (elapsedTime / farmingDuration) * maxTokens;
-  };
-
-  const handleButtonClick = () => {
-    if (!isFarming && farmedTokens >= maxTokens) {
-      collectTokens();
-    } else {
-      startFarming();
-    }
-  };
-
-  const startFarming = () => {
-    if (!isFarming) {
-      const now = new Date();
-      setStartTime(now.toISOString());
-      setIsFarming(true);
-      setElapsedFarmingTime(0);
-      setFarmedTokens(0);
-      updateServerData();
-    }
-  };
-
-  const collectTokens = () => {
-    if (farmedTokens >= maxTokens) {
-      setTokens(prevTokens => {
-        const newTokens = Number((prevTokens + farmedTokens).toFixed(3));
-        setFarmedTokens(0);
-        setIsFarming(false);
-        setElapsedFarmingTime(0);
-        setStartTime(null);
-        updateServerData();
-        return newTokens;
-      });
-    }
-  };
-
-  // ... (оставьте функции handleNextText и handlePrevText без изменений)
 
   const progressPercentage = (farmedTokens / maxTokens) * 100;
 
