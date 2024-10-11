@@ -4,7 +4,7 @@ import backgroundMusicFile from './audio/pokemonGym.mp3';
 import winEffectFile from './audio/win.mp3';
 import startButtonSound from './audio/start.mp3';
 import cardClickSound from './audio/card.mp3';
-import UniverseData from '../../UniverseData';
+// import UniverseData from '../../UniverseData';
 
 
 
@@ -117,10 +117,10 @@ const PurblePairs = ({ onGameEnd }) => {
             setShowMessage(true);
             new Audio(winEffectFile).play();
             
-            // Обновляем глобальный счет
-            UniverseData.addGameScore('purblePairs', finalScore);
-            console.log('Updated PurblePairs score:', finalScore);
-            console.log('New total clicks:', UniverseData.getTotalClicks());
+            // // Обновляем глобальный счет
+            // UniverseData.addGameScore('purblePairs', finalScore);
+            // console.log('Updated PurblePairs score:', finalScore);
+            // console.log('New total clicks:', UniverseData.getTotalClicks());
         }
     }, [matchedPairs, score, startTime, isGameStarted]);
 

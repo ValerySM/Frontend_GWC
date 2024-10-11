@@ -1,6 +1,4 @@
 import React, { useState } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowLeft, faArrowRight } from '@fortawesome/free-solid-svg-icons';
 import EWE from '../Universes/EWE/src/EWE';
 import EcoGame from '../Universes/ECI/EcoGame';
 import EatsApp from '../Universes/EWI/src/EatsApp';
@@ -66,14 +64,14 @@ const UniverseSwitcher = () => {
             onClick={() => changeUniverse('prev')}
             disabled={isButtonDisabled}
           >
-            <FontAwesomeIcon icon={faArrowLeft} />
+            {getNextUniverse('prev')}
           </button>
           <button 
             className='npBtn' 
             onClick={() => changeUniverse('next')}
             disabled={isButtonDisabled}
           >
-            <FontAwesomeIcon icon={faArrowRight} />
+            {getNextUniverse('next')}
           </button>
         </div>
       )}

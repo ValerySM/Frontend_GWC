@@ -15,7 +15,7 @@ const BoostTab = () => {
       {!activeGame ? (
         <div className="game-selection">
           <h3>Выберите мини-игру</h3>
-          <button className='gameBTN' onClick={() => setActiveGame('PURBLE_PAIRS')}>Purble Pairs</button>
+          {/* <button className='gameBTN' onClick={() => setActiveGame('PURBLE_PAIRS')}>Purble Pairs</button> */}
           <button className='gameBTN' onClick={() => setActiveGame('APPLE_CATCHER')}>Apple Catcher</button>
         </div>
       ) : (

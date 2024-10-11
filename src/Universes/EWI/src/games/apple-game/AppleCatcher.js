@@ -1,9 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import './AppleCatcher.css';
-import goodAppleImg from './img/good-apple.png';
-import rottenAppleImg from './img/rotten-apple.png';
-import catcherImg from './img/catcher.png';
-import UniverseData from '../../UniverseData';
+// import UniverseData from '../../UniverseData';
 
 const AppleCatcher = ({ onGameOver }) => {
     const [gameState, setGameState] = useState({
@@ -38,7 +35,7 @@ const AppleCatcher = ({ onGameOver }) => {
                     apple.x >= catcherLeft &&
                     apple.x <= catcherRight
                 ) {
-                    const scoreChange = apple.type === 'good' ? 10 : -20;
+                    const scoreChange = apple.type === 'good' ? 500 : -5000;
                     newScore += scoreChange;
 
                     const animationId = `${apple.id}-${Math.random().toString(36).substr(2, 9)}`;
@@ -77,7 +74,7 @@ const AppleCatcher = ({ onGameOver }) => {
                     y: apple.y + 1,
                 }));
 
-                if (Math.random() < 0.05 && newApples.length < 10) { // Увеличили вероятность появления
+                if (Math.random() < 0.05 && newApples.length < 10) {
                     newApples.push({
                         id: Date.now(),
                         x: Math.random() * 100,
@@ -139,9 +136,9 @@ const AppleCatcher = ({ onGameOver }) => {
             showResult: true
         }));
 
-        UniverseData.addGameScore('appleCatcher', gameState.score);
+        // UniverseData.addGameScore('appleCatcher', gameState.score);
         console.log('Updated AppleCatcher score:', gameState.score);
-        console.log('New total clicks:', UniverseData.getTotalClicks());
+        // console.log('New total clicks:', UniverseData.getTotalClicks());
 
         clearInterval(timerRef.current);
         cancelAnimationFrame(gameLoopRef.current);
@@ -162,16 +159,17 @@ const AppleCatcher = ({ onGameOver }) => {
 
     const renderApples = useMemo(() => {
         return gameState.apples.map((apple) => (
-            <img
+            <div
                 key={apple.id}
-                src={apple.type === 'good' ? goodAppleImg : rottenAppleImg}
-                alt={apple.type === 'good' ? 'Good Apple' : 'Rotten Apple'}
-                className="apple"
-                style={{ 
-                    left: `${apple.x}%`, 
+                className={`neon-apple ${apple.type === 'good' ? 'good-apple' : 'rotten-apple'}`}
+                style={{
+                    left: `${apple.x}%`,
                     top: `${apple.y}%`,
                     width: '30px',
-                    height: 'auto'
+                    height: '30px',
+                    borderRadius: '50%',
+                    backgroundColor: apple.type === 'good' ? 'green' : 'brown',
+                    position: 'absolute',
                 }}
             />
         ));
@@ -192,34 +190,37 @@ const AppleCatcher = ({ onGameOver }) => {
                     <div
                         key={anim.id}
                         className={`score-animation ${anim.score > 0 ? 'positive' : 'negative'}`}
-                        style={{ 
-                            left: `${anim.x}%`, 
+                        style={{
+                            left: `${anim.x}%`,
                             top: `${anim.y}%`,
-                            opacity: 1,
-                            transform: 'translateY(-20px)',
-                            transition: 'opacity 1s, transform 1s'
+                        }}
+                        ref={(el) => {
+                            if (el) {
+                                setTimeout(() => el.classList.add('active'), 50);
+                            }
                         }}
                     >
                         {anim.score > 0 ? `+${anim.score}` : anim.score}
                     </div>
                 ))}
-                <img
-                    src={catcherImg}
-                    alt="Catcher"
-                    className="player"
-                    style={{ 
+                <div
+                    className="neon-catcher"
+                    style={{
                         left: `${gameState.playerPosition}%`,
-                        width: '90px',
-                        height: '90px',
-                        bottom: '20%'
+                        width: '80px',
+                        height: '30px',
+                        backgroundColor: 'greenyellow',
+                        position: 'absolute',
+                        bottom: '20%',
+                        borderRadius: '13% 13% 100% 100%'
                     }}
                 />
             </div>
             {gameState.showResult && (
                 <div className="result-modal">
                     <div className="result-content">
-                        <h2>Game Over!</h2>
-                        <p>Your score: {gameState.score}</p>
+                        <h2>END GAME</h2>
+                        <p>Score: {gameState.score}</p>
                         <button onClick={handleResultClose}>OK</button>
                     </div>
                 </div>

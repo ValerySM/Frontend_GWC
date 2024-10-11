@@ -1,4 +1,4 @@
-import UniverseData from '../UniverseData';
+// import UniverseData from '../UniverseData';
 
 export const handleClick = (energy, damageLevel, count, totalClicks, setCount, updateTotalClicks, setEnergy, setIsImageDistorted, activityTimeoutRef, setRegenRate) => {
   if (energy > 0 && !isNaN(damageLevel)) {

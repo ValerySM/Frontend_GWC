@@ -1,20 +1,42 @@
-import React, { useState, useEffect } from 'react';
-import Score from './comp/Score';
-import './css/EWE.css';
-import FarmButton from './comp/FarmButton';
 
-function Ewe({ userId }) {
-  const [tokens, setTokens] = useState(0);
-  const [farmedTokens, setFarmedTokens] = useState(0);
-  const [isFarming, setIsFarming] = useState(false);
-  const [startTime, setStartTime] = useState(null);
-  const [elapsedFarmingTime, setElapsedFarmingTime] = useState(0);
-  const [animationClass, setAnimationClass] = useState('fade-in');
-  const [currentTextIndex, setCurrentTextIndex] = useState(0);
-  const [isAnimating, setIsAnimating] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+import React, { useState, useEffect } from 'react';
+import Score from './comp/Score'; // Импортируем компонент для отображения счета
+import './css/EWE.css'; // Импортируем стили
+import FarmButton from './comp/FarmButton'; // Импортируем кнопку для фермерства
+
+function Ewe() {
+  // Хуки состояния
+  const [tokens, setTokens] = useState(() => {
+    const savedTokens = localStorage.getItem('tokens');
+    return savedTokens ? parseFloat(savedTokens) : 0; // Загружаем токены из localStorage
+  });
+
+  const [farmedTokens, setFarmedTokens] = useState(() => {
+    const savedFarmedTokens = localStorage.getItem('farmedTokens');
+    return savedFarmedTokens ? parseFloat(savedFarmedTokens) : 0; // Загружаем фермерские токены
+  });
+
+  const [isFarming, setIsFarming] = useState(() => {
+    const savedIsFarming = localStorage.getItem('isFarming');
+    return savedIsFarming === 'true'; // Загружаем статус фермерства
+  });
+
+  const [startTime, setStartTime] = useState(() => {
+    const savedStartTime = localStorage.getItem('startTime');
+    return savedStartTime ? new Date(parseInt(savedStartTime, 10)) : null; // Загружаем время начала фермерства
+  });
+
+  const [elapsedFarmingTime, setElapsedFarmingTime] = useState(() => {
+    const savedElapsedFarmingTime = localStorage.getItem('elapsedFarmingTime');
+    return savedElapsedFarmingTime ? parseFloat(savedElapsedFarmingTime) : 0; // Загружаем прошедшее время фермерства
+  });
+
+  const [animationClass, setAnimationClass] = useState('fade-in'); // Класс для анимации
+  const [currentTextIndex, setCurrentTextIndex] = useState(0); // Индекс текущего текста
+  const [isAnimating, setIsAnimating] = useState(false); // Флаг для анимации
 
   const texts = [
+    // Здесь ваши тексты
     {
       title: 'Woods',
       content: "— the echo of silence. Green Woods — the voice of depth, unheard but felt. Green Woods — freedom of creativity. Green Woods — the intertwining of worlds. Green Woods — being yourself."
@@ -23,7 +45,7 @@ function Ewe({ userId }) {
       title: 'Two: Idea',
       content: "Our idea is to create blockchain marketplaces in the gaming sphere. We aim to help the environment by utilizing coin farming for future development. By educating people about new technologies, we provide more advanced platforms that open new horizons and opportunities."
     },
-    {
+   {
       title: 'Three: Stages',
       content: "At this stage, we are developing a 2D application for coin mining, reconnecting it from a local network to our server. This will create more convenient conditions. We are adding new features to enhance quality and increase user profits."
     },
@@ -64,171 +86,83 @@ function Ewe({ userId }) {
     }
   ];
 
-  const maxTokens = 0.128;
-  const farmingDuration = 12 * 60 * 60;
-
-  useEffect(() => {
-    if (userId) {
-      console.log("EWE: Fetching user data for userId:", userId);
-      fetchUserData();
-    }
-  }, [userId]);
-
-  useEffect(() => {
-    console.log("EWE component state:", {
-      tokens,
-      farmedTokens,
-      isFarming,
-      startTime,
-      elapsedFarmingTime
-    });
-  }, [tokens, farmedTokens, isFarming, startTime, elapsedFarmingTime]);
+  const maxTokens = 0.128; // Максимальное количество токенов
+  const farmingDuration = 12 * 60 * 60; // Длительность фермерства 12 часов в секундах
 
   useEffect(() => {
     let farmingInterval;
     if (isFarming) {
-      const interval = 1000;
+      const interval = 1000; // Обновление каждую секунду
 
       farmingInterval = setInterval(() => {
         const now = new Date();
-        const elapsed = Math.min((now - new Date(startTime)) / 1000 + elapsedFarmingTime, farmingDuration);
-        const farmed = (elapsed / farmingDuration) * maxTokens;
+        // Вычисляем прошедшее время фермерства
+        const elapsed = Math.min((now - startTime) / 1000 + elapsedFarmingTime, farmingDuration);
+        const farmed = (elapsed / farmingDuration) * maxTokens; // Вычисляем фермерские токены
 
         setFarmedTokens(farmed);
-        setElapsedFarmingTime(elapsed);
 
+        // Если фермерство завершено
         if (elapsed >= farmingDuration) {
           clearInterval(farmingInterval);
           setIsFarming(false);
-          collectTokens();
+          setElapsedFarmingTime(0);
         }
       }, interval);
     }
 
-    return () => clearInterval(farmingInterval);
+    return () => clearInterval(farmingInterval); // Очистка интервала при размонтировании
   }, [isFarming, startTime, elapsedFarmingTime]);
 
   useEffect(() => {
-    const updateInterval = setInterval(() => {
-      if (isFarming) {
-        updateServerData();
-      }
-    }, 60000); // Обновление каждую минуту
-
-    return () => clearInterval(updateInterval);
-  }, [isFarming, tokens, farmedTokens, startTime, elapsedFarmingTime]);
-
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      updateServerData();
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
+    // Сохранение состояния в localStorage
+    localStorage.setItem('tokens', tokens);
+    localStorage.setItem('farmedTokens', farmedTokens);
+    localStorage.setItem('isFarming', isFarming);
+    localStorage.setItem('startTime', startTime ? startTime.getTime() : null);
+    localStorage.setItem('elapsedFarmingTime', elapsedFarmingTime);
   }, [tokens, farmedTokens, isFarming, startTime, elapsedFarmingTime]);
 
-  const fetchUserData = async () => {
-    if (!userId) return;
+  useEffect(() => {
+    const interval = setInterval(() => {
+      handleNextText(); // Переход к следующему тексту
+    }, 8000); // Каждые 8 секунд
 
-    setIsLoading(true);
-    try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/get_user_data`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ user_id: userId }),
-      });
-      if (response.ok) {
-        const userData = await response.json();
-        console.log("EWE: Fetched user data:", userData);
-        if (userData.eweData) {
-          setTokens(userData.eweData.tokens);
-          setFarmedTokens(userData.eweData.farmedTokens);
-          setIsFarming(userData.eweData.isFarming);
-          setStartTime(userData.eweData.startTime);
-          setElapsedFarmingTime(userData.eweData.elapsedFarmingTime);
-        } else {
-          console.error("EWE: eweData not found in user data");
-        }
-      } else {
-        console.error("EWE: Failed to fetch user data");
-      }
-    } catch (error) {
-      console.error('EWE: Error fetching user data:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const updateServerData = async () => {
-    if (!userId) return;
-
-    try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/update`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          user_id: userId,
-          updates: {
-            eweData: {
-              tokens: tokens,
-              farmedTokens: farmedTokens,
-              isFarming: isFarming,
-              startTime: startTime,
-              elapsedFarmingTime: elapsedFarmingTime
-            }
-          }
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to update server data');
-      }
-    } catch (error) {
-      console.error('EWE: Error updating server data:', error);
-    }
-  };
+    return () => clearInterval(interval); // Очистка интервала при размонтировании
+  }, [currentTextIndex]);
 
   const handleButtonClick = () => {
+    // Обработка нажатия кнопки
     if (!isFarming && farmedTokens >= maxTokens) {
-      collectTokens();
+      collectTokens(); // Сбор токенов
     } else {
-      startFarming();
+      startFarming(); // Начало фермерства
     }
   };
 
   const startFarming = () => {
+    // Начинаем фермерство
     if (!isFarming) {
       const now = new Date();
-      setStartTime(now.toISOString());
+      setStartTime(now);
       setIsFarming(true);
       setElapsedFarmingTime(0);
       setFarmedTokens(0);
-      updateServerData();
     }
   };
 
   const collectTokens = () => {
+    // Сбор фермерских токенов
     if (farmedTokens >= maxTokens) {
-      setTokens(prevTokens => {
-        const newTokens = Number((prevTokens + farmedTokens).toFixed(3));
-        setFarmedTokens(0);
-        setIsFarming(false);
-        setElapsedFarmingTime(0);
-        setStartTime(null);
-        updateServerData();
-        return newTokens;
-      });
+      setTokens(prevTokens => Number((prevTokens + farmedTokens).toFixed(3))); // Обновление токенов
+      setFarmedTokens(0); // Сброс фермерских токенов
+      setIsFarming(false); // Завершение фермерства
+      setElapsedFarmingTime(0); // Сброс прошедшего времени
     }
   };
 
   const handleNextText = () => {
+    // Переход к следующему тексту
     if (isAnimating) return;
 
     setIsAnimating(true);
@@ -238,18 +172,17 @@ function Ewe({ userId }) {
       setCurrentTextIndex((prevIndex) => (prevIndex + 1) % texts.length);
       setAnimationClass('fade-in');
       setIsAnimating(false);
-    }, 500);
+    }, 500); // Время анимации
 
-    const nextButton = document.querySelector('.btntxt2');
-    if (nextButton) {
-      nextButton.classList.add('sparkle');
-      setTimeout(() => {
-        nextButton.classList.remove('sparkle');
-      }, 500);
-    }
+    // Анимация кнопки
+    document.querySelector('.btntxt2').classList.add('sparkle');
+    setTimeout(() => {
+      document.querySelector('.btntxt2').classList.remove('sparkle');
+    }, 500);
   };
 
   const handlePrevText = () => {
+    // Переход к предыдущему тексту
     if (isAnimating) return;
 
     setIsAnimating(true);
@@ -259,49 +192,43 @@ function Ewe({ userId }) {
       setCurrentTextIndex((prevIndex) => (prevIndex - 1 + texts.length) % texts.length);
       setAnimationClass('fade-in');
       setIsAnimating(false);
-    }, 500);
+    }, 500); // Время анимации
 
-    const prevButton = document.querySelector('.btntxt1');
-    if (prevButton) {
-      prevButton.classList.add('sparkle');
-      setTimeout(() => {
-        prevButton.classList.remove('sparkle');
-      }, 500);
-    }
+    // Анимация кнопки
+    document.querySelector('.btntxt1').classList.add('sparkle');
+    setTimeout(() => {
+      document.querySelector('.btntxt1').classList.remove('sparkle');
+    }, 500);
   };
 
-  const progressPercentage = (farmedTokens / maxTokens) * 100;
-
-  if (isLoading) {
-    return <div>Loading EWE data...</div>;
-  }
+  const progressPercentage = (farmedTokens / maxTokens) * 100; // Процент фермерских токенов
 
   return (
     <div className="App">
       <header className="header">
-        <Score tokens={tokens} />
+        <Score tokens={tokens} /> {/* Компонент для отображения счета */}
       </header>
       <div className="content">
         <div className="progress-bar">
           <div 
             className="progress-bar-fill" 
-            style={{ width: `${progressPercentage}%` }}
+            style={{ width: `${progressPercentage}%` }} // Установка ширины полосы прогресса
           >
-            <span className="progress-text">{progressPercentage.toFixed(1)}%</span>
+            <span className="progress-text">{progressPercentage.toFixed(1)}%</span> {/* Отображение процента */}
           </div>
         </div>
         <div className={`animation_contain`}>
           <button onClick={handlePrevText} className='btntxt1 btntxt'>←</button>
           <div className={`text-display ${animationClass}`}>
             <h3>{texts[currentTextIndex].title}</h3><br />
-            {texts[currentTextIndex].content}
+            {texts[currentTextIndex].content} {/* Отображение текста */}
           </div>
           <button onClick={handleNextText} className='btntxt2 btntxt'>→</button>
         </div>
         <FarmButton
-          isFarming={isFarming}
-          farmedTokens={farmedTokens}
-          onClick={handleButtonClick}
+          isFarming={isFarming} // Передача статуса фермерства
+          farmedTokens={farmedTokens} // Передача количества фермерских токенов
+          onClick={handleButtonClick} // Обработка нажатия на кнопку фермерства
         />
       </div>
     </div>

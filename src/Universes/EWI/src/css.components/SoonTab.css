@@ -1,110 +1,92 @@
-.soon-tab {
-    font-size: 24px;
-    font-weight: 700;
-    color: rgba(255, 217, 0, 1);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    padding: 20px;
-}
-
-.soon-tab::after {
-    content: '';
-    position: absolute;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+.ref {height: 100%;
+    background-color: #19d3f459; 
+    border: 1px solid #03abcd; 
+    border-radius: 8px; 
+    padding: 20px; 
+    /* text-align: center;  */
+  }
+  .ref_h{color: rgba(252, 252, 252, 0.998);
+    text-shadow: 
+    0 0 1px #00ffff, /* Голубое свечение */
+    0 0 1px #00ffff, 
+    0 0 1px #00ffff, 
+    0 0 2px #ff00ff, /* Розовое свечение */
+    0 0 2px #ff00ff, 
+    0 0 3px #ff00ff;}
+  .ref_link {
+    height: 6%;
+    padding-left: 5%;
     width: 100%;
-    height: 100%;
-    top: 0;
-    left: 0;
-    pointer-events: none;
-}
-
-.referral-title {
-    font-size: 28px;
-    margin-bottom: 20px;
-}
-
-.referral-link-container {
-    width: 100%;
-    margin-bottom: 20px;
-}
-
-.referral-link {
-    font-size: 18px;
-    word-break: break-all;
-    background-color: rgba(255, 255, 255, 0.1);
-    padding: 10px;
+    font-size: 18px; /* Размер шрифта */
+    color: #00fee9; /* Цвет текста */
+    margin-bottom: 15px; /* Отступ снизу */
+    word-break: break-all; /* Перенос длинных ссылок */
+    border: 2px solid black;
     border-radius: 5px;
-    margin-bottom: 10px;
-}
-
-.copy-button {
-    background-color: rgba(255, 217, 0, 0.8);
-    border: none;
-    color: black;
-    padding: 10px 20px;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.8); /* Тень */
+    animation: blink 3s infinite; /* Применение анимации мерцания */
+  }
+  
+  .ref_btn {width: 100%;
     font-size: 16px;
-    margin: 4px 2px;
-    cursor: pointer;
-    border-radius: 5px;
-}
-
-.referral-instruction {
-    font-size: 18px;
-    margin-bottom: 20px;
-    text-align: center;
-}
-
-.referral-stats {
-    background-color: rgba(255, 255, 255, 0.1);
-    padding: 15px;
-    border-radius: 5px;
-    width: 100%;
-}
-
-.referral-stats h3 {
-    font-size: 22px;
-    margin-bottom: 10px;
-}
-
-.referral-stats p {
-    font-size: 18px;
-}
-
-.dots {
-    display: flex;
-    gap: 0.2em;
-    margin-top: 20px;
-}
-
-.dots div {
-    width: 0.2em;
-    height: 0.7em;
-    background-color: rgba(242, 255, 0, 0.8);
-    border-radius: 5px;
-    animation: blink 1.8s infinite step-start;
-}
-
-.dots div:nth-child(2) {
-    animation-delay: 0.3s;
-}
-
-.dots div:nth-child(3) {
-    animation-delay: 0.6s;
-}
-
-@keyframes blink {
+    font-weight: bolder;
+    background-color: #00fbff; /* Цвет кнопки */
+    color: rgba(248, 248, 248, 0.634); /* Цвет текста кнопки */
+    border: none; /* Без границы */
+    border-radius: 5px; /* Скругление углов кнопки */
+    padding: 10px 20px; /* Отступы внутри кнопки */
+    transition: background-color 0.3s; /* Плавный переход цвета */
+    text-shadow: 
+    0 0 1px #00ffff, /* Голубое свечение */
+    0 0 1px #00ffff, 
+    0 0 1px #00ffff, 
+    0 0 2px #ff00ff, /* Розовое свечение */
+    0 0 2px #ff00ff, 
+    0 0 3px #ff00ff;
+    animation: neon 2.5s infinite alternate;
+  }
+  
+ 
+  
+  .ref_line {
+    margin-top: 20px; 
+    font-weight: bold; 
+  }
+  
+  .ref_enemy {
+    color: #eeeeee; 
+    text-shadow: 
+    0 0 1px #00ffff, /* Голубое свечение */
+    0 0 1px #00ffff, 
+    0 0 1px #00ffff, 
+    0 0 2px #ff00ff, /* Розовое свечение */
+    0 0 2px #ff00ff, 
+    0 0 3px #ff00ff;
+  }
+  .ref_reward{
+    padding-top: 10px;
+    color:#f0f5f5;
+    text-shadow: 
+    0 0 1px #00ffff, /* Голубое свечение */
+    0 0 1px #00ffff, 
+    0 0 1px #00ffff, 
+    0 0 2px #ff00ff, /* Розовое свечение */
+    0 0 2px #ff00ff, 
+    0 0 3px #ff00ff;
+  }
+  @keyframes blink {
     0%, 100% {
-        opacity: 1;
+      opacity: 1;
     }
     50% {
-        opacity: 0.6;
+      opacity: 0.5;
     }
-}
+  }
+  @keyframes neon {
+    0%, 100% {
+      box-shadow: 0 0 3px #00fbff, 0 0 8px #aa00ff, 0 0 15px #c300ff, 0 0 17px #00fbff, 0 0 20px #d000ff, 0 0 25px #00fbff;
+    }
+    50% {
+      box-shadow: 0 0 7px #00fee9, 0 0 15px #00fee9, 0 0 20px #00fee9, 0 0 25px #00fee9, 0 0 30px #00fee9, 0 0 35px #00fee9;
+    }
+  }
