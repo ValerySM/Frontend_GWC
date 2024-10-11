@@ -1,0 +1,174 @@
+.purble-pairs {
+   margin-top: 5%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100vw;
+    /* justify-content: center; */
+    height: 100vh;
+}
+.game-header {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 500px;
+    margin-bottom: 0px;
+}
+.btn-game {
+    border: 1px solid gray;
+    border-radius: 5px;
+    color: greenyellow;
+    width: 100%;
+    font-size: 180%;
+    cursor: pointer;
+    background: linear-gradient(45deg, #e4ce0b 20%, #2fa50c 70%,#0a26c4 100%);
+    background-size: 400% 400%;
+    animation: gradientAnimation 5s ease infinite;
+}
+.timer {
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    font-weight: bolder;
+    font-size: 120%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+}
+.timerBtn {
+    display: inline-block;
+    font-size: 120%;
+    font-weight: bold;
+    background: linear-gradient(45deg,  #fffb02 20%,#0ae08e 60%,#eb0aff 80%);
+    background-size: 400% 400%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: gradientAnimation 5s ease infinite;
+    padding: 5px;
+}
+.score{
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    font-weight: bolder;
+    font-size: 120%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+}
+.scoreBtn{
+    display: inline-block;
+    font-size: 120%;
+    font-weight: bold;
+    background: linear-gradient(45deg,  #fffb02 20%,#0ae08e 60%,#eb0aff 80%);
+    background-size: 400% 400%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: gradientAnimation 5s ease infinite;
+    padding: 5px;
+}
+.cards{position: relative;
+    height: 100%;
+    display: flex;
+    /* align-items: end; */
+    justify-content: center;
+    /* height: 100%; */
+    width: 100%;
+}
+.cards-grid {position: absolute;
+    width: 100%;
+    height: 60%;
+    margin: 5%;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2%;
+}
+.card {
+    position: relative;
+    border: 2px solid white;
+    /* perspective: 1000px; */
+    position: relative;
+}
+.card.flipped .card-front {
+    transform: rotateY(0);
+}
+.card.flipped .card-back {
+    transform: rotateY(180deg);
+}
+.card-front,
+.card-back {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    backface-visibility: hidden;
+    transition: transform 0.8s;
+}
+.card-front {
+    transform: rotateY(180deg);
+}
+.card-back {
+    align-items: center;
+    justify-content: center;
+    display: flex;
+    background: linear-gradient(45deg, #e4ce0b 20%, #2fa50c 70%,#0a26c4 100%);
+    background-size: 400% 400%;
+    animation: gradientAnimation 5s ease infinite;
+}
+@keyframes gradientAnimation {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+.card-img{
+    position: absolute;
+    height: 100%;
+    object-fit: cover;
+    width: 100%;
+}
+.back-descr{
+    font-size: 150%;
+    font-weight: bolder;
+    font-style: oblique;
+    color: greenyellow;
+}
+
+/* Обновленные стили для MessageBox */
+.message-box {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    font-size: 24px;
+    border-radius: 10px;
+    text-align: center;
+    z-index: 1000;
+}
+
+.message-box p {
+    margin-bottom: 15px;
+}
+
+.message-box button {
+    margin-top: 10px;
+    padding: 10px 20px;
+    background-color: greenyellow;
+    color: black;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+.message-box button:hover {
+    background-color: #b3ff00;
+}

@@ -1,0 +1,70 @@
+.upgrades {
+  margin-top: 5%;
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.upgrades button {
+  text-align: start;
+  margin-top: 1%;
+  width: 70%;
+  background-color: rgba(4, 201, 236, 0.6);
+  color: rgba(208, 255, 0);
+  padding: 1%;
+  cursor: pointer;
+  border-radius: 5px;
+  position: relative;
+  overflow: hidden;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.upgrades button:disabled {
+  color: rgb(52, 50, 50);
+  background-color: rgba(56, 34, 32, 0.6);
+  cursor: not-allowed;
+}
+
+.upgrades button:active {
+  transform: scale(0.95);
+  background-color: rgba(159, 251, 0, 0.6);
+}
+
+/* .upgrades button .loading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  animation: loading 1.5s linear infinite;
+  pointer-events: none;
+  display: none;
+} */
+
+.upgrades button.loading-active .loading {
+  display: block;
+}
+
+/* @keyframes loading {
+  0% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.3;
+  }
+  100% {
+    transform: scale(0);
+    opacity: 0;
+  }
+} */
+
+.upgrade-txt {
+  text-align: start;
+  font-size: larger;
+  color: rgba(168, 204, 10);
+}

@@ -1,0 +1,55 @@
+.settings-button-container {
+    position: fixed;
+    top: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    width: 100%;
+    z-index: 1000; 
+  }
+  
+  .settings-button {
+    margin-right: -1%;
+    z-index: 1;
+    background-color: transparent;
+    border: none;
+    border-radius: 0%;
+    cursor: pointer;
+    outline: none;
+    transition: transform 0.8s; /* Переход для вращения */
+    transform-origin: center; /* Центрирование вращения */
+  }
+  
+  .settings-button.rotate {
+    transform: rotate(-360deg); /* Вращение на 180 градусов */
+  }
+  
+  .settings-menu {
+    position: absolute;
+    top: 10%; /* Отступ от кнопки вниз */
+    right: 0;
+    background-color: rgba(1, 1, 1, 0.8);
+    border: 1px solid #ccc;
+    border-radius: 30% 20% 1% 30%;
+    box-shadow: 0 2px 10px rgba(1, 1, 1, 0.5);
+    padding: 10% 10% 6% 2%;
+    width: max-content;
+    opacity: 0; /* Начальная непрозрачность */
+    transform: translateX(30px) translateY(-90px) scale(0.8) rotate(100deg); /* Начальное смещение вверх */
+    transition: opacity 0.5s, transform 0.5s; /* Переходы для плавного появления */
+    visibility: hidden; /* Изначально скрыт */
+  }
+  
+  .settings-menu.open {
+    opacity: 1; /* Конечная непрозрачность */
+    transform: translateY(0); /* Конечное положение */
+    visibility: visible; /* Показать элемент */
+  }
+  
+  .settings-menu p {
+    margin: 0;
+    padding: 10px;
+    cursor: pointer;
+    color: #fff; /* Белый цвет текста */
+  }
+  
