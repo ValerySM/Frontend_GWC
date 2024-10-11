@@ -131,12 +131,19 @@ function Ewe({ userId }) {
       });
       if (response.ok) {
         const userData = await response.json();
-        const offlineEarnings = calculateOfflineEarnings(userData.eweData);
-        setTokens(userData.eweData.tokens + offlineEarnings);
-        setFarmedTokens(userData.eweData.farmedTokens);
-        setIsFarming(userData.eweData.isFarming);
-        setStartTime(userData.eweData.startTime);
-        setElapsedFarmingTime(userData.eweData.elapsedFarmingTime);
+        console.log("Fetched user data:", userData);  // Добавлено для отладки
+        if (userData.eweData) {
+          const offlineEarnings = calculateOfflineEarnings(userData.eweData);
+          setTokens(userData.eweData.tokens + offlineEarnings);
+          setFarmedTokens(userData.eweData.farmedTokens);
+          setIsFarming(userData.eweData.isFarming);
+          setStartTime(userData.eweData.startTime);
+          setElapsedFarmingTime(userData.eweData.elapsedFarmingTime);
+        } else {
+          console.error("eweData not found in user data");
+        }
+      } else {
+        console.error("Failed to fetch user data");
       }
     } catch (error) {
       console.error('Error fetching user data:', error);
