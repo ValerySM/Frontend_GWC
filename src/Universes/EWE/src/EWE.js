@@ -12,6 +12,7 @@ function Ewe({ userId }) {
   const [animationClass, setAnimationClass] = useState('fade-in');
   const [currentTextIndex, setCurrentTextIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const texts = [
     {
@@ -68,9 +69,20 @@ function Ewe({ userId }) {
 
   useEffect(() => {
     if (userId) {
+      console.log("EWE: Fetching user data for userId:", userId);
       fetchUserData();
     }
   }, [userId]);
+
+  useEffect(() => {
+    console.log("EWE component state:", {
+      tokens,
+      farmedTokens,
+      isFarming,
+      startTime,
+      elapsedFarmingTime
+    });
+  }, [tokens, farmedTokens, isFarming, startTime, elapsedFarmingTime]);
 
   useEffect(() => {
     let farmingInterval;
@@ -121,6 +133,7 @@ function Ewe({ userId }) {
   const fetchUserData = async () => {
     if (!userId) return;
 
+    setIsLoading(true);
     try {
       const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/get_user_data`, {
         method: 'POST',
@@ -131,22 +144,23 @@ function Ewe({ userId }) {
       });
       if (response.ok) {
         const userData = await response.json();
-        console.log("Fetched user data:", userData);  // Добавлено для отладки
+        console.log("EWE: Fetched user data:", userData);
         if (userData.eweData) {
-          const offlineEarnings = calculateOfflineEarnings(userData.eweData);
-          setTokens(userData.eweData.tokens + offlineEarnings);
+          setTokens(userData.eweData.tokens);
           setFarmedTokens(userData.eweData.farmedTokens);
           setIsFarming(userData.eweData.isFarming);
           setStartTime(userData.eweData.startTime);
           setElapsedFarmingTime(userData.eweData.elapsedFarmingTime);
         } else {
-          console.error("eweData not found in user data");
+          console.error("EWE: eweData not found in user data");
         }
       } else {
-        console.error("Failed to fetch user data");
+        console.error("EWE: Failed to fetch user data");
       }
     } catch (error) {
-      console.error('Error fetching user data:', error);
+      console.error('EWE: Error fetching user data:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -177,17 +191,8 @@ function Ewe({ userId }) {
         throw new Error('Failed to update server data');
       }
     } catch (error) {
-      console.error('Error updating server data:', error);
+      console.error('EWE: Error updating server data:', error);
     }
-  };
-
-  const calculateOfflineEarnings = (eweData) => {
-    if (!eweData.isFarming || !eweData.startTime) return 0;
-
-    const now = new Date();
-    const startTime = new Date(eweData.startTime);
-    const elapsedTime = Math.min((now - startTime) / 1000 + eweData.elapsedFarmingTime, farmingDuration);
-    return (elapsedTime / farmingDuration) * maxTokens;
   };
 
   const handleButtonClick = () => {
@@ -266,6 +271,10 @@ function Ewe({ userId }) {
   };
 
   const progressPercentage = (farmedTokens / maxTokens) * 100;
+
+  if (isLoading) {
+    return <div>Loading EWE data...</div>;
+  }
 
   return (
     <div className="App">

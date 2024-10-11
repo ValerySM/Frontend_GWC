@@ -8,26 +8,29 @@ import EcoGame from './Universes/ECI/EcoGame';
 function App() {
   const [currentUniverse, setCurrentUniverse] = useState('EatsApp');
   const [userId, setUserId] = useState(null);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    if (window.Telegram && window.Telegram.WebApp) {
-      setUserId(window.Telegram.WebApp.initDataUnsafe.user.id);
-    }
+    const initTelegramWebApp = () => {
+      if (window.Telegram && window.Telegram.WebApp) {
+        window.Telegram.WebApp.ready();
+        const telegramUserId = window.Telegram.WebApp.initDataUnsafe.user.id;
+        console.log("Telegram User ID:", telegramUserId);
+        setUserId(telegramUserId);
+        setIsInitialized(true);
+      } else {
+        console.error("Telegram WebApp is not available");
+      }
+    };
+
+    initTelegramWebApp();
   }, []);
 
   useEffect(() => {
-    if (window.TelegramWebApps) {
-      window.TelegramWebApps.ready();
-      
-      // Пример использования Telegram Web App API
-      window.TelegramWebApps.onEvent('backButtonClicked', () => {
-        console.log('Back button clicked');
-      });
-
-      // Пример получения данных из Telegram Web App
-      console.log(window.TelegramWebApps.initData);
+    if (isInitialized && userId) {
+      console.log("App initialized with user ID:", userId);
     }
-  }, []);
+  }, [isInitialized, userId]);
 
   const renderGame = () => {
     switch (currentUniverse) {
@@ -41,6 +44,10 @@ function App() {
         return null;
     }
   };
+
+  if (!isInitialized) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="App">
