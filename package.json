@@ -9,7 +9,7 @@
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
-    "css-doodle": "^0.40.5",
+    "axios": "^1.7.7",
     "node-telegram-bot-api": "^0.66.0",
     "nodemon": "^3.1.4",
     "react": "^18.3.1",
@@ -45,7 +45,7 @@
       "last 1 safari version"
     ]
   },
-  "homepage": "https://valerysm.github.io/Test-fix-GWC/",
+  "homepage": "https://valerysm.github.io/Frontend_GWC/",
   "main": "index.js",
   "keywords": [],
   "author": "",

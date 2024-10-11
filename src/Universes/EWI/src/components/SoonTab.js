@@ -47,14 +47,20 @@ function SoonTab({ userData }) {
   };
 
   return (
-    <div className="ref"> {/* Изменено на ваш класс */}
-      <h2 className='ref_h'>Referral System</h2>
-      <div className='ref_link'>{referralLink}</div> 
-      <button className='ref_btn' onClick={copyToClipboard}>Copy Link</button> {/* Добавлен класс */}
-      <div className='ref_line'>
-        <span className='ref_enemy'>Your referrals:</span>
-        {referralStats && <span className='ref_reward'>{referralStats.referrals_count}</span>}
+    <div className="soon-tab">
+      <h2>Referral System</h2>
+      <div>
+        <h3>Your Referral Link</h3>
+        <p>{referralLink}</p>
+        <button onClick={copyToClipboard}>Copy Link</button>
+        <p>Share this link with your friends to earn bonuses!</p>
       </div>
+      {referralStats && (
+        <div>
+          <h3>Your Referral Stats</h3>
+          <p>Referrals: {referralStats.referrals_count}</p>
+        </div>
+      )}
     </div>
   );
 }
