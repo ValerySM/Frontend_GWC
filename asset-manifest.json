@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/Test-fix-GWC/static/css/main.d6b439be.css",
-    "main.js": "/Test-fix-GWC/static/js/main.94e37b8b.js",
+    "main.js": "/Test-fix-GWC/static/js/main.fef69183.js",
     "static/media/pokemonGym.mp3": "/Test-fix-GWC/static/media/pokemonGym.748e7bdbb500902dd8fd.mp3",
     "static/media/clicker-image.png": "/Test-fix-GWC/static/media/clicker-image.513d1439ea34bf68693f.png",
     "static/media/7.png": "/Test-fix-GWC/static/media/7.358dda2e356875ae28be.png",
@@ -18,10 +18,10 @@
     "static/media/start.mp3": "/Test-fix-GWC/static/media/start.cf3e5e40242046be6a6f.mp3",
     "index.html": "/Test-fix-GWC/index.html",
     "main.d6b439be.css.map": "/Test-fix-GWC/static/css/main.d6b439be.css.map",
-    "main.94e37b8b.js.map": "/Test-fix-GWC/static/js/main.94e37b8b.js.map"
+    "main.fef69183.js.map": "/Test-fix-GWC/static/js/main.fef69183.js.map"
   },
   "entrypoints": [
     "static/css/main.d6b439be.css",
-    "static/js/main.94e37b8b.js"
+    "static/js/main.fef69183.js"
   ]
 }
